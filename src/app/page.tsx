@@ -18,6 +18,11 @@ import { fetchDayScores, type DayScores } from "@/lib/oura/queries";
 import { detectFirstDay, fetchWide, type DayRow } from "@/lib/oura/metrics";
 import { InsightCards } from "@/components/insights/insight-cards";
 import { DistributionCard } from "@/components/insights/distribution-card";
+import { SlopeCard } from "@/components/insights/slope-card";
+import { WeekReportCard } from "@/components/insights/week-report-card";
+import { MilestonesCard } from "@/components/insights/milestones-card";
+import { WeekdayCard } from "@/components/insights/weekday-card";
+import { ShiftsCard } from "@/components/insights/shifts-card";
 
 const RANGES = [
   { label: "30 d", days: 30 },
@@ -129,6 +134,23 @@ export default function Dashboard() {
       {history && (
         <div className="stagger-item">
           <DistributionCard rows={history} />
+        </div>
+      )}
+
+      {history && (
+        <div className="stagger-item grid gap-4 lg:grid-cols-2">
+          <SlopeCard rows={history} />
+          <div className="space-y-4">
+            <WeekReportCard rows={history} />
+            <MilestonesCard rows={history} />
+          </div>
+        </div>
+      )}
+
+      {history && (
+        <div className="stagger-item grid gap-4 lg:grid-cols-2">
+          <WeekdayCard rows={history} />
+          <ShiftsCard rows={history} />
         </div>
       )}
 

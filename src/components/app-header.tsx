@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" }) {
+export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" | "tags" }) {
   return (
     <header className="sticky top-4 z-20 mx-auto w-fit max-w-full rounded-full border bg-background/70 px-3 shadow-[var(--shadow-border)] backdrop-blur-xl">
       <div className="flex h-12 items-center gap-3">
@@ -43,6 +43,14 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" 
             className={cn(active === "year" && "bg-muted font-semibold")}
           >
             <Link href="/year">Year</Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className={cn(active === "tags" && "bg-muted font-semibold")}
+          >
+            <Link href="/tags">Tag Lab</Link>
           </Button>
         </nav>
         <Button asChild variant="outline" size="sm" className="rounded-full">

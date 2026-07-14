@@ -49,6 +49,7 @@ export function CommandPalette({
           <CommandItem onSelect={() => run(() => router.push("/"))}>Dashboard</CommandItem>
           <CommandItem onSelect={() => run(() => router.push("/trends"))}>Trends</CommandItem>
           <CommandItem onSelect={() => run(() => router.push("/year"))}>Year</CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/tags"))}>Tag Lab</CommandItem>
         </CommandGroup>
         {onAddChart && (
           <>
