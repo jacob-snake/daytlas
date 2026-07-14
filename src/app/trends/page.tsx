@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, Brush, XAxis } from "recharts";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, LineChart as LineChartIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
@@ -230,16 +238,43 @@ export default function TrendsPage() {
         </Card>
       )}
 
-      {visible &&
-        charts.map((key, i) => (
-          <MetricPanel
-            key={key}
-            metricKey={key}
-            data={visible}
-            index={i}
-            onRemove={() => setCharts((c) => c.filter((k) => k !== key))}
-          />
-        ))}
+      {visible && charts.length === 0 && (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <LineChartIcon />
+            </EmptyMedia>
+            <EmptyTitle>No charts yet</EmptyTitle>
+            <EmptyDescription>
+              Pick a metric in “Add chart” above, or press{" "}
+              <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>{" "}
+              and search for one.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+
+      {visible && (
+        <AnimatePresence initial={false} mode="popLayout">
+          {charts.map((key, i) => (
+            <motion.div
+              key={key}
+              layout
+              initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: { duration: 0.15, ease: "easeIn" } }}
+              transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+            >
+              <MetricPanel
+                metricKey={key}
+                data={visible}
+                index={i}
+                onRemove={() => setCharts((c) => c.filter((k) => k !== key))}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      )}
 
       {visible && charts.length >= 2 && (
         <CorrelationMatrixCard data={visible} metricKeys={charts} />

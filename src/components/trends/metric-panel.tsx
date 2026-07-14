@@ -1,6 +1,7 @@
 "use client";
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { format } from "date-fns";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,15 @@ export function MetricPanel({
               }
             />
             <YAxis domain={["auto", "auto"]} width={40} tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(_, payload) =>
+                    format(new Date(payload?.[0]?.payload?.day), "EEE, d MMM yyyy")
+                  }
+                />
+              }
+            />
             <Line
               type="monotone"
               dataKey={metricKey}

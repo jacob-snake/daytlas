@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,7 +40,15 @@ export function TrendChart({ data }: { data: DayScores[] }) {
               }
             />
             <YAxis domain={[0, 100]} width={32} tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(_, payload) =>
+                    format(new Date(payload?.[0]?.payload?.day), "EEE, d MMM yyyy")
+                  }
+                />
+              }
+            />
             <ChartLegend content={<ChartLegendContent />} />
             {(["sleep", "readiness", "activity"] as const).map((key) => (
               <Line

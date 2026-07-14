@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -137,7 +138,13 @@ export function ExportDialog() {
 
         <DialogFooter>
           <Button onClick={run} disabled={busy || !Object.values(metrics).some(Boolean)}>
-            {busy ? "Fetching…" : "Download"}
+            {busy ? (
+              <>
+                <Spinner data-icon="inline-start" /> Fetching…
+              </>
+            ) : (
+              "Download"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
