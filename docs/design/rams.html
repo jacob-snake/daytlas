@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woura — Dashboard</title>
+<style>
+  :root{
+    --bg:#0d0f12;
+    --surface:#15181d;
+    --surface-2:#1b1f26;
+    --line:#262b33;
+    --text:#e7e9ec;
+    --text-2:#9aa1ab;
+    --text-3:#5f6772;
+    --accent:#e2683c;      /* single functional accent — warm signal */
+    --sleep:#6f9fd8;
+    --readiness:#7cc4a8;
+    --activity:#e2b45a;
+    --hrv:#b590d9;
+    --temp:#d97a6c;
+    --r:6px;
+    --sp1:8px; --sp2:16px; --sp3:24px; --sp4:40px; --sp5:64px;
+    --sans:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 var(--sp5) var(--sp5);}
+
+  /* ---- Header ---- */
+  header{display:flex;align-items:baseline;justify-content:space-between;
+    padding:var(--sp4) 0 var(--sp3);border-bottom:1px solid var(--line);margin-bottom:var(--sp4);}
+  .brand{display:flex;align-items:baseline;gap:var(--sp2);}
+  .brand .mark{width:10px;height:10px;border-radius:50%;background:var(--accent);position:relative;top:-1px;}
+  .brand h1{font-size:19px;font-weight:600;letter-spacing:-0.01em;}
+  .brand .sub{font-size:12px;color:var(--text-3);letter-spacing:.04em;text-transform:uppercase;}
+  nav{display:flex;gap:var(--sp1);align-items:center;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+  .seg button{background:transparent;border:0;color:var(--text-2);font:inherit;font-size:12px;
+    padding:7px 14px;cursor:pointer;letter-spacing:.02em;}
+  .seg button.on{background:var(--surface-2);color:var(--text);}
+  .seg button+button{border-left:1px solid var(--line);}
+  .local{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);
+    margin-left:var(--sp2);letter-spacing:.03em;}
+  .local .dot{width:6px;height:6px;border-radius:50%;background:var(--readiness);}
+  .exp{background:transparent;border:1px solid var(--line);color:var(--text-2);font:inherit;
+    font-size:12px;padding:7px 14px;border-radius:var(--r);cursor:pointer;margin-left:var(--sp1);}
+
+  /* ---- Score row ---- */
+  .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp3);margin-bottom:var(--sp4);}
+  .score{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp3);}
+  .score .label{font-size:12px;color:var(--text-2);letter-spacing:.04em;text-transform:uppercase;}
+  .score .row{display:flex;align-items:baseline;gap:10px;margin-top:14px;}
+  .score .val{font-size:52px;font-weight:600;line-height:1;letter-spacing:-0.02em;}
+  .score .delta{font-size:13px;color:var(--text-2);}
+  .score .delta.up{color:var(--readiness);}
+  .score .delta.dn{color:var(--temp);}
+  .score .spark{margin-top:var(--sp3);display:block;width:100%;height:36px;}
+  .score .foot{font-size:11px;color:var(--text-3);margin-top:14px;letter-spacing:.03em;}
+
+  /* ---- Section header ---- */
+  .sec{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--sp3);}
+  .sec h2{font-size:15px;font-weight:600;letter-spacing:-0.01em;}
+  .sec .note{font-size:12px;color:var(--text-3);}
+
+  /* ---- Main chart ---- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:var(--sp3);margin-bottom:var(--sp4);}
+  .legend{display:flex;gap:var(--sp3);margin-bottom:var(--sp2);flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);}
+  .legend i{width:14px;height:2px;display:inline-block;border-radius:2px;}
+  .chart{width:100%;display:block;}
+  .axis{fill:var(--text-3);font-size:10px;font-family:var(--mono);letter-spacing:.02em;}
+  .grid{stroke:var(--line);stroke-width:1;}
+
+  /* ---- Bottom grid ---- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp3);}
+  .mini h3{font-size:12px;color:var(--text-2);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+  .mini .now{font-size:28px;font-weight:600;letter-spacing:-0.01em;}
+  .mini .unit{font-size:13px;color:var(--text-3);margin-left:4px;font-weight:400;}
+  .mini .rng{font-size:11px;color:var(--text-3);margin-top:2px;letter-spacing:.03em;}
+  .mini svg{margin-top:var(--sp2);width:100%;height:60px;display:block;}
+
+  footer{margin-top:var(--sp5);padding-top:var(--sp3);border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);letter-spacing:.03em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="mark"></span>
+      <h1>Woura</h1>
+      <span class="sub">Ring&nbsp;Data</span>
+    </div>
+    <nav>
+      <div class="seg">
+        <button>7D</button>
+        <button>30D</button>
+        <button class="on">90D</button>
+        <button>1Y</button>
+      </div>
+      <span class="local"><span class="dot"></span>Local only</span>
+      <button class="exp">Export</button>
+    </nav>
+  </header>
+
+  <!-- SCORES -->
+  <section class="scores">
+    <!-- Sleep -->
+    <div class="score">
+      <div class="label">Sleep</div>
+      <div class="row"><span class="val">82</span><span class="delta up">+3 vs. prior 90d</span></div>
+      <svg class="spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--sleep)" stroke-width="1.5"
+          points="0,24 25,20 50,26 75,18 100,22 125,14 150,19 175,12 200,16 225,10 250,15 275,9 300,11"/>
+      </svg>
+      <div class="foot">Avg 82 · range 61–94</div>
+    </div>
+    <!-- Readiness -->
+    <div class="score">
+      <div class="label">Readiness</div>
+      <div class="row"><span class="val">78</span><span class="delta dn">−1 vs. prior 90d</span></div>
+      <svg class="spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--readiness)" stroke-width="1.5"
+          points="0,16 25,14 50,20 75,17 100,22 125,18 150,24 175,20 200,19 225,23 250,18 275,21 300,20"/>
+      </svg>
+      <div class="foot">Avg 79 · range 64–90</div>
+    </div>
+    <!-- Activity -->
+    <div class="score">
+      <div class="label">Activity</div>
+      <div class="row"><span class="val">85</span><span class="delta up">+5 vs. prior 90d</span></div>
+      <svg class="spark" viewBox="0 0 300 36" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--activity)" stroke-width="1.5"
+          points="0,22 25,26 50,18 75,20 100,14 125,19 150,12 175,16 200,10 225,14 250,8 275,13 300,7"/>
+      </svg>
+      <div class="foot">Avg 83 · range 58–96</div>
+    </div>
+  </section>
+
+  <!-- MAIN TREND -->
+  <div class="sec">
+    <h2>Score trends</h2>
+    <span class="note">Daily · 90 days · Apr 15 – Jul 14, 2026</span>
+  </div>
+  <div class="panel">
+    <div class="legend">
+      <span><i style="background:var(--sleep)"></i>Sleep</span>
+      <span><i style="background:var(--readiness)"></i>Readiness</span>
+      <span><i style="background:var(--activity)"></i>Activity</span>
+    </div>
+    <svg class="chart" viewBox="0 0 1264 320" preserveAspectRatio="none">
+      <!-- gridlines -->
+      <g class="grid">
+        <line x1="40" y1="20"  x2="1264" y2="20"/>
+        <line x1="40" y1="80"  x2="1264" y2="80"/>
+        <line x1="40" y1="140" x2="1264" y2="140"/>
+        <line x1="40" y1="200" x2="1264" y2="200"/>
+        <line x1="40" y1="260" x2="1264" y2="260"/>
+      </g>
+      <!-- y labels (score) -->
+      <g class="axis" text-anchor="end">
+        <text x="30" y="24">100</text>
+        <text x="30" y="84">85</text>
+        <text x="30" y="144">70</text>
+        <text x="30" y="204">55</text>
+        <text x="30" y="264">40</text>
+      </g>
+      <!-- x labels -->
+      <g class="axis" text-anchor="middle">
+        <text x="40"   y="300">Apr 15</text>
+        <text x="345"  y="300">May 10</text>
+        <text x="650"  y="300">Jun 04</text>
+        <text x="955"  y="300">Jun 29</text>
+        <text x="1240" y="300">Jul 14</text>
+      </g>
+      <!-- Sleep -->
+      <polyline fill="none" stroke="var(--sleep)" stroke-width="1.75" stroke-linejoin="round"
+        points="40,110 140,96 240,120 340,88 440,104 540,72 640,92 740,64 840,80 940,56 1040,78 1140,52 1240,60"/>
+      <!-- Readiness -->
+      <polyline fill="none" stroke="var(--readiness)" stroke-width="1.75" stroke-linejoin="round"
+        points="40,96 140,88 240,108 340,100 440,116 540,104 640,120 740,108 840,104 940,116 1040,102 1140,110 1240,100"/>
+      <!-- Activity -->
+      <polyline fill="none" stroke="var(--activity)" stroke-width="1.75" stroke-linejoin="round"
+        points="40,132 140,144 240,112 340,120 440,92 540,110 640,84 740,100 840,72 940,90 1040,68 1140,86 1240,58"/>
+    </svg>
+  </div>
+
+  <!-- SECONDARY METRICS -->
+  <div class="sec">
+    <h2>Vital signs</h2>
+    <span class="note">Nightly averages</span>
+  </div>
+  <div class="grid3">
+    <div class="panel mini">
+      <h3>Resting heart rate</h3>
+      <div><span class="now">51</span><span class="unit">bpm</span></div>
+      <div class="rng">90d low 47 · high 58</div>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--accent)" stroke-width="1.5"
+          points="0,30 40,28 80,34 120,26 160,32 200,22 240,30 280,20 320,28 360,18 400,24"/>
+      </svg>
+    </div>
+    <div class="panel mini">
+      <h3>Heart rate variability</h3>
+      <div><span class="now">64</span><span class="unit">ms</span></div>
+      <div class="rng">90d low 42 · high 78</div>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--hrv)" stroke-width="1.5"
+          points="0,34 40,30 80,38 120,28 160,32 200,24 240,30 280,22 320,26 360,20 400,28"/>
+      </svg>
+    </div>
+    <div class="panel mini">
+      <h3>Temperature deviation</h3>
+      <div><span class="now">−0.2</span><span class="unit">°C</span></div>
+      <div class="rng">90d range −0.9 … +0.7</div>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+        <line x1="0" y1="30" x2="400" y2="30" stroke="var(--line)" stroke-width="1"/>
+        <polyline fill="none" stroke="var(--temp)" stroke-width="1.5"
+          points="0,32 40,28 80,36 120,24 160,34 200,30 240,26 280,38 320,22 360,34 400,30"/>
+      </svg>
+    </div>
+  </div>
+
+  <footer>
+    <span>Woura · open source · data stored locally in your browser</span>
+    <span>Last sync 06:14 · 90 nights loaded</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woura — Dashboard (Vignelli)</title>
+<style>
+  :root{
+    --bg:#0d0d0d;            /* page plane */
+    --surface:#1a1a19;       /* card surface */
+    --surface-2:#141413;     /* recessed */
+    --ink:#ffffff;           /* primary */
+    --ink-2:#c3c2b7;         /* secondary */
+    --muted:#898781;         /* axis / labels */
+    --grid:#2c2c2a;          /* hairline gridlines */
+    --line:#383835;          /* baseline / rules */
+    --hair:rgba(255,255,255,0.10);
+    --accent:#e34a34;        /* THE one accent — Vignelli red */
+    /* metric line colours (validated dark categorical) */
+    --sleep:#3987e5;
+    --readiness:#199e70;
+    --activity:#c98500;
+    --hrv:#9085e9;
+    --temp:#e66767;
+    --sp1:8px; --sp2:16px; --sp3:24px; --sp4:32px; --sp5:48px; --sp6:64px;
+    --font:"Helvetica Neue",Helvetica,Arial,"Inter",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--font);
+    -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 0;}
+  body{padding:0;}
+  .tnum{font-variant-numeric:tabular-nums;}
+  .page{width:1440px;margin:0 auto;}
+
+  /* ---------- MASTHEAD ---------- */
+  header{border-bottom:2px solid var(--ink);
+    display:flex;align-items:baseline;justify-content:space-between;
+    padding:var(--sp3) var(--sp5);}
+  .wordmark{font-size:30px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;}
+  .wordmark span{color:var(--accent);}
+  .masthead-meta{display:flex;gap:var(--sp5);align-items:baseline;}
+  .masthead-meta .lbl{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;}
+  .masthead-meta .val{font-size:14px;letter-spacing:.04em;color:var(--ink-2);}
+  .privacy{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--readiness);}
+  .privacy::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--readiness);}
+
+  /* ---------- SUB-NAV / RANGE ---------- */
+  .subnav{display:flex;justify-content:space-between;align-items:center;
+    padding:var(--sp2) var(--sp5);border-bottom:1px solid var(--line);}
+  nav{display:flex;gap:var(--sp4);}
+  nav a{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+    text-decoration:none;padding-bottom:6px;}
+  nav a.active{color:var(--ink);border-bottom:2px solid var(--accent);}
+  .range{display:flex;border:1px solid var(--line);}
+  .range button{background:none;border:none;border-right:1px solid var(--line);
+    color:var(--muted);font-family:var(--font);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;padding:8px 16px;cursor:pointer;}
+  .range button:last-child{border-right:none;}
+  .range button.active{background:var(--ink);color:var(--bg);font-weight:700;}
+
+  /* ---------- GRID ---------- */
+  main{padding:var(--sp5);display:grid;grid-template-columns:repeat(12,1fr);
+    gap:var(--sp3);}
+  .card{background:var(--surface);border:1px solid var(--hair);padding:var(--sp3);}
+  .card-title{font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:var(--sp2);}
+
+  /* score tiles */
+  .score{grid-column:span 4;display:flex;flex-direction:column;}
+  .score .row{display:flex;align-items:flex-end;justify-content:space-between;}
+  .score .num{font-size:76px;font-weight:700;line-height:.9;letter-spacing:-.02em;}
+  .score .unit{font-size:20px;color:var(--muted);font-weight:400;margin-left:6px;}
+  .score .delta{font-size:13px;letter-spacing:.08em;text-transform:uppercase;}
+  .delta.up{color:var(--readiness);} .delta.down{color:var(--temp);}
+  .score .bar{height:6px;margin-top:var(--sp3);background:var(--surface-2);}
+  .score .bar > i{display:block;height:100%;}
+  .score.sleep .accent{color:var(--sleep);} .score.sleep .bar>i{background:var(--sleep);}
+  .score.readiness .accent{color:var(--readiness);} .score.readiness .bar>i{background:var(--readiness);}
+  .score.activity .accent{color:var(--activity);} .score.activity .bar>i{background:var(--activity);}
+  .tile-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--sp2);}
+  .tile-head .k{width:8px;height:8px;}
+
+  /* main trend */
+  .trend{grid-column:span 12;}
+  .legend{display:flex;gap:var(--sp4);margin-bottom:var(--sp2);flex-wrap:wrap;}
+  .legend .item{display:flex;align-items:center;gap:8px;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);}
+  .legend .swatch{width:16px;height:3px;}
+  .trend-head{display:flex;justify-content:space-between;align-items:flex-start;}
+
+  /* secondary metric cards */
+  .metric{grid-column:span 4;}
+  .metric .big{font-size:46px;font-weight:700;letter-spacing:-.01em;line-height:1;}
+  .metric .u{font-size:15px;color:var(--muted);margin-left:4px;font-weight:400;}
+  .metric .foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:var(--sp2);}
+  .metric .stat{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+  /* correlation */
+  .corr{grid-column:span 6;}
+  .corr .r{font-size:46px;font-weight:700;letter-spacing:-.01em;}
+  .corr .rlabel{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+  .stages{grid-column:span 6;}
+
+  svg{display:block;width:100%;overflow:visible;}
+  .axis text{fill:var(--muted);font-family:var(--font);font-size:10px;letter-spacing:.08em;}
+  .glabel{fill:var(--muted);font-family:var(--font);font-size:10px;}
+  footer{padding:var(--sp3) var(--sp5) var(--sp6);border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;font-size:10px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="wordmark">W<span>O</span>URA</div>
+    <div class="masthead-meta">
+      <div><span class="lbl">Subject</span><span class="val">Ring · Gen 3</span></div>
+      <div><span class="lbl">Period</span><span class="val tnum">15 Apr — 14 Jul 2026</span></div>
+      <div><span class="lbl">Synced</span><span class="val tnum">Today · 07:42</span></div>
+    </div>
+    <div class="privacy">Local · On Device</div>
+  </header>
+
+  <div class="subnav">
+    <nav>
+      <a href="#" class="active">Dashboard</a>
+      <a href="#">Sleep</a>
+      <a href="#">Readiness</a>
+      <a href="#">Activity</a>
+      <a href="#">Correlate</a>
+      <a href="#">Export</a>
+    </nav>
+    <div class="range">
+      <button>7D</button>
+      <button>30D</button>
+      <button class="active">90D</button>
+      <button>1Y</button>
+      <button>All</button>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- THREE PRIMARY SCORES -->
+    <section class="card score sleep">
+      <div class="tile-head"><span class="card-title" style="margin:0">Sleep</span><span class="k" style="background:var(--sleep)"></span></div>
+      <div class="row"><div><span class="num accent tnum">84</span><span class="unit">/100</span></div><span class="delta up">▲ 6 vs avg</span></div>
+      <div class="bar"><i style="width:84%"></i></div>
+    </section>
+
+    <section class="card score readiness">
+      <div class="tile-head"><span class="card-title" style="margin:0">Readiness</span><span class="k" style="background:var(--readiness)"></span></div>
+      <div class="row"><div><span class="num accent tnum">79</span><span class="unit">/100</span></div><span class="delta up">▲ 3 vs avg</span></div>
+      <div class="bar"><i style="width:79%"></i></div>
+    </section>
+
+    <section class="card score activity">
+      <div class="tile-head"><span class="card-title" style="margin:0">Activity</span><span class="k" style="background:var(--activity)"></span></div>
+      <div class="row"><div><span class="num accent tnum">71</span><span class="unit">/100</span></div><span class="delta down">▼ 4 vs avg</span></div>
+      <div class="bar"><i style="width:71%"></i></div>
+    </section>
+
+    <!-- MAIN TREND -->
+    <section class="card trend">
+      <div class="trend-head">
+        <div>
+          <div class="card-title">Scores · 90-Day Trend</div>
+          <div class="legend">
+            <span class="item"><span class="swatch" style="background:var(--sleep)"></span>Sleep</span>
+            <span class="item"><span class="swatch" style="background:var(--readiness)"></span>Readiness</span>
+            <span class="item"><span class="swatch" style="background:var(--activity)"></span>Activity</span>
+          </div>
+        </div>
+      </div>
+      <svg viewBox="0 0 1320 300" role="img" aria-label="90-day trend of sleep, readiness and activity scores">
+        <!-- gridlines -->
+        <g class="axis">
+          <line x1="40" y1="20"  x2="1320" y2="20"  stroke="var(--grid)"/>
+          <line x1="40" y1="80"  x2="1320" y2="80"  stroke="var(--grid)"/>
+          <line x1="40" y1="140" x2="1320" y2="140" stroke="var(--grid)"/>
+          <line x1="40" y1="200" x2="1320" y2="200" stroke="var(--grid)"/>
+          <line x1="40" y1="260" x2="1320" y2="260" stroke="var(--line)"/>
+          <text x="0" y="24">100</text><text x="0" y="84">85</text>
+          <text x="0" y="144">70</text><text x="0" y="204">55</text><text x="0" y="264">40</text>
+          <text x="40"   y="285">Apr 15</text>
+          <text x="380"  y="285">May 10</text>
+          <text x="720"  y="285">Jun 05</text>
+          <text x="1060" y="285">Jul 01</text>
+          <text x="1270" y="285">Jul 14</text>
+        </g>
+        <!-- sleep -->
+        <polyline fill="none" stroke="var(--sleep)" stroke-width="2"
+          points="40,88 100,72 160,96 220,64 280,80 340,60 400,76 460,52 520,84 580,68 640,56 700,72 760,48 820,64 880,44 940,68 1000,52 1060,60 1120,44 1180,56 1240,40 1300,52"/>
+        <!-- readiness -->
+        <polyline fill="none" stroke="var(--readiness)" stroke-width="2"
+          points="40,110 100,104 160,120 220,96 280,112 340,92 400,108 460,88 520,116 580,100 640,84 700,104 760,80 820,96 880,76 940,100 1000,88 1060,92 1120,72 1180,88 1240,68 1300,80"/>
+        <!-- activity -->
+        <polyline fill="none" stroke="var(--activity)" stroke-width="2"
+          points="40,132 100,148 160,120 220,156 280,128 340,164 400,136 460,120 520,152 580,168 640,140 700,124 760,156 820,144 880,132 940,160 1000,136 1060,148 1120,124 1180,140 1240,152 1300,128"/>
+        <!-- end markers + direct labels -->
+        <circle cx="1300" cy="52" r="4" fill="var(--sleep)" stroke="var(--surface)" stroke-width="2"/>
+        <circle cx="1300" cy="80" r="4" fill="var(--readiness)" stroke="var(--surface)" stroke-width="2"/>
+        <circle cx="1300" cy="128" r="4" fill="var(--activity)" stroke="var(--surface)" stroke-width="2"/>
+      </svg>
+    </section>
+
+    <!-- SECONDARY METRICS -->
+    <section class="card metric">
+      <div class="card-title">Heart Rate Variability</div>
+      <div><span class="big tnum">48</span><span class="u">ms · avg night</span></div>
+      <svg viewBox="0 0 400 70" aria-label="HRV sparkline, 90 days">
+        <polyline fill="none" stroke="var(--hrv)" stroke-width="2"
+          points="0,46 30,40 60,52 90,36 120,44 150,30 180,48 210,34 240,42 270,28 300,38 330,24 360,34 400,26"/>
+        <circle cx="400" cy="26" r="4" fill="var(--hrv)" stroke="var(--surface)" stroke-width="2"/>
+      </svg>
+      <div class="foot"><span class="stat">Range 31–58 ms</span><span class="stat" style="color:var(--readiness)">▲ 11%</span></div>
+    </section>
+
+    <section class="card metric">
+      <div class="card-title">Resting Heart Rate</div>
+      <div><span class="big tnum">54</span><span class="u">bpm · lowest</span></div>
+      <svg viewBox="0 0 400 70" aria-label="Resting heart rate sparkline, 90 days">
+        <polyline fill="none" stroke="var(--temp)" stroke-width="2"
+          points="0,28 30,32 60,26 90,36 120,30 150,40 180,32 210,44 240,34 270,46 300,38 330,50 360,42 400,52"/>
+        <circle cx="400" cy="52" r="4" fill="var(--temp)" stroke="var(--surface)" stroke-width="2"/>
+      </svg>
+      <div class="foot"><span class="stat">Range 52–61 bpm</span><span class="stat" style="color:var(--readiness)">▼ Lower is better</span></div>
+    </section>
+
+    <section class="card metric">
+      <div class="card-title">Temperature Deviation</div>
+      <div><span class="big tnum">−0.1</span><span class="u">°C from baseline</span></div>
+      <svg viewBox="0 0 400 70" aria-label="Temperature deviation, 90 days, centred on baseline">
+        <line x1="0" y1="35" x2="400" y2="35" stroke="var(--line)" stroke-dasharray="3 3"/>
+        <polyline fill="none" stroke="var(--activity)" stroke-width="2"
+          points="0,32 30,38 60,30 90,42 120,34 150,28 180,40 210,44 240,30 270,36 300,26 330,38 360,34 400,38"/>
+        <circle cx="400" cy="38" r="4" fill="var(--activity)" stroke="var(--surface)" stroke-width="2"/>
+      </svg>
+      <div class="foot"><span class="stat">Baseline ± 0.5 °C</span><span class="stat">Within range</span></div>
+    </section>
+
+    <!-- CORRELATION -->
+    <section class="card corr">
+      <div class="trend-head">
+        <div class="card-title">Correlate · HRV × Readiness</div>
+        <div style="text-align:right"><div class="r tnum">r = +0.73</div><div class="rlabel">Pearson · n = 90</div></div>
+      </div>
+      <div class="legend" style="margin-top:var(--sp1)">
+        <span class="item"><span class="swatch" style="background:var(--hrv)"></span>HRV (ms)</span>
+        <span class="item"><span class="swatch" style="background:var(--readiness)"></span>Readiness</span>
+      </div>
+      <svg viewBox="0 0 620 220" aria-label="HRV and readiness overlaid, indexed">
+        <g class="axis">
+          <line x1="30" y1="20" x2="620" y2="20" stroke="var(--grid)"/>
+          <line x1="30" y1="90" x2="620" y2="90" stroke="var(--grid)"/>
+          <line x1="30" y1="160" x2="620" y2="160" stroke="var(--line)"/>
+        </g>
+        <polyline fill="none" stroke="var(--hrv)" stroke-width="2"
+          points="30,120 90,90 150,130 210,70 270,100 330,60 390,110 450,66 510,96 570,54 620,72"/>
+        <polyline fill="none" stroke="var(--readiness)" stroke-width="2"
+          points="30,128 90,102 150,134 210,84 270,110 330,74 390,116 450,80 510,104 570,66 620,84"/>
+        <circle cx="620" cy="72" r="4" fill="var(--hrv)" stroke="var(--surface)" stroke-width="2"/>
+        <circle cx="620" cy="84" r="4" fill="var(--readiness)" stroke="var(--surface)" stroke-width="2"/>
+      </svg>
+    </section>
+
+    <!-- SLEEP STAGES -->
+    <section class="card stages">
+      <div class="card-title">Sleep Stages · Last 14 Nights</div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="height:12px;background:var(--sleep)"></span>Deep</span>
+        <span class="item"><span class="swatch" style="height:12px;background:#5598e7"></span>REM</span>
+        <span class="item"><span class="swatch" style="height:12px;background:#9ec5f4"></span>Light</span>
+        <span class="item"><span class="swatch" style="height:12px;background:var(--line)"></span>Awake</span>
+      </div>
+      <svg viewBox="0 0 620 200" aria-label="Stacked sleep stages for 14 nights">
+        <g class="axis">
+          <text x="0" y="16">8h</text><text x="0" y="96">4h</text><text x="0" y="176">0h</text>
+        </g>
+        <!-- 14 stacked bars: deep, rem, light, awake stacked from baseline y=180 -->
+        <g id="bars"></g>
+      </svg>
+      <script>
+        (function(){
+          const nights=[[34,52,74,12],[30,60,80,10],[38,50,70,14],[28,58,84,8],[36,54,76,12],
+            [40,56,72,10],[32,50,80,16],[30,62,74,10],[38,52,78,12],[26,60,82,14],
+            [34,58,70,8],[36,50,76,12],[30,64,72,10],[38,54,74,12]];
+          const cols={0:'var(--sleep)',1:'#5598e7',2:'#9ec5f4',3:'var(--line)'};
+          const bw=30, gap=(620-14*bw)/13, base=180, g=document.getElementById('bars');
+          nights.forEach((n,i)=>{
+            let x=i*(bw+gap), y=base;
+            n.forEach((h,s)=>{
+              y-=h; const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+              r.setAttribute('x',x); r.setAttribute('y',y+1); r.setAttribute('width',bw);
+              r.setAttribute('height',Math.max(0,h-2)); r.setAttribute('fill',cols[s]);
+              g.appendChild(r);
+            });
+          });
+        })();
+      </script>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>Woura — Open Source</span>
+    <span>Data never leaves this device</span>
+    <span>Export · CSV / JSON / PNG</span>
+  </footer>
+
+</div>
+</body>
+</html>
