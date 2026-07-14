@@ -1,3 +1,4 @@
+import { cacheGet, cacheSet } from "@/lib/idb-cache";
 import type { OuraListResponse } from "./types";
 
 // Client-side Oura API client. Talks to our stateless /api/oura proxy.
@@ -94,11 +95,15 @@ async function fetchPage<T>(
   return res.json();
 }
 
-/** Fetch all pages of a collection endpoint for a date range. */
+/** Fetch all pages of a collection endpoint for a date range (IndexedDB-cached). */
 export async function fetchAll<T>(
   endpoint: string,
   range: { start_date?: string; end_date?: string; start_datetime?: string; end_datetime?: string }
 ): Promise<T[]> {
+  const cacheKey = `${getToken() ? "live" : "sandbox"}|${endpoint}|${JSON.stringify(range)}`;
+  const cached = await cacheGet<T[]>(cacheKey);
+  if (cached) return cached;
+
   const out: T[] = [];
   let next: string | null = null;
   do {
@@ -109,5 +114,7 @@ export async function fetchAll<T>(
     out.push(...page.data);
     next = page.next_token;
   } while (next);
+
+  void cacheSet(cacheKey, out);
   return out;
 }

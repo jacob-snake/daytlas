@@ -13,8 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -84,13 +84,17 @@ export function ExportDialog() {
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="from">From</Label>
-            <Input id="from" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="to">To</Label>
-            <Input id="to" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <div className="col-span-2 space-y-1.5">
+            <Label>Date range</Label>
+            <div>
+              <DateRangePicker
+                value={{ start: startDate, end: endDate }}
+                onChange={(r) => {
+                  setStartDate(r.start);
+                  setEndDate(r.end);
+                }}
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Format</Label>

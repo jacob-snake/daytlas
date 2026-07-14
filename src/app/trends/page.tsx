@@ -7,8 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -93,12 +93,16 @@ export default function TrendsPage() {
 
       <section className="flex flex-wrap items-end gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="from">From</Label>
-          <Input id="from" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="to">To</Label>
-          <Input id="to" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <Label>Date range</Label>
+          <div>
+            <DateRangePicker
+              value={{ start: startDate, end: endDate }}
+              onChange={(r) => {
+                setStartDate(r.start);
+                setEndDate(r.end);
+              }}
+            />
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label>Period</Label>
@@ -175,10 +179,25 @@ export default function TrendsPage() {
                 />
                 <Brush
                   dataKey="day"
-                  height={24}
-                  stroke="var(--muted-foreground)"
-                  fill="transparent"
-                  travellerWidth={8}
+                  height={28}
+                  stroke="var(--border)"
+                  fill="var(--secondary)"
+                  travellerWidth={10}
+                  traveller={(props) => {
+                    const { x, y, width, height } = props as {
+                      x: number; y: number; width: number; height: number;
+                    };
+                    return (
+                      <g>
+                        <rect x={x} y={y + 2} width={width} height={height - 4} rx={5} fill="var(--foreground)" />
+                        <line
+                          x1={x + width / 2} x2={x + width / 2}
+                          y1={y + 9} y2={y + height - 9}
+                          stroke="var(--background)" strokeWidth={1.5} strokeLinecap="round"
+                        />
+                      </g>
+                    );
+                  }}
                   tickFormatter={() => ""}
                   onChange={(range) => {
                     if (range?.startIndex !== undefined && range?.endIndex !== undefined) {

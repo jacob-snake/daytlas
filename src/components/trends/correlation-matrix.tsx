@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -59,36 +60,53 @@ export function CorrelationMatrixCard({
       </CardHeader>
       <CardContent>
         {strongest && (
-          <p className="mb-3 text-sm">
-            Strongest: <span className="font-medium">{METRIC_BY_KEY[strongest.a].label}</span> ×{" "}
-            <span className="font-medium">{METRIC_BY_KEY[strongest.b].label}</span>{" "}
-            <span className="font-mono tabular-nums">r = {strongest.r.toFixed(2)}</span>
-          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Strongest relationship</span>
+            <Badge variant="secondary">{METRIC_BY_KEY[strongest.a].label}</Badge>
+            <span className="text-muted-foreground">×</span>
+            <Badge variant="secondary">{METRIC_BY_KEY[strongest.b].label}</Badge>
+            <Badge
+              className="tabular-nums"
+              style={{ background: cellColor(strongest.r), color: "var(--foreground)" }}
+            >
+              r = {strongest.r.toFixed(2)}
+            </Badge>
+          </div>
         )}
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="w-auto">
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead />
                 {metricKeys.map((k) => (
-                  <TableHead key={k}>{METRIC_BY_KEY[k].label}</TableHead>
+                  <TableHead key={k} className="w-24 text-center text-xs">
+                    {METRIC_BY_KEY[k].label}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {metricKeys.map((a, i) => (
-                <TableRow key={a}>
-                  <TableHead>{METRIC_BY_KEY[a].label}</TableHead>
+                <TableRow key={a} className="border-0 hover:bg-transparent">
+                  <TableHead className="pr-4 text-xs whitespace-nowrap">
+                    {METRIC_BY_KEY[a].label}
+                  </TableHead>
                   {metricKeys.map((b, j) => {
                     const s = matrix[i][j];
                     return (
-                      <TableCell
-                        key={b}
-                        className="text-center font-mono text-xs tabular-nums"
-                        style={s ? { background: cellColor(s.r) } : undefined}
-                        title={s ? `${s.n} days` : undefined}
-                      >
-                        {i === j ? "—" : s ? s.r.toFixed(2) : "·"}
+                      <TableCell key={b} className="p-1 text-center" title={s ? `${s.n} days` : undefined}>
+                        {i === j ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : s ? (
+                          <span
+                            className="inline-flex w-16 justify-center rounded-md px-2 py-1.5 font-mono text-xs font-medium tabular-nums"
+                            style={{ background: cellColor(s.r) }}
+                          >
+                            {s.r.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">·</span>
+                        )}
                       </TableCell>
                     );
                   })}
