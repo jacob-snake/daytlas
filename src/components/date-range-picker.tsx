@@ -27,9 +27,12 @@ const PRESETS: { label: string; range: () => Range }[] = [
 export function DateRangePicker({
   value,
   onChange,
+  allDataStart,
 }: {
   value: Range;
   onChange: (r: Range) => void;
+  /** Earliest day with data — enables the "All data" preset. */
+  allDataStart?: string;
 }) {
   const [open, setOpen] = useState(false);
   const selected: DateRange = {
@@ -48,6 +51,19 @@ export function DateRangePicker({
       <PopoverContent className="w-auto p-0" align="start">
         <div className="flex">
           <div className="flex flex-col gap-1 p-3">
+            {allDataStart && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="justify-start font-semibold"
+                onClick={() => {
+                  onChange({ start: allDataStart, end: iso(new Date()) });
+                  setOpen(false);
+                }}
+              >
+                All data
+              </Button>
+            )}
             {PRESETS.map((p) => (
               <Button
                 key={p.label}

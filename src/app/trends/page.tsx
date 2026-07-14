@@ -16,6 +16,7 @@ import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { CommandPalette } from "@/components/command-palette";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,7 +35,14 @@ import { CorrelationMatrixCard } from "@/components/trends/correlation-matrix";
 import { hasToken } from "@/lib/oura/client";
 import { fetchAll } from "@/lib/oura/client";
 import type { EnhancedTag } from "@/lib/oura/types";
-import { aggregate, fetchWide, METRICS, type DayRow, type Period } from "@/lib/oura/metrics";
+import {
+  aggregate,
+  detectFirstDay,
+  fetchWide,
+  METRICS,
+  type DayRow,
+  type Period,
+} from "@/lib/oura/metrics";
 import { Welcome } from "@/components/welcome";
 
 function isoDaysAgo(days: number): string {
@@ -49,7 +57,7 @@ const overviewConfig = {
 
 export default function TrendsPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [startDate, setStartDate] = useState(isoDaysAgo(365));
+  const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState(isoDaysAgo(0));
   const [period, setPeriod] = useState<Period>("weekly");
   const [rows, setRows] = useState<DayRow[] | null>(null);
@@ -60,8 +68,19 @@ export default function TrendsPage() {
 
   useEffect(() => setAuthorized(hasToken()), []);
 
+  const [firstDay, setFirstDay] = useState<string | null>(null);
+
+  // Default range: from this user's very first Oura record (like Oura web).
   useEffect(() => {
     if (!authorized) return;
+    detectFirstDay().then((d) => {
+      setFirstDay(d);
+      setStartDate((s) => s ?? d);
+    });
+  }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized || !startDate) return;
     let cancelled = false;
     setRows(null);
     setError(null);
@@ -105,25 +124,30 @@ export default function TrendsPage() {
         <div className="space-y-1.5">
           <Label>Date range</Label>
           <div>
-            <DateRangePicker
-              value={{ start: startDate, end: endDate }}
-              onChange={(r) => {
-                setStartDate(r.start);
-                setEndDate(r.end);
-              }}
-            />
+            {startDate ? (
+              <DateRangePicker
+                allDataStart={firstDay ?? undefined}
+                value={{ start: startDate, end: endDate }}
+                onChange={(r) => {
+                  setStartDate(r.start);
+                  setEndDate(r.end);
+                }}
+              />
+            ) : (
+              <Skeleton className="h-8 w-[240px]" />
+            )}
           </div>
         </div>
         <div className="space-y-1.5">
           <Label>Period</Label>
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
+          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <TabsList>
+              <TabsTrigger value="daily">Daily</TabsTrigger>
+              <TabsTrigger value="weekly">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="quarterly">Quarterly</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         <div className="space-y-1.5">
           <Label>Add chart</Label>

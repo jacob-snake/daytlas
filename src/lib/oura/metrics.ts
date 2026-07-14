@@ -147,7 +147,52 @@ export async function fetchWide(startDate: string, endDate: string): Promise<Day
   return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
-export type Period = "daily" | "weekly" | "monthly";
+export type Period = "daily" | "weekly" | "monthly" | "quarterly";
+
+const FIRST_DAY_KEY = "woura.firstDay";
+
+/**
+ * Earliest day with any Oura data for this user (Oura web's "from the very
+ * first record" default). Detected once from ring_configuration.set_up_at,
+ * verified against the earliest daily_activity document, then cached.
+ */
+export async function detectFirstDay(): Promise<string> {
+  const cached = window.localStorage.getItem(FIRST_DAY_KEY);
+  if (cached) return cached;
+
+  const fallback = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 3);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  let first = fallback;
+  try {
+    const rings = await fetchAll<{ set_up_at: string | null }>("ring_configuration", {});
+    const setups = rings
+      .map((r) => r.set_up_at)
+      .filter((s): s is string => !!s)
+      .map((s) => s.slice(0, 10))
+      .sort();
+    if (setups[0]) first = setups[0];
+
+    // Data can predate the current ring (account migrations) — probe one page
+    // of daily activity starting well before the earliest setup date.
+    const probeStart = new Date(first);
+    probeStart.setFullYear(probeStart.getFullYear() - 5);
+    const probe = await fetchAll<{ day: string }>("daily_activity", {
+      start_date: probeStart.toISOString().slice(0, 10),
+      end_date: first,
+    });
+    const days = probe.map((p) => p.day).sort();
+    if (days[0] && days[0] < first) first = days[0];
+  } catch {
+    // fall through with fallback
+  }
+
+  window.localStorage.setItem(FIRST_DAY_KEY, first);
+  return first;
+}
 
 /** Average rows into weekly/monthly buckets (daily = passthrough). */
 export function aggregate(rows: DayRow[], period: Period): DayRow[] {
@@ -156,7 +201,10 @@ export function aggregate(rows: DayRow[], period: Period): DayRow[] {
   for (const r of rows) {
     const d = new Date(r.day as string);
     let key: string;
-    if (period === "monthly") {
+    if (period === "quarterly") {
+      const qMonth = Math.floor(d.getMonth() / 3) * 3 + 1;
+      key = `${d.getFullYear()}-${String(qMonth).padStart(2, "0")}-01`;
+    } else if (period === "monthly") {
       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
     } else {
       const monday = new Date(d);
