@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Welcome } from "@/components/welcome";
 import { YearHeatmap } from "@/components/year/heatmap";
+import { RingYear } from "@/components/year/ring-year";
 import { SleepBarcode } from "@/components/year/sleep-barcode";
 import { hasToken } from "@/lib/oura/client";
 import { detectFirstDay, fetchWide, METRICS, type DayRow } from "@/lib/oura/metrics";
@@ -113,6 +114,20 @@ export default function YearPage() {
         </>
       ) : (
         <>
+          <div className="stagger-item">
+            <Card>
+              <CardHeader>
+                <CardTitle>The ring</CardTitle>
+                <CardDescription>
+                  {year} wrapped around a circle — every spoke is one day
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RingYear rows={rows} metricKey={metricKey} year={year} />
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="stagger-item">
             <Card>
               <CardHeader>

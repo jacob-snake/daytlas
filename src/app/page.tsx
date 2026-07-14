@@ -15,6 +15,9 @@ import { VitalsPanels } from "@/components/dashboard/vitals-panels";
 import { CorrelationCard } from "@/components/dashboard/correlation-card";
 import { hasToken } from "@/lib/oura/client";
 import { fetchDayScores, type DayScores } from "@/lib/oura/queries";
+import { detectFirstDay, fetchWide, type DayRow } from "@/lib/oura/metrics";
+import { InsightCards } from "@/components/insights/insight-cards";
+import { DistributionCard } from "@/components/insights/distribution-card";
 
 const RANGES = [
   { label: "30 d", days: 30 },
@@ -35,9 +38,23 @@ export default function Dashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [days, setDays] = useState(90);
   const [data, setData] = useState<DayScores[] | null>(null);
+  const [history, setHistory] = useState<DayRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setAuthorized(hasToken()), []);
+
+  // Full history feeds the insight/percentile computations (IndexedDB-cached).
+  useEffect(() => {
+    if (!authorized) return;
+    let cancelled = false;
+    detectFirstDay()
+      .then((first) => fetchWide(first, new Date().toISOString().slice(0, 10)))
+      .then((r) => !cancelled && setHistory(r))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [authorized]);
 
   useEffect(() => {
     if (!authorized) return;
@@ -97,9 +114,23 @@ export default function Dashboard() {
         )}
       </section>
 
+      {history ? (
+        <div className="stagger-item">
+          <InsightCards rows={history} />
+        </div>
+      ) : (
+        <Skeleton className="h-44 rounded-xl" />
+      )}
+
       <div className="stagger-item">
         {data ? <TrendChart data={data} /> : <Skeleton className="h-[420px] rounded-xl" />}
       </div>
+
+      {history && (
+        <div className="stagger-item">
+          <DistributionCard rows={history} />
+        </div>
+      )}
 
       {data && (
         <div className="stagger-item">

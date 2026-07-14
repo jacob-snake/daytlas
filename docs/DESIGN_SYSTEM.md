@@ -66,6 +66,17 @@ Switch, Dialog, Alert, Table, Skeleton, Separator, Tooltip, Sonner, Command,
 Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Lucide only —
 no emoji as icons.
 
+## Patterns (beyond base shadcn)
+- **Insight card**: CardDescription (metric dot + window) → big tabular
+  CardTitle + delta Badge → 1–3 plain-language sentences (percentile story,
+  vs-last-year, best day). Always number + words, never number alone.
+- **Distribution card**: stacked histogram (all days muted, recent window in
+  `--chart-3`) + dashed ReferenceLine at the recent mean. Title is a question.
+- **RingYear**: radial spokes, sequential ramp, hover elongates spoke; center
+  is a live readout (label / big value / context line).
+- **YearHeatmap / SleepBarcode**: sequential ramp only; hover readout line
+  above the SVG doubles as the accessible text alternative.
+
 ## Audit status (2026-07-15)
 - Hardcoded colors outside globals: only the three viz-encoding files listed
   above — intentional, documented here.
