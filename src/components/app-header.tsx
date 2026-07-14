@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-export function AppHeader({ active }: { active: "dashboard" | "trends" }) {
+export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" }) {
   return (
-    <header className="sticky top-0 z-20 -mx-6 border-b bg-background/80 px-6 backdrop-blur md:-mx-10 md:px-10">
-      <div className="flex h-14 items-center gap-4">
-        <Link href="/" className="text-lg font-bold tracking-tight">
+    <header className="sticky top-4 z-20 mx-auto w-fit max-w-full rounded-full border bg-background/70 px-3 shadow-[var(--shadow-border)] backdrop-blur-xl">
+      <div className="flex h-12 items-center gap-3">
+        <Link href="/" className="pl-2 text-lg font-bold tracking-tight">
           Woura
         </Link>
         <Badge variant="secondary" className="hidden gap-1.5 sm:inline-flex">
@@ -36,14 +36,20 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" }) {
           >
             <Link href="/trends">Trends</Link>
           </Button>
-        </nav>
-        <div className="ml-auto">
-          <Button asChild variant="outline" size="sm">
-            <a href="https://buymeacoffee.com" target="_blank" rel="noreferrer">
-              <Coffee data-icon="inline-start" /> Buy me a coffee
-            </a>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className={cn(active === "year" && "bg-muted font-semibold")}
+          >
+            <Link href="/year">Year</Link>
           </Button>
-        </div>
+        </nav>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
+            <Coffee data-icon="inline-start" /> Buy me a coffee
+          </a>
+        </Button>
       </div>
     </header>
   );

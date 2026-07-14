@@ -1,0 +1,73 @@
+# Woura Design System
+
+Single source of truth for visual decisions. All UI chrome uses semantic tokens
+from `src/app/globals.css`; components never hardcode chrome colors.
+
+## Tokens
+
+### Color — UI chrome (light, primary theme)
+| Token | Value | Use |
+|---|---|---|
+| `--background` | `oklch(0.97 0.007 95)` | warm paper page |
+| `--card` | `oklch(0.995 0.002 95)` | surfaces |
+| `--foreground` | `oklch(0.17 0.005 90)` | ink text |
+| `--muted-foreground` | `oklch(0.5 0.015 90)` | secondary text (≥4.5:1) |
+| `--border` / `--input` | `oklch(0.9 0.01 95)` | dividers, form outlines only |
+
+Dark theme exists as secondary (`.dark`), same token names.
+
+### Color — data (validated, dataviz six-checks)
+One hue = one metric, everywhere. Slot order is the colorblind-safety
+mechanism — never reorder.
+
+| Slot | Metric | Light | Dark |
+|---|---|---|---|
+| `--chart-1` | Sleep | `#2a63c9` | `#3987e5` |
+| `--chart-2` | Readiness | `#5a6b1f` | `#199e70` |
+| `--chart-3` | Activity | `#e8622c` | `#c98500` |
+| `--chart-4` | HRV | `#7a4fb8` | `#9085e9` |
+| `--chart-5` | Temperature | `#0e8a6b` | `#e66767` |
+
+CVD separation sits in the 8–12 floor band → legends/direct labels are
+mandatory on every multi-series chart.
+
+**Sequential ramp** (heatmap, sleep barcode — magnitude encoding):
+`#e3ecf9 → #b9d0f0 → #87aee3 → #4f83d2 → #2a63c9 → #1a4694` (single hue,
+monotonic lightness). **Diverging** (correlation r): blue `rgba(57,135,229,α)`
+positive ↔ red `rgba(230,103,103,α)` negative, neutral at zero. These literals
+live only inside viz components; they encode data, not chrome.
+
+### Typography
+- Sans: **Plus Jakarta Sans** (next/font, self-hosted; no external requests)
+- Mono: Geist Mono — numerals, r-values, axis ticks; `tabular-nums` on all data
+- No serifs anywhere. Headings `text-balance`, body `text-pretty`
+
+### Radius & spacing
+- `--radius: 0.875rem`; concentric nesting: outer = inner + padding
+- Spacing on the Tailwind 4/8 scale; page gutter `p-6 md:p-10`
+
+### Elevation
+- Cards: `--shadow-border` (hairline ring + diffused ambient lift), hover
+  `--shadow-border-hover` + `-1px` translate. No solid borders for depth;
+  borders are for dividers/inputs only.
+
+### Motion
+- Easing: `--ease-premium: cubic-bezier(0.32, 0.72, 0, 1)`; micro 150–300 ms
+- Motion (motion/react) with `MotionConfig reducedMotion="user"`
+- Enter: y+blur spring (bounce 0); exits softer than enters (−12 px, 150 ms)
+- Press: `scale(0.96)`; only `transform`/`opacity`/`filter` are animated
+
+### Texture
+- Global film-grain overlay (inline SVG turbulence, opacity 0.025)
+
+## Components
+All UI from shadcn/ui: Card, Button, Badge, Tabs, Select, Input, Label,
+Switch, Dialog, Alert, Table, Skeleton, Separator, Tooltip, Sonner, Command,
+Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Lucide only —
+no emoji as icons.
+
+## Audit status (2026-07-15)
+- Hardcoded colors outside globals: only the three viz-encoding files listed
+  above — intentional, documented here.
+- Icon-only buttons carry `aria-label`; focus rings intact; cursor-pointer
+  restored globally for enabled controls.
