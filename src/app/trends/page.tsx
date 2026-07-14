@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { CommandPalette } from "@/components/command-palette";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -90,6 +91,7 @@ export default function TrendsPage() {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 p-6 md:p-10">
       <AppHeader active="trends" />
+      <CommandPalette onAddChart={(key) => setCharts((c) => (c.includes(key) ? c : [...c, key]))} />
 
       <section className="flex flex-wrap items-end gap-4">
         <div className="space-y-1.5">

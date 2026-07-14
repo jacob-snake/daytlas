@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppHeader } from "@/components/app-header";
 import { Welcome } from "@/components/welcome";
+import { CommandPalette } from "@/components/command-palette";
 import { ScoreCard } from "@/components/dashboard/score-card";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { ExportDialog } from "@/components/dashboard/export-dialog";
@@ -61,6 +62,7 @@ export default function Dashboard() {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 p-6 md:p-10">
       <AppHeader active="dashboard" />
+      <CommandPalette />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={String(days)} onValueChange={(v) => setDays(Number(v))}>
