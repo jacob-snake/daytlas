@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "data-analysis": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "skillPath": "data-analysis/SKILL.md",
+      "computedHash": "dee20c2c003730a1cf7a273805b45aa9ee42084cedfde3eaa4addd20d681abc8"
+    },
     "data-visualization": {
       "source": "anthropics/knowledge-work-plugins",
       "sourceType": "github",
