@@ -2,6 +2,14 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { DayRow } from "@/lib/oura/metrics";
 import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 import { pearson } from "@/lib/stats";
@@ -58,40 +66,36 @@ export function CorrelationMatrixCard({
           </p>
         )}
         <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-1 text-sm">
-            <thead>
-              <tr>
-                <th />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead />
                 {metricKeys.map((k) => (
-                  <th key={k} className="p-1 text-left text-xs font-medium text-muted-foreground">
-                    {METRIC_BY_KEY[k].label}
-                  </th>
+                  <TableHead key={k}>{METRIC_BY_KEY[k].label}</TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {metricKeys.map((a, i) => (
-                <tr key={a}>
-                  <th className="p-1 text-left text-xs font-medium text-muted-foreground">
-                    {METRIC_BY_KEY[a].label}
-                  </th>
+                <TableRow key={a}>
+                  <TableHead>{METRIC_BY_KEY[a].label}</TableHead>
                   {metricKeys.map((b, j) => {
                     const s = matrix[i][j];
                     return (
-                      <td
+                      <TableCell
                         key={b}
-                        className="rounded-md p-2 text-center font-mono text-xs tabular-nums"
+                        className="text-center font-mono text-xs tabular-nums"
                         style={s ? { background: cellColor(s.r) } : undefined}
                         title={s ? `${s.n} days` : undefined}
                       >
                         {i === j ? "—" : s ? s.r.toFixed(2) : "·"}
-                      </td>
+                      </TableCell>
                     );
                   })}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Pearson r over the timeline selection. Blue = positive, red = negative. Correlation is not causation.

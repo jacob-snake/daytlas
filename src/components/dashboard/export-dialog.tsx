@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -57,6 +59,7 @@ export function ExportDialog() {
     try {
       const rows = await buildExport({ startDate, endDate, metrics, format, units });
       download(rows, format, `woura-export-${startDate}-to-${endDate}`);
+      toast.success(`Exported ${rows.length} days of data`);
       setOpen(false);
     } catch (e) {
       setError(String((e as Error).message ?? e));
@@ -69,7 +72,7 @@ export function ExportDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          Export
+          <Download data-icon="inline-start" /> Export
         </Button>
       </DialogTrigger>
       <DialogContent>

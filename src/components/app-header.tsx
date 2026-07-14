@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -39,7 +40,7 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" }) {
         <div className="ml-auto">
           <Button asChild variant="outline" size="sm">
             <a href="https://buymeacoffee.com" target="_blank" rel="noreferrer">
-              ☕ Buy me a coffee
+              <Coffee data-icon="inline-start" /> Buy me a coffee
             </a>
           </Button>
         </div>

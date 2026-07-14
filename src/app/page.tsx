@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppHeader } from "@/components/app-header";
@@ -74,9 +76,11 @@ export default function Dashboard() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Couldn&apos;t load your data</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <section className="stagger-item grid gap-4 md:grid-cols-3">

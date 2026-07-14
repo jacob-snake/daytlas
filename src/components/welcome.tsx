@@ -1,5 +1,6 @@
 "use client";
 
+import { Coffee, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,11 +25,13 @@ export function Welcome() {
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <Button asChild size="lg">
-            <a href="/api/auth/login">Authorize with Oura</a>
+            <a href="/api/auth/login">
+              <Lock data-icon="inline-start" /> Authorize with Oura
+            </a>
           </Button>
           <Button asChild variant="ghost">
             <a href="https://buymeacoffee.com" target="_blank" rel="noreferrer">
-              ☕ Buy me a coffee
+              <Coffee data-icon="inline-start" /> Buy me a coffee
             </a>
           </Button>
         </CardContent>

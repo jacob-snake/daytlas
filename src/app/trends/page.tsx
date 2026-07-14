@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, Brush, XAxis } from "recharts";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -135,9 +137,11 @@ export default function TrendsPage() {
       </section>
 
       {error && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Couldn&apos;t load your data</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {!aggregated ? (

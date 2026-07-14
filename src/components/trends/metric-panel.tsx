@@ -1,6 +1,7 @@
 "use client";
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -36,8 +37,8 @@ export function MetricPanel({
         <CardTitle>
           {def.label} {def.unit && <span className="text-muted-foreground">({def.unit})</span>}
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={onRemove} aria-label={`Remove ${def.label}`}>
-          Remove
+        <Button variant="ghost" size="icon" onClick={onRemove} aria-label={`Remove ${def.label}`}>
+          <X />
         </Button>
       </CardHeader>
       <CardContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -33,7 +34,8 @@ export function ScoreCard({
         {delta !== null && (
           <CardAction>
             <Badge variant="outline" className="tabular-nums">
-              {delta >= 0 ? "↑" : "↓"} {Math.abs(delta).toFixed(1)}
+              {delta >= 0 ? <TrendingUp /> : <TrendingDown />}
+              {Math.abs(delta).toFixed(1)}
             </Badge>
           </CardAction>
         )}
