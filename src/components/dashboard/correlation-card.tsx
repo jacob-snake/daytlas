@@ -94,6 +94,10 @@ export function CorrelationCard({ data }: { data: DayScores[] }) {
             <span className="text-muted-foreground">Not enough overlapping data to compute r.</span>
           )}
         </p>
+        <p className="mb-2 text-xs text-muted-foreground">
+          r measures how tightly two metrics move together: +1 = perfectly together, −1 = perfectly
+          opposite, 0 = no relationship.
+        </p>
         <ChartContainer config={config} className="h-[280px] w-full">
           <ScatterChart margin={{ left: 0, right: 12, top: 8 }}>
             <CartesianGrid strokeOpacity={0.35} />

@@ -108,6 +108,10 @@ export function MetricPanel({
             />
           </ComposedChart>
         </ChartContainer>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Shaded band = your usual range; dashed line = your rolling average. Points outside the
+          band are genuinely unusual for you.
+        </p>
       </CardContent>
     </Card>
   );

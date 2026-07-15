@@ -1,0 +1,45 @@
+"use client";
+
+import Link from "next/link";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cacheClear } from "@/lib/idb-cache";
+
+export function AppFooter() {
+  return (
+    <footer className="mt-12 border-t pt-6 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground">
+        <p>
+          Woura · open source · your data never leaves this browser ·{" "}
+          <span className="tabular-nums">v0.1</span>
+        </p>
+        <div className="flex items-center gap-1">
+          <Button asChild variant="ghost" size="xs">
+            <Link href="/privacy">Privacy</Link>
+          </Button>
+          <Button asChild variant="ghost" size="xs">
+            <Link href="/terms">Terms</Link>
+          </Button>
+          <Button asChild variant="ghost" size="xs">
+            <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
+              Support
+            </a>
+          </Button>
+          <Separator orientation="vertical" className="mx-1 h-4" />
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={async () => {
+              await cacheClear();
+              toast.success("All locally cached data wiped");
+            }}
+          >
+            <Trash2 data-icon="inline-start" /> Wipe local data
+          </Button>
+        </div>
+      </div>
+    </footer>
+  );
+}

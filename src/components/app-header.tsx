@@ -53,6 +53,12 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" 
             <Link href="/tags">Tag Lab</Link>
           </Button>
         </nav>
+        <kbd
+          className="hidden rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline-block"
+          title="Command palette — search pages, metrics, actions"
+        >
+          ⌘K
+        </kbd>
         <Button asChild variant="outline" size="sm" className="rounded-full">
           <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
             <Coffee data-icon="inline-start" /> Buy me a coffee

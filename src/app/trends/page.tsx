@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/empty";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
+import { AppFooter } from "@/components/app-footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -303,6 +304,7 @@ export default function TrendsPage() {
       {visible && charts.length >= 2 && (
         <CorrelationMatrixCard data={visible} metricKeys={charts} />
       )}
+      <AppFooter />
     </main>
   );
 }

@@ -23,6 +23,9 @@ import { WeekReportCard } from "@/components/insights/week-report-card";
 import { MilestonesCard } from "@/components/insights/milestones-card";
 import { WeekdayCard } from "@/components/insights/weekday-card";
 import { ShiftsCard } from "@/components/insights/shifts-card";
+import { AppFooter } from "@/components/app-footer";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 const RANGES = [
   { label: "30 d", days: 30 },
@@ -103,9 +106,18 @@ export default function Dashboard() {
         <Alert variant="destructive">
           <AlertCircle />
           <AlertTitle>Couldn&apos;t load your data</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            {error.includes("401") ? "Your Oura session expired." : error}
+            {error.includes("401") && (
+              <Button asChild size="sm" variant="outline">
+                <a href="/api/auth/login">Sign in again</a>
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
+
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>
 
       <section className="stagger-item grid gap-4 md:grid-cols-3">
         {data ? (
@@ -119,12 +131,20 @@ export default function Dashboard() {
         )}
       </section>
 
+      <h2 className="pt-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        How you compare
+      </h2>
+
       {history ? (
         <div className="stagger-item">
           <InsightCards rows={history} />
         </div>
       ) : (
-        <Skeleton className="h-44 rounded-xl" />
+        <div className="flex items-center gap-3 rounded-xl border p-4 text-sm text-muted-foreground">
+          <Spinner className="size-4" />
+          Fetching your entire history for the first time — this happens once, then it&apos;s cached
+          on this device.
+        </div>
       )}
 
       <div className="stagger-item">
@@ -148,10 +168,15 @@ export default function Dashboard() {
       )}
 
       {history && (
-        <div className="stagger-item grid gap-4 lg:grid-cols-2">
-          <WeekdayCard rows={history} />
-          <ShiftsCard rows={history} />
-        </div>
+        <>
+          <h2 className="pt-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Your patterns
+          </h2>
+          <div className="stagger-item grid gap-4 lg:grid-cols-2">
+            <WeekdayCard rows={history} />
+            <ShiftsCard rows={history} />
+          </div>
+        </>
       )}
 
       {data && (
@@ -165,6 +190,8 @@ export default function Dashboard() {
           <CorrelationCard data={data} />
         </div>
       )}
+
+      <AppFooter />
     </main>
   );
 }
