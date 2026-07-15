@@ -67,6 +67,26 @@ Open-source, local-first web dashboard pre dáta z Oura prstena. Náhrada za „
 6. PDF „report pre doktora"
 Konkurencia: Cracked-Oura (346★, desktop-only), vital-view (mŕtvy), Grafana stacky (DevOps bariéra). Nikto nekombinuje web + local-first + údržbu.
 
+## Stránky & funkcie (stav 2026-07-15)
+- **/** Dashboard: sekcie Today (score karty + Export) / How you compare (InsightCards s percentilovým verdiktom, TrendChart s range tabmi v CardAction, DistributionCard, SlopeCard, WeekReportCard, MilestonesCard) / Your patterns (WeekdayCard, ShiftsCard) + OnboardingCard (localStorage `woura.onboarded`)
+- **/trends**: DateRangePicker (default = prvý záznam usera, preset „All data"), Period taby (daily/weekly/monthly/quarterly), Brush timeline, Add Chart (32 metrík), baseline pásma ±1σ v paneloch, tags chips, korelačná matica
+- **/year**: RingYear (radiálny), YearHeatmap (kalendár), SleepBarcode (rytmus nocí)
+- **/tags** Tag Lab: dopad tagov na druhý deň (min n=5, zobrazuje n)
+- ⌘K paleta (navigácia, add-chart, wipe cache) + hint badge v hlavičke
+- AppFooter všade: Privacy/Terms/**Buy me a coffee (LEN vo footri, nie v menu — Jakubovo rozhodnutie)**/Wipe local data/verzia
+- `src/lib/analytics.ts` = jediný zdroj štatistík (baseline, slope, weekday, changepoints, streaks, weekly z-scores, tag impact) — všetko lokálne, žiadne AI
+
+## Ponaučenia z vývoja (neopakovať chyby)
+- macOS FS je case-insensitive: `woura` a `Woura` je ten istý adresár; Finder občas vyrobí duplikáty „file 2.tsx" → build error o duplicitných identifikátoroch; hľadať `find src -name "* 2.*"`
+- Tailwind v4 resetuje `cursor: pointer` na buttonoch → vrátené globálne v globals.css
+- `shadcn add` sa pýta na overwrite existujúcich súborov → odpovedať N (`printf 'N\n' |`), inak prepíše naše úpravy (button má custom scale-0.96)
+- Recharts Brush: custom `traveller` render prop na pekné úchytky; range Area cez dataKey vracajúci `[low, high]`
+- Server na porte 3001: po builde `lsof -ti :3001 | xargs kill` + `npm run start -- -p 3001`; štart trvá ~5 s (smoke test až po sleep 5)
+- Oura sandbox vyžaduje ľubovoľný neprázdny Authorization header
+- BMC handle: **hadjakub**
+- detectFirstDay: ring_configuration.set_up_at + probe daily_activity 5 rokov pred tým; cache v localStorage `woura.firstDay`
+- Nikdy neťahať Jakubove reálne hodnoty do LLM kontextu (agreement §4(d) + náš sľub) — screenshoty od neho áno, ale nefetchovať dáta
+
 ## Prevádzka
 - Dev: `npm run dev`; prod test: `npm run build && npm run start -- -p 3001`
 - Užívateľ (Jakub) nie je technický — komunikovať jednoducho, po slovensky, bez žargónu; kroky za neho alebo presné copy-paste hodnoty.

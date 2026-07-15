@@ -40,7 +40,15 @@ export function SlopeCard({ rows }: { rows: DayRow[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ minWidth: 480, maxWidth: 640 }}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width="100%"
+          style={{ minWidth: 480, maxWidth: 640 }}
+          role="img"
+          aria-label={`This month vs last: ${slopes
+            .map((s) => `${METRIC_BY_KEY[s.key].label} ${s.changePct >= 0 ? "up" : "down"} ${Math.abs(s.changePct).toFixed(1)} percent`)
+            .join(", ")}.`}
+        >
           <text x={COL_L} y={12} fontSize={11} fill="var(--muted-foreground)" textAnchor="middle">
             previous 30 days
           </text>

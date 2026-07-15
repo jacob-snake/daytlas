@@ -65,7 +65,7 @@ export function YearHeatmap({
   return (
     <div>
       <div className="mb-2 flex h-5 items-center justify-between text-sm">
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground" aria-live="polite">
           {hover
             ? `${format(new Date(hover.day), "EEE, d MMM yyyy")} — ${
                 hover.value !== null ? `${hover.value}${def.unit && ` ${def.unit}`}` : "no data"
@@ -86,6 +86,19 @@ export function YearHeatmap({
           width={width}
           height={height + 18}
           onMouseLeave={() => setHover(null)}
+          tabIndex={0}
+          role="img"
+          aria-label={`${def.label} calendar heatmap for ${year}. Use arrow keys to browse days; values from ${Math.round(domain.min)} to ${Math.round(domain.max)}.`}
+          className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onKeyDown={(e) => {
+            const deltas: Record<string, number> = { ArrowRight: 7, ArrowLeft: -7, ArrowDown: 1, ArrowUp: -1 };
+            const delta = deltas[e.key];
+            if (!delta) return;
+            e.preventDefault();
+            const idx = hover ? cells.findIndex((c) => c.day === hover.day) : 0;
+            const next = cells[Math.max(0, Math.min(cells.length - 1, idx + delta))];
+            if (next) setHover({ day: next.day, value: next.value });
+          }}
         >
           {["Mon", "Wed", "Fri", "Sun"].map((d, i) => (
             <text

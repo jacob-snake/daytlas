@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -59,11 +58,6 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" 
         >
           ⌘K
         </kbd>
-        <Button asChild variant="outline" size="sm" className="rounded-full">
-          <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
-            <Coffee data-icon="inline-start" /> Buy me a coffee
-          </a>
-        </Button>
       </div>
     </header>
   );

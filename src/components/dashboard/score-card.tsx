@@ -28,7 +28,7 @@ export function ScoreCard({
           <span className="size-2 rounded-full" style={{ background: color }} />
           {label}
         </CardDescription>
-        <CardTitle className="text-4xl font-semibold tabular-nums tracking-tight md:text-5xl">
+        <CardTitle className="text-4xl font-semibold tabular-nums tracking-tight">
           {value ?? "–"}
         </CardTitle>
         {delta !== null && (

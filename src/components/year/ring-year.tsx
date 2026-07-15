@@ -56,7 +56,21 @@ export function RingYear({
 
   return (
     <div className="flex justify-center">
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[480px]" onMouseLeave={() => setHover(null)}>
+      <svg
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        className="w-full max-w-[480px] rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onMouseLeave={() => setHover(null)}
+        tabIndex={0}
+        role="img"
+        aria-label={`${def.label} for ${year} as a ring, ${year} average ${avg !== null ? avg.toFixed(0) : "unknown"}. Use left and right arrow keys to browse days.`}
+        onKeyDown={(e) => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          e.preventDefault();
+          const idx = hover ? spokes.findIndex((s) => s.day === hover.day) : 0;
+          const next = spokes[Math.max(0, Math.min(spokes.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1)))];
+          if (next) setHover({ day: next.day, value: next.value });
+        }}
+      >
         {spokes.map((s) => {
           const [x1, y1] = pt(s.angle, R_IN);
           const [x2, y2] = pt(s.angle, hover?.day === s.day ? R_OUT + 8 : R_OUT);

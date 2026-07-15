@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppHeader } from "@/components/app-header";
 import { Welcome } from "@/components/welcome";
@@ -24,14 +23,9 @@ import { MilestonesCard } from "@/components/insights/milestones-card";
 import { WeekdayCard } from "@/components/insights/weekday-card";
 import { ShiftsCard } from "@/components/insights/shifts-card";
 import { AppFooter } from "@/components/app-footer";
+import { OnboardingCard } from "@/components/onboarding-card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-
-const RANGES = [
-  { label: "30 d", days: 30 },
-  { label: "90 d", days: 90 },
-  { label: "1 y", days: 365 },
-];
 
 function latestAndDelta(data: DayScores[], key: "sleep" | "readiness" | "activity") {
   const withValue = data.filter((d) => d[key] !== null);
@@ -89,19 +83,6 @@ export default function Dashboard() {
       <AppHeader active="dashboard" />
       <CommandPalette />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-          <TabsList>
-            {RANGES.map((r) => (
-              <TabsTrigger key={r.days} value={String(r.days)}>
-                {r.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <ExportDialog />
-      </div>
-
       {error && (
         <Alert variant="destructive">
           <AlertCircle />
@@ -117,7 +98,12 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>
+      <OnboardingCard />
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>
+        <ExportDialog />
+      </div>
 
       <section className="stagger-item grid gap-4 md:grid-cols-3">
         {data ? (
@@ -148,7 +134,11 @@ export default function Dashboard() {
       )}
 
       <div className="stagger-item">
-        {data ? <TrendChart data={data} /> : <Skeleton className="h-[420px] rounded-xl" />}
+        {data ? (
+          <TrendChart data={data} days={days} onDaysChange={setDays} />
+        ) : (
+          <Skeleton className="h-[420px] rounded-xl" />
+        )}
       </div>
 
       {history && (

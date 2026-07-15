@@ -2,7 +2,8 @@
 
 import { format } from "date-fns";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChartConfig,
   ChartContainer,
@@ -19,12 +20,35 @@ const config = {
   activity: { label: "Activity", color: "var(--chart-3)" },
 } satisfies ChartConfig;
 
-export function TrendChart({ data }: { data: DayScores[] }) {
+export function TrendChart({
+  data,
+  days,
+  onDaysChange,
+}: {
+  data: DayScores[];
+  days: number;
+  onDaysChange: (days: number) => void;
+}) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Score trends</CardTitle>
         <CardDescription>Sleep, readiness and activity over time</CardDescription>
+        <CardAction>
+          <Tabs value={String(days)} onValueChange={(v) => onDaysChange(Number(v))}>
+            <TabsList>
+              {[
+                { label: "30 d", days: 30 },
+                { label: "90 d", days: 90 },
+                { label: "1 y", days: 365 },
+              ].map((r) => (
+                <TabsTrigger key={r.days} value={String(r.days)}>
+                  {r.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <ChartContainer config={config} className="h-[340px] w-full">

@@ -43,7 +43,7 @@ export function SleepBarcode({ rows }: { rows: DayRow[] }) {
 
   return (
     <div>
-      <div className="mb-2 h-5 text-sm text-muted-foreground">
+      <div className="mb-2 h-5 text-sm text-muted-foreground" aria-live="polite">
         {hover
           ? `${format(new Date(hover.day as string), "EEE, d MMM yyyy")} — asleep ${clock(hover.bedtime as number)} → ${clock(hover.wakeup_time as number)} · ${hover.total_sleep ?? "–"} h · score ${hover.sleep_score ?? "–"}`
           : "Every night, bedtime to wake-up. Darker = better sleep score."}
@@ -55,6 +55,17 @@ export function SleepBarcode({ rows }: { rows: DayRow[] }) {
           style={{ minWidth: Math.min(W + 44, 1400) }}
           height={H + 20}
           onMouseLeave={() => setHover(null)}
+          tabIndex={0}
+          role="img"
+          aria-label={`Sleep rhythm barcode: ${bars.length} nights, bedtime to wake-up on a clock axis. Use left and right arrow keys to browse nights.`}
+          className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            e.preventDefault();
+            const idx = hover ? bars.findIndex((b) => b.r === hover) : 0;
+            const next = bars[Math.max(0, Math.min(bars.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1)))];
+            if (next) setHover(next.r);
+          }}
         >
           {[20, 24, 28, 32, 36].map((t) => (
             <g key={t}>
