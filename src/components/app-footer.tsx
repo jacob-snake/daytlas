@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cacheClear } from "@/lib/idb-cache";
+import pkg from "../../package.json";
 
 export function AppFooter() {
   return (
@@ -13,7 +14,15 @@ export function AppFooter() {
       <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground">
         <p>
           Woura · open source · your data never leaves this browser ·{" "}
-          <span className="tabular-nums">v0.1</span>
+          <a
+            href="https://github.com/hadjakub/woura/releases"
+            target="_blank"
+            rel="noreferrer"
+            className="tabular-nums underline-offset-2 hover:underline"
+            title="Check for newer versions on GitHub — Woura never phones home"
+          >
+            v{pkg.version}
+          </a>
         </p>
         <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="xs">

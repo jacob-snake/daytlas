@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Woura
 
-## Getting Started
+**Your Oura data, on your terms.** An open-source, local-first web dashboard for
+Oura ring data — built when Oura retired "Oura on the Web".
 
-First, run the development server:
+- 🔒 **Local-first**: your health data goes browser ↔ Oura API and is cached
+  only on your device (IndexedDB). No accounts, no database, no telemetry.
+- 🚫 **No AI**: every insight is plain, inspectable statistics
+  (`src/lib/analytics.ts`) computed in your browser. Nothing ever leaves it.
+- 📊 **More than the old Oura web**: full-history trends, correlation matrix,
+  ±1σ baseline bands, calendar heatmap, ring year, sleep-rhythm barcode,
+  weekday profiles, baseline-shift detection, streaks — and **Tag Lab**, which
+  shows what your tagged habits do to your body the next day.
+- 📤 **Clean export**: CSV/JSON, human units (hours, not seconds), date and
+  metric filters.
+
+Free forever. If it's useful, [buy me a coffee](https://buymeacoffee.com/hadjakub). ☕
+
+## Self-hosting (10 minutes)
+
+Personal access tokens were retired by Oura in Dec 2025, so you register your
+own (free) OAuth app — your data then flows only between your browser, your
+own app registration, and Oura:
+
+1. **Register an Oura app** at
+   [cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications):
+   - Website: `http://localhost:3001`
+   - Privacy Policy: `http://localhost:3001/privacy`
+   - Terms of Service: `http://localhost:3001/terms`
+   - Redirect URI: `http://localhost:3001/api/auth/callback` (exactly)
+   - Tick all scopes, agree, create — copy the Client ID and Client Secret.
+2. **Clone & configure**:
+   ```bash
+   git clone https://github.com/hadjakub/woura && cd woura
+   npm install
+   cp .env.example .env.local   # then paste your Client ID/Secret into it
+   ```
+3. **Run**:
+   ```bash
+   npm run build && npm run start -- -p 3001
+   ```
+   Open http://localhost:3001 and click **Authorize with Oura**.
+
+The unapproved-app limit of 10 users is irrelevant here — your registration
+serves only you.
+
+## Versioning & upgrades
+
+Woura uses [SemVer](https://semver.org/) (`MAJOR.MINOR.PATCH`). The running
+version is shown in the footer and links to the
+[releases page](https://github.com/hadjakub/woura/releases) — Woura never
+checks for updates automatically (no phoning home, by design).
+
+To upgrade a self-hosted install:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git pull
+npm install
+npm run build && npm run start -- -p 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Your data and login are untouched — they live in your browser, not in the app
+folder. See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Privacy & security
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The full threat model and architecture live in
+[docs/SECURITY_ARCHITECTURE.md](docs/SECURITY_ARCHITECTURE.md). Short version:
 
-## Learn More
+- The bundled API proxy exists only because api.ouraring.com doesn't send CORS
+  headers; it forwards requests verbatim and stores/logs nothing (~40 lines,
+  read it yourself: `src/app/api/oura/[...path]/route.ts`).
+- Tokens are stored in your browser only and sent only to `api.ouraring.com`.
+- "Wipe local data" in the footer deletes everything cached on your device;
+  revoke API access anytime at cloud.ouraring.com.
 
-To learn more about Next.js, take a look at the following resources:
+## Disclaimer
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Woura is an independent open-source project, not affiliated with or endorsed
+by Ōura Health Oy / Ouraring Inc. It is not a medical device. Your use of the
+Oura API is subject to the Oura API and MCP Agreement.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
