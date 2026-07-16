@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
-import { ChartLineUpIcon, GaugeIcon, FlaskIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { ChartLineUpIcon, GaugeIcon, FlaskIcon, CircleDashedIcon } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const KEY = "woura.onboarded";
 
 const STEPS = [
   {
@@ -25,6 +20,13 @@ const STEPS = [
     color: "var(--chart-2)",
   },
   {
+    href: "/year",
+    title: "Year",
+    text: "Your whole year as rings, heatmap and sleep barcode",
+    icon: CircleDashedIcon,
+    color: "var(--chart-3)",
+  },
+  {
     href: "/tags",
     title: "Tag Lab",
     text: "What your habits actually do to your body the next day",
@@ -33,29 +35,11 @@ const STEPS = [
   },
 ];
 
-export function OnboardingCard() {
-  const [show, setShow] = useState(false);
-  useEffect(() => setShow(!window.localStorage.getItem(KEY)), []);
-  if (!show) return null;
-
-  const dismiss = () => {
-    window.localStorage.setItem(KEY, "1");
-    setShow(false);
-  };
-
+export function OnboardingCard({ current }: { current?: string }) {
   return (
-    <Card className="stagger-item relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={dismiss}
-        aria-label="Dismiss welcome tips"
-        className="absolute top-3 right-3"
-      >
-        <X />
-      </Button>
-      <CardContent className="grid gap-4 pt-5 md:grid-cols-3">
-        {STEPS.map((s) => (
+    <Card className="stagger-item">
+      <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.filter((s) => s.href !== current).map((s) => (
           <Link
             key={s.href}
             href={s.href}

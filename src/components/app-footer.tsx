@@ -26,6 +26,9 @@ export function AppFooter() {
         </p>
         <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="xs">
+            <Link href="/about">About</Link>
+          </Button>
+          <Button asChild variant="ghost" size="xs">
             <Link href="/privacy">Privacy</Link>
           </Button>
           <Button asChild variant="ghost" size="xs">

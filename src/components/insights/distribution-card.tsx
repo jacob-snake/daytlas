@@ -70,6 +70,13 @@ export function DistributionCard({ rows }: { rows: DayRow[] }) {
           <p className="text-sm text-muted-foreground">Not enough data yet.</p>
         ) : (
           <>
+            <p className="mb-2 text-sm">
+              Dashed line = your 30-day average:{" "}
+              <span className="font-bold tabular-nums">
+                {dist.recentMean?.toFixed(0)}
+                {def.unit ? ` ${def.unit}` : ""}
+              </span>
+            </p>
             <ChartContainer config={config} className="h-[220px] w-full">
               <BarChart data={data} margin={{ left: 8, right: 8, top: 8 }} barCategoryGap={2}>
                 <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={40} fontSize={11} />
@@ -93,11 +100,7 @@ export function DistributionCard({ rows }: { rows: DayRow[] }) {
               </BarChart>
             </ChartContainer>
             <p className="mt-2 text-sm text-muted-foreground">
-              {dist.total.toLocaleString()} tracked days · dashed line = your 30-day average{" "}
-              <span className="font-semibold text-foreground tabular-nums">
-                {dist.recentMean?.toFixed(0)}
-                {def.unit ? ` ${def.unit}` : ""}
-              </span>
+              {dist.total.toLocaleString()} tracked days · orange = last 30 days
             </p>
           </>
         )}

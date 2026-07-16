@@ -52,12 +52,14 @@ export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" 
             <Link href="/tags">Tag Lab</Link>
           </Button>
         </nav>
-        <kbd
-          className="hidden rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline-block"
+        <button
+          className="hidden cursor-pointer rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:bg-foreground hover:text-background md:inline-block"
           title="Command palette — search pages, metrics, actions"
+          aria-label="Open command palette"
+          onClick={() => window.dispatchEvent(new CustomEvent("woura:cmdk"))}
         >
           ⌘K
-        </kbd>
+        </button>
       </div>
     </header>
   );

@@ -99,7 +99,7 @@ export function CorrelationCard({ data }: { data: DayScores[] }) {
           opposite, 0 = no relationship.
         </p>
         <ChartContainer config={config} className="h-[280px] w-full">
-          <ScatterChart margin={{ left: 0, right: 12, top: 8 }}>
+          <ScatterChart margin={{ left: 0, right: 12, top: 8, bottom: 8 }}>
             <CartesianGrid strokeOpacity={0.35} />
             <XAxis
               type="number"
@@ -108,7 +108,9 @@ export function CorrelationCard({ data }: { data: DayScores[] }) {
               domain={["auto", "auto"]}
               tickLine={false}
               axisLine={false}
-              label={{ value: x.label, position: "insideBottom", offset: -4, fontSize: 11 }}
+              height={52}
+              tickMargin={8}
+              label={{ value: x.label, position: "insideBottom", offset: 0, fontSize: 12, fill: "var(--muted-foreground)" }}
             />
             <YAxis
               type="number"

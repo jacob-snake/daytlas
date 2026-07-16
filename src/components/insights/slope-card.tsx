@@ -21,11 +21,10 @@ const GOOD = "var(--chart-2)";
 const BAD = "var(--destructive)";
 
 const W = 640;
-const LABEL_W = 150;
-const VAL_W = 52;
-const PCT_W = 56;
+const LABEL_W = 160;
+const VAL_W = 56;
 const X1 = LABEL_W + VAL_W; // left dot
-const X2 = W - PCT_W - VAL_W; // right dot
+const X2 = X1 + 240; // right dot — deliberately short line
 const ROW_H = 52;
 const SLOPE_MAX = 20; // px of vertical rise/fall inside a row
 
@@ -95,11 +94,10 @@ export function SlopeCard({ rows }: { rows: DayRow[] }) {
                   {fmt(s.cur)}
                 </text>
                 <text
-                  x={W}
-                  y={y2 + 5}
-                  fontSize={13}
-                  fontWeight={700}
-                  textAnchor="end"
+                  x={X2 + 76}
+                  y={y2 + 6}
+                  fontSize={17}
+                  fontWeight={800}
                   fill={color}
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >

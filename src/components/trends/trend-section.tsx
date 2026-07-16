@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Icon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -65,12 +66,20 @@ export function TrendSection({ section, data }: { section: SectionDef; data: Day
         )}
         {summary.delta !== null && Math.abs(summary.delta) >= 0.05 && (
           <Badge variant="outline" className="tabular-nums text-sm">
-            {summary.delta > 0 ? "↗" : "↘"} {Math.abs(summary.delta).toFixed(1)} across this range
+            {summary.delta > 0 ? (
+              <TrendingUp className="size-4" style={{ color: "var(--chart-2)" }} />
+            ) : (
+              <TrendingDown className="size-4 text-destructive" />
+            )}
+            <span className="font-semibold" style={{ color: summary.delta > 0 ? "var(--chart-2)" : "var(--destructive)" }}>
+              {Math.abs(summary.delta).toFixed(1)}
+            </span>
+            across this range
           </Badge>
         )}
         <div className="ml-auto">
           <Select value="" onValueChange={(k) => setCharts((c) => (c.includes(k) ? c : [...c, k]))}>
-            <SelectTrigger size="sm" className="add-trigger w-[170px]">
+            <SelectTrigger size="sm" className="add-trigger w-[180px]">
               <SelectValue placeholder="＋ Add chart" />
             </SelectTrigger>
             <SelectContent>

@@ -31,8 +31,13 @@ export function CommandPalette({
         setOpen((o) => !o);
       }
     };
+    const open = () => setOpen(true);
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    window.addEventListener("woura:cmdk", open);
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener("woura:cmdk", open);
+    };
   }, []);
 
   const run = (fn: () => void) => {

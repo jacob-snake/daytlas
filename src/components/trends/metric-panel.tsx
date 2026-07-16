@@ -169,7 +169,7 @@ export function MetricPanel({
         </CardTitle>
         <CardAction className="flex items-center gap-1.5">
           <Select value="" onValueChange={onCompareAdd}>
-            <SelectTrigger size="sm" className="add-trigger w-[150px]">
+            <SelectTrigger size="sm" className="add-trigger w-[185px]">
               <SelectValue placeholder="＋ Combine with…" />
             </SelectTrigger>
             <SelectContent>

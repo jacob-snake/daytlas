@@ -98,7 +98,7 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      <OnboardingCard />
+      <OnboardingCard current="/" />
 
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>

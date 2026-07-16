@@ -176,13 +176,17 @@ body::before {
 /* Add-trigger: the "create something" affordance — dashed, bold, never a plain pill */
 .add-trigger {
   border-style: dashed !important;
-  border-color: color-mix(in oklab, var(--foreground) 30%, transparent) !important;
-  font-weight: 600;
+  border-width: 1.5px !important;
+  border-color: color-mix(in oklab, var(--foreground) 55%, transparent) !important;
+  background: var(--card) !important;
+  font-weight: 700;
   color: var(--foreground);
+  box-shadow: var(--shadow-border);
 }
 .add-trigger:hover {
-  border-color: var(--foreground) !important;
-  background: var(--muted);
+  border-style: solid !important;
+  background: var(--foreground) !important;
+  color: var(--background);
 }
 
 /* Staggered enter animation for dashboard sections */
