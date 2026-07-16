@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { X } from "lucide-react";
+import { ArrowsOutIcon } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +65,7 @@ export function MetricPanel({
   onCompareAdd: (key: string) => void;
   onCompareRemove: (key: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const def = METRIC_BY_KEY[metricKey];
   const baseColor = PANEL_COLORS[index % PANEL_COLORS.length];
   const comparing = compareKeys.length > 0;
@@ -87,33 +90,9 @@ export function MetricPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, metricKey, comparing, compareKeys.join(",")]);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {def.label}{" "}
-          {def.unit && !comparing && <span className="font-normal text-muted-foreground">({def.unit})</span>}
-        </CardTitle>
-        <CardAction className="flex items-center gap-1.5">
-          <Select value="" onValueChange={onCompareAdd}>
-            <SelectTrigger size="sm" className="w-[150px]">
-              <SelectValue placeholder="+ Combine with…" />
-            </SelectTrigger>
-            <SelectContent>
-              {METRICS.filter((m) => !allKeys.includes(m.key)).map((m) => (
-                <SelectItem key={m.key} value={m.key}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="ghost" size="icon" onClick={onRemove} aria-label={`Remove ${def.label}`}>
-            <X />
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} className="h-[220px] w-full">
+  const renderChart = (heightClass: string) => (
+    <ChartContainer config={config} className={`${heightClass} w-full`}>
+
           <ComposedChart data={chartData} margin={{ left: 0, right: 12, top: 8 }}>
             <CartesianGrid vertical={false} strokeOpacity={0.35} />
             <XAxis
@@ -121,11 +100,12 @@ export function MetricPanel({
               tickLine={false}
               axisLine={false}
               minTickGap={48}
+              tickMargin={8}
               tickFormatter={(d: string) =>
                 new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" })
               }
             />
-            <YAxis domain={["auto", "auto"]} width={40} tickLine={false} axisLine={false} />
+            <YAxis domain={["auto", "auto"]} width={44} tickMargin={8} tickLine={false} axisLine={false} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -177,7 +157,44 @@ export function MetricPanel({
               />
             ))}
           </ComposedChart>
-        </ChartContainer>
+    </ChartContainer>
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {def.label}{" "}
+          {def.unit && !comparing && <span className="font-normal text-muted-foreground">({def.unit})</span>}
+        </CardTitle>
+        <CardAction className="flex items-center gap-1.5">
+          <Select value="" onValueChange={onCompareAdd}>
+            <SelectTrigger size="sm" className="add-trigger w-[150px]">
+              <SelectValue placeholder="＋ Combine with…" />
+            </SelectTrigger>
+            <SelectContent>
+              {METRICS.filter((m) => !allKeys.includes(m.key)).map((m) => (
+                <SelectItem key={m.key} value={m.key}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setExpanded(true)}
+            aria-label={`Expand ${def.label} to full screen`}
+          >
+            <ArrowsOutIcon weight="bold" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onRemove} aria-label={`Remove ${def.label}`}>
+            <X />
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        {renderChart("h-[220px]")}
         {comparing ? (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>Normalized (z-scores) so different units share one axis.</span>
@@ -193,6 +210,33 @@ export function MetricPanel({
           </p>
         )}
       </CardContent>
+<Dialog open={expanded} onOpenChange={setExpanded}>
+        <DialogContent className="max-h-[92vh] w-[95vw] sm:max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>{def.label}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Select value="" onValueChange={onCompareAdd}>
+              <SelectTrigger size="sm" className="add-trigger w-[170px]">
+                <SelectValue placeholder="＋ Combine with…" />
+              </SelectTrigger>
+              <SelectContent>
+                {METRICS.filter((m) => !allKeys.includes(m.key)).map((m) => (
+                  <SelectItem key={m.key} value={m.key}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {compareKeys.map((k) => (
+              <Button key={k} variant="outline" size="xs" onClick={() => onCompareRemove(k)}>
+                {METRIC_BY_KEY[k].label} <X className="size-3" />
+              </Button>
+            ))}
+          </div>
+          {renderChart("h-[68vh]")}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

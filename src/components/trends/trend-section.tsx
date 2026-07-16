@@ -70,8 +70,8 @@ export function TrendSection({ section, data }: { section: SectionDef; data: Day
         )}
         <div className="ml-auto">
           <Select value="" onValueChange={(k) => setCharts((c) => (c.includes(k) ? c : [...c, k]))}>
-            <SelectTrigger size="sm" className="w-[170px]">
-              <SelectValue placeholder="+ Add chart" />
+            <SelectTrigger size="sm" className="add-trigger w-[170px]">
+              <SelectValue placeholder="＋ Add chart" />
             </SelectTrigger>
             <SelectContent>
               {section.metrics.map((k) => (

@@ -149,7 +149,7 @@ export async function fetchWide(startDate: string, endDate: string): Promise<Day
 
 export type Period = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
-const FIRST_DAY_KEY = "woura.firstDay.v2";
+const FIRST_DAY_KEY = "woura.firstDay.v3";
 
 /**
  * Earliest day with any Oura data for this user (Oura web's "from the very
@@ -166,30 +166,26 @@ export async function detectFirstDay(): Promise<string> {
     return d.toISOString().slice(0, 10);
   })();
 
-  let first = fallback;
-  try {
-    const rings = await fetchAll<{ set_up_at: string | null }>("ring_configuration", {});
-    const setups = rings
-      .map((r) => r.set_up_at)
-      .filter((s): s is string => !!s)
-      .map((s) => s.slice(0, 10))
-      .sort();
-    if (setups[0]) first = setups[0];
-
-    // Data can predate the current ring (older rings, account migrations) —
-    // probe all the way back to the first Oura ring generation (2015).
-    const probe = await fetchAll<{ day: string }>("daily_activity", {
-      start_date: "2015-01-01",
-      end_date: first,
-    });
-    const days = probe.map((p) => p.day).sort();
-    if (days[0] && days[0] < first) first = days[0];
-  } catch {
-    // fall through with fallback
+  // Probe year by year from the first Oura ring generation. Small requests
+  // survive API range limits; each probe is cached in IndexedDB anyway.
+  let first: string | null = null;
+  const thisYear = new Date().getFullYear();
+  for (let y = 2015; y <= thisYear && !first; y++) {
+    try {
+      const probe = await fetchAll<{ day: string }>("daily_activity", {
+        start_date: `${y}-01-01`,
+        end_date: `${y}-12-31`,
+      });
+      const days = probe.map((p) => p.day).sort();
+      if (days[0]) first = days[0];
+    } catch {
+      // one bad year must not abort the search
+    }
   }
 
-  window.localStorage.setItem(FIRST_DAY_KEY, first);
-  return first;
+  const result = first ?? fallback;
+  window.localStorage.setItem(FIRST_DAY_KEY, result);
+  return result;
 }
 
 /** Average rows into weekly/monthly buckets (daily = passthrough). */

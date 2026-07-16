@@ -26,14 +26,14 @@ const VAL_W = 52;
 const PCT_W = 56;
 const X1 = LABEL_W + VAL_W; // left dot
 const X2 = W - PCT_W - VAL_W; // right dot
-const ROW_H = 42;
-const SLOPE_MAX = 12; // px of vertical rise/fall inside a row
+const ROW_H = 52;
+const SLOPE_MAX = 20; // px of vertical rise/fall inside a row
 
 export function SlopeCard({ rows }: { rows: DayRow[] }) {
   const slopes = useMemo(() => slopeComparison(rows, KEYS, 30), [rows]);
   if (!slopes.length) return null;
 
-  const H = slopes.length * ROW_H + 26;
+  const H = slopes.length * ROW_H + 30;
   const fmt = (v: number) => (Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(1)}k` : Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1));
 
   return (
@@ -44,11 +44,10 @@ export function SlopeCard({ rows }: { rows: DayRow[] }) {
           Last 30 days against the 30 before — green moved in the right direction
         </CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
-          style={{ minWidth: 560 }}
           role="img"
           aria-label={`This month vs last: ${slopes
             .map((s) => `${METRIC_BY_KEY[s.key].label} ${s.changePct >= 0 ? "up" : "down"} ${Math.abs(s.changePct).toFixed(1)} percent`)
@@ -62,33 +61,33 @@ export function SlopeCard({ rows }: { rows: DayRow[] }) {
           </text>
           {slopes.map((s, i) => {
             const yMid = 26 + i * ROW_H + ROW_H / 2;
-            const rise = Math.max(-SLOPE_MAX, Math.min(SLOPE_MAX, s.changePct)) * (SLOPE_MAX / 10);
+            const rise = Math.max(-SLOPE_MAX, Math.min(SLOPE_MAX, s.changePct * 4));
             const y1 = yMid + rise / 2;
             const y2 = yMid - rise / 2;
             const color = s.improved ? GOOD : BAD;
             const def = METRIC_BY_KEY[s.key];
             return (
               <g key={s.key}>
-                <text x={0} y={yMid + 5} fontSize={13} fontWeight={600} fill="var(--foreground)">
+                <text x={0} y={yMid + 5} fontSize={14} fontWeight={600} fill="var(--foreground)">
                   {def.label.length > 18 ? `${def.label.slice(0, 17)}…` : def.label}
                 </text>
                 <text
                   x={X1 - 12}
                   y={y1 + 5}
-                  fontSize={13}
+                  fontSize={14}
                   textAnchor="end"
                   fill="var(--muted-foreground)"
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
                   {fmt(s.prev)}
                 </text>
-                <line x1={X1} y1={y1} x2={X2} y2={y2} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
-                <circle cx={X1} cy={y1} r={5} fill={color} />
-                <circle cx={X2} cy={y2} r={5} fill={color} />
+                <line x1={X1} y1={y1} x2={X2} y2={y2} stroke={color} strokeWidth={3.5} strokeLinecap="round" />
+                <circle cx={X1} cy={y1} r={6} fill={color} />
+                <circle cx={X2} cy={y2} r={6} fill={color} />
                 <text
                   x={X2 + 12}
                   y={y2 + 5}
-                  fontSize={14}
+                  fontSize={16}
                   fontWeight={700}
                   fill="var(--foreground)"
                   style={{ fontVariantNumeric: "tabular-nums" }}
@@ -98,8 +97,8 @@ export function SlopeCard({ rows }: { rows: DayRow[] }) {
                 <text
                   x={W}
                   y={y2 + 5}
-                  fontSize={12}
-                  fontWeight={600}
+                  fontSize={13}
+                  fontWeight={700}
                   textAnchor="end"
                   fill={color}
                   style={{ fontVariantNumeric: "tabular-nums" }}

@@ -80,18 +80,38 @@ export function DateRangePicker({
             ))}
           </div>
           <Separator orientation="vertical" className="h-auto" />
-          <Calendar
-            mode="range"
-            numberOfMonths={2}
-            defaultMonth={selected.from}
-            selected={selected}
-            onSelect={(r) => {
-              if (r?.from && r?.to) {
-                onChange({ start: iso(r.from), end: iso(r.to) });
-              }
-            }}
-            disabled={{ after: new Date() }}
-          />
+          <div>
+            <div className="flex items-center gap-3 border-b px-4 py-3 text-sm">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">From</p>
+                <p className="font-semibold tabular-nums">{format(selected.from!, "d MMM yyyy")}</p>
+              </div>
+              <span className="text-muted-foreground">→</span>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">To</p>
+                <p className="font-semibold tabular-nums">{format(selected.to!, "d MMM yyyy")}</p>
+              </div>
+            </div>
+            <Calendar
+              mode="range"
+              numberOfMonths={2}
+              defaultMonth={selected.from}
+              selected={selected}
+              onSelect={(r) => {
+                if (r?.from && r?.to) {
+                  onChange({ start: iso(r.from), end: iso(r.to) });
+                }
+              }}
+              disabled={{ after: new Date() }}
+              classNames={{
+                day: "size-10 rounded-full text-[13px] font-medium",
+                range_middle:
+                  "bg-[color-mix(in_oklab,var(--chart-1)_16%,transparent)] rounded-none first:rounded-l-full last:rounded-r-full",
+                range_start: "rounded-full bg-primary text-primary-foreground",
+                range_end: "rounded-full bg-primary text-primary-foreground",
+              }}
+            />
+          </div>
         </div>
       </PopoverContent>
     </Popover>

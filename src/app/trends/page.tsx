@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
-import { Area, AreaChart, Brush, XAxis } from "recharts";
+import { format, subDays, subYears } from "date-fns";
+import { Area, AreaChart, Brush, ReferenceLine, XAxis } from "recharts";
 import { AlertCircle } from "lucide-react";
 import { MoonIcon, HeartbeatIcon, PersonSimpleRunIcon } from "@phosphor-icons/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -21,12 +21,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { CommandPalette } from "@/components/command-palette";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { TrendSection, type SectionDef } from "@/components/trends/trend-section";
 import { hasToken, fetchAll } from "@/lib/oura/client";
 import type { EnhancedTag } from "@/lib/oura/types";
 import { aggregate, detectFirstDay, fetchWide, type DayRow, type Period } from "@/lib/oura/metrics";
 import { Welcome } from "@/components/welcome";
+import { cn } from "@/lib/utils";
 
 const SECTIONS: SectionDef[] = [
   {
@@ -97,10 +98,12 @@ const overviewConfig = {
   readiness_score: { label: "Readiness", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
+const iso = (d: Date) => format(d, "yyyy-MM-dd");
+
 export default function TrendsPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
-  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(iso(new Date()));
   const [firstDay, setFirstDay] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("weekly");
   const [rows, setRows] = useState<DayRow[] | null>(null);
@@ -150,6 +153,20 @@ export default function TrendsPage() {
     return `${f(visible[0].day as string)} – ${f(visible[visible.length - 1].day as string)}`;
   }, [visible]);
 
+  const yearStarts = useMemo(() => {
+    if (!aggregated) return [];
+    const seen = new Set<string>();
+    const starts: string[] = [];
+    for (const r of aggregated) {
+      const y = (r.day as string).slice(0, 4);
+      if (!seen.has(y)) {
+        seen.add(y);
+        starts.push(r.day as string);
+      }
+    }
+    return starts.slice(1); // no line at the very first point
+  }, [aggregated]);
+
   const tagSummary = useMemo(() => {
     const counts = new Map<string, number>();
     for (const t of tags) {
@@ -160,6 +177,16 @@ export default function TrendsPage() {
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [tags]);
+
+  const PRESETS = useMemo(
+    () => [
+      { label: "All data", start: firstDay },
+      { label: "1 Y", start: iso(subYears(new Date(), 1)) },
+      { label: "90 D", start: iso(subDays(new Date(), 90)) },
+      { label: "30 D", start: iso(subDays(new Date(), 30)) },
+    ],
+    [firstDay]
+  );
 
   if (authorized === false) return <Welcome />;
 
@@ -176,91 +203,106 @@ export default function TrendsPage() {
         </Alert>
       )}
 
+      {/* Sticky control bar: section anchors + range presets + picker + period */}
+      <div className="sticky top-20 z-10 -mx-2 flex flex-wrap items-center gap-2 rounded-xl border bg-background/85 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-xl">
+        <nav className="flex items-center gap-1">
+          {SECTIONS.map((s) => (
+            <Button
+              key={s.id}
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              <s.icon weight="fill" className="size-4" style={{ color: s.color }} />
+              <span className="hidden lg:inline">{s.title}</span>
+            </Button>
+          ))}
+        </nav>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1">
+            {PRESETS.map((p) => (
+              <Button
+                key={p.label}
+                variant={startDate === p.start ? "secondary" : "ghost"}
+                size="sm"
+                className={cn(startDate === p.start && "font-semibold")}
+                disabled={!p.start}
+                onClick={() => p.start && setStartDate(p.start)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+          {startDate ? (
+            <DateRangePicker
+              allDataStart={firstDay ?? undefined}
+              value={{ start: startDate, end: endDate }}
+              onChange={(r) => {
+                setStartDate(r.start);
+                setEndDate(r.end);
+              }}
+            />
+          ) : (
+            <Skeleton className="h-8 w-[220px]" />
+          )}
+          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <TabsList>
+              <TabsTrigger value="daily">Day</TabsTrigger>
+              <TabsTrigger value="weekly">Week</TabsTrigger>
+              <TabsTrigger value="monthly">Month</TabsTrigger>
+              <TabsTrigger value="quarterly">Quarter</TabsTrigger>
+              <TabsTrigger value="yearly">Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Timeline</CardTitle>
-          <CardDescription>
-            {visibleLabel ?? "…"} — drag the handles to zoom, every chart below follows
+          <CardDescription className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full" style={{ background: "var(--chart-2)" }} />
+              <span className="font-medium text-foreground">Readiness score</span>
+            </span>
+            <span>· {visibleLabel ?? "…"} — drag the handles, every chart below follows</span>
           </CardDescription>
-          <CardAction className="flex flex-wrap items-center gap-2">
-            {startDate ? (
-              <DateRangePicker
-                allDataStart={firstDay ?? undefined}
-                value={{ start: startDate, end: endDate }}
-                onChange={(r) => {
-                  setStartDate(r.start);
-                  setEndDate(r.end);
-                }}
-              />
-            ) : (
-              <Skeleton className="h-8 w-[240px]" />
-            )}
-            <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
-              <TabsList>
-                <TabsTrigger value="daily">Day</TabsTrigger>
-                <TabsTrigger value="weekly">Week</TabsTrigger>
-                <TabsTrigger value="monthly">Month</TabsTrigger>
-                <TabsTrigger value="quarterly">Quarter</TabsTrigger>
-                <TabsTrigger value="yearly">Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardAction>
         </CardHeader>
         <CardContent>
           {!aggregated ? (
             <Skeleton className="h-[150px] rounded-xl" />
           ) : (
-            <ChartContainer config={overviewConfig} className="h-[150px] w-full">
-              <AreaChart data={aggregated} margin={{ left: 0, right: 0, top: 4 }}>
-                <defs>
-                  <linearGradient id="tl" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={72}
-                  tickFormatter={(d: string) => format(new Date(d), "MMM yy")}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      labelFormatter={(_, payload) =>
-                        format(new Date(payload?.[0]?.payload?.day), "d MMM yyyy")
-                      }
-                    />
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="readiness_score"
-                  stroke="var(--chart-2)"
-                  strokeWidth={2}
-                  fill="url(#tl)"
-                  dot={false}
-                  connectNulls
-                />
+            <ChartContainer config={overviewConfig} className="h-[170px] w-full">
+              <AreaChart data={aggregated} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                <XAxis dataKey="day" hide />
                 <Brush
                   dataKey="day"
-                  height={30}
+                  height={160}
+                  y={0}
                   stroke="var(--border)"
                   fill="var(--secondary)"
-                  travellerWidth={10}
+                  travellerWidth={14}
                   traveller={(props) => {
                     const { x, y, width, height } = props as {
                       x: number; y: number; width: number; height: number;
                     };
                     return (
                       <g>
-                        <rect x={x} y={y + 2} width={width} height={height - 4} rx={5} fill="var(--foreground)" />
-                        <line
-                          x1={x + width / 2} x2={x + width / 2}
-                          y1={y + 9} y2={y + height - 9}
-                          stroke="var(--background)" strokeWidth={1.5} strokeLinecap="round"
-                        />
+                        <rect x={x} y={y} width={width} height={height} rx={7} fill="var(--foreground)" />
+                        {[-3, 0, 3].map((o) => (
+                          <line
+                            key={o}
+                            x1={x + width / 2 + o}
+                            x2={x + width / 2 + o}
+                            y1={y + height / 2 - 12}
+                            y2={y + height / 2 + 12}
+                            stroke="var(--background)"
+                            strokeWidth={1.5}
+                            strokeLinecap="round"
+                          />
+                        ))}
                       </g>
                     );
                   }}
@@ -270,7 +312,36 @@ export default function TrendsPage() {
                       setBrush({ start: range.startIndex, end: range.endIndex });
                     }
                   }}
-                />
+                >
+                  <AreaChart data={aggregated} margin={{ top: 4, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="tl" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.45} />
+                        <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.06} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="day"
+                      tickLine={false}
+                      axisLine={false}
+                      minTickGap={72}
+                      tickMargin={6}
+                      tickFormatter={(d: string) => format(new Date(d), "MMM yy")}
+                    />
+                    {yearStarts.map((d) => (
+                      <ReferenceLine key={d} x={d} stroke="var(--border)" strokeWidth={1} />
+                    ))}
+                    <Area
+                      type="monotone"
+                      dataKey="readiness_score"
+                      stroke="var(--chart-2)"
+                      strokeWidth={2}
+                      fill="url(#tl)"
+                      dot={false}
+                      connectNulls
+                    />
+                  </AreaChart>
+                </Brush>
               </AreaChart>
             </ChartContainer>
           )}
@@ -280,7 +351,7 @@ export default function TrendsPage() {
       {tagSummary.length > 0 && (
         <Card>
           <CardContent className="pt-4">
-            <p className="mb-2 text-sm font-medium">Tags in this range</p>
+            <p className="mb-2 text-sm font-semibold">Tags in this range</p>
             <div className="flex flex-wrap gap-2">
               {tagSummary.map(([name, count]) => (
                 <Badge key={name} variant="outline">
@@ -298,7 +369,11 @@ export default function TrendsPage() {
           <Skeleton className="h-[300px] rounded-xl" />
         </>
       ) : (
-        SECTIONS.map((s) => <TrendSection key={s.id} section={s} data={visible} />)
+        SECTIONS.map((s) => (
+          <div key={s.id} id={s.id} className="scroll-mt-36">
+            <TrendSection section={s} data={visible} />
+          </div>
+        ))
       )}
 
       <AppFooter />

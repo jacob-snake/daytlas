@@ -59,11 +59,12 @@ export function TrendChart({
               tickLine={false}
               axisLine={false}
               minTickGap={48}
+              tickMargin={8}
               tickFormatter={(d: string) =>
                 new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" })
               }
             />
-            <YAxis domain={[0, 100]} width={32} tickLine={false} axisLine={false} />
+            <YAxis domain={[0, 100]} width={44} tickMargin={8} tickLine={false} axisLine={false} />
             <ChartTooltip
               content={
                 <ChartTooltipContent

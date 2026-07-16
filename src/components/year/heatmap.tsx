@@ -38,22 +38,24 @@ export function YearHeatmap({
     const max = Math.max(...values);
 
     const start = new Date(year, 0, 1);
-    const end = new Date(Math.min(new Date(year, 11, 31).getTime(), Date.now()));
+    const end = new Date(year, 11, 31); // full grid; future days drawn as faint placeholders
+    const today = new Date();
     const startCol = new Date(start);
     startCol.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // back to Monday
 
-    const cells: { x: number; y: number; day: string; value: number | null; fill: string }[] = [];
+    const cells: { x: number; y: number; day: string; value: number | null; fill: string; future: boolean }[] = [];
     for (let d = new Date(startCol), i = 0; d <= end; d.setDate(d.getDate() + 1), i++) {
       if (d < start) continue;
       const day = format(d, "yyyy-MM-dd");
       const week = Math.floor((d.getTime() - startCol.getTime()) / (7 * 86400000));
-      const value = byDay.get(day) ?? null;
+      const future = d > today;
+      const value = future ? null : (byDay.get(day) ?? null);
       let fill = EMPTY;
       if (value !== null && max > min) {
         const t = (value - min) / (max - min);
         fill = RAMP[Math.min(RAMP.length - 1, Math.floor(t * RAMP.length))];
       }
-      cells.push({ x: week * STEP, y: ((d.getDay() + 6) % 7) * STEP, day, value, fill });
+      cells.push({ x: week * STEP, y: ((d.getDay() + 6) % 7) * STEP, day, value, fill, future });
     }
     const weeks = Math.ceil(((end.getTime() - startCol.getTime()) / 86400000 + 1) / 7);
     return { cells, weeks, domain: { min, max } };
@@ -119,15 +121,14 @@ export function YearHeatmap({
               height={CELL}
               rx={3.5}
               fill={c.fill}
-              opacity={hover && hover.day !== c.day ? 0.75 : 1}
-              onMouseEnter={() => setHover({ day: c.day, value: c.value })}
+              opacity={c.future ? 0.35 : hover && hover.day !== c.day ? 0.75 : 1}
+              onMouseEnter={() => !c.future && setHover({ day: c.day, value: c.value })}
             >
               <title>{`${c.day}: ${c.value ?? "–"}`}</title>
             </rect>
           ))}
           {Array.from({ length: 12 }, (_, m) => {
             const first = new Date(year, m, 1);
-            if (first > new Date()) return null;
             const startCol = new Date(year, 0, 1);
             startCol.setDate(startCol.getDate() - ((startCol.getDay() + 6) % 7));
             const week = Math.floor((first.getTime() - startCol.getTime()) / (7 * 86400000));

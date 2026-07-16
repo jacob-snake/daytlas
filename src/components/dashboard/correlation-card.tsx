@@ -115,7 +115,8 @@ export function CorrelationCard({ data }: { data: DayScores[] }) {
               dataKey="y"
               name={y.label}
               domain={["auto", "auto"]}
-              width={40}
+              width={44}
+              tickMargin={8}
               tickLine={false}
               axisLine={false}
             />

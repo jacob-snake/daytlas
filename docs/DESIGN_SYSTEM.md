@@ -65,6 +65,13 @@ Switch, Dialog, Alert, Table, Skeleton, Separator, Tooltip, Sonner, Command,
 Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Phosphor **filled** (`weight="fill"`) for decorative/semantic icons; Lucide outline only for functional glyphs (close, arrows). No emoji as icons.
 
 ## Patterns (beyond base shadcn)
+- **Add-trigger** (`.add-trigger`): every "create/add" control (Add chart,
+  Combine with…) uses dashed foreground/30 border + semibold text — visually
+  distinct from plain pills/badges. Radius rule: controls are `rounded-lg`;
+  `rounded-full` is reserved for the nav pill, badges and calendar range.
+- **Sticky control bar** (Trends): section anchors + range presets + picker +
+  period tabs in one backdrop-blur bar, `sticky top-20`; sections get
+  `scroll-mt-36` anchors.
 - **Insight card**: CardDescription (metric dot + window) → big tabular
   CardTitle + delta Badge → 1–3 plain-language sentences (percentile story,
   vs-last-year, best day). Always number + words, never number alone.
