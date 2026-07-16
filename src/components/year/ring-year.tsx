@@ -7,7 +7,7 @@ import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 
 // The year as a ring — 365 days around a circle, a nod to the device itself.
 
-const RAMP = ["#e3ecf9", "#b9d0f0", "#87aee3", "#4f83d2", "#2a63c9", "#1a4694"];
+const RAMP = ["#e7efff", "#bcd3fb", "#84adf5", "#4a80ec", "#2058d4", "#0d3695", "#071d55"];
 const SIZE = 480;
 const CX = SIZE / 2;
 const R_IN = 132;
@@ -32,19 +32,20 @@ export function RingYear({
     const max = Math.max(...values);
     const daysInYear = (new Date(year, 11, 31).getTime() - new Date(year, 0, 1).getTime()) / 86400000 + 1;
 
-    const spokes: { day: string; value: number | null; angle: number; fill: string }[] = [];
-    const end = new Date(Math.min(new Date(year, 11, 31).getTime(), Date.now()));
-    for (let d = new Date(year, 0, 1); d <= end; d.setDate(d.getDate() + 1)) {
+    const spokes: { day: string; value: number | null; angle: number; fill: string; future: boolean }[] = [];
+    const today = new Date();
+    for (let d = new Date(year, 0, 1); d <= new Date(year, 11, 31); d.setDate(d.getDate() + 1)) {
       const day = format(d, "yyyy-MM-dd");
       const doy = (d.getTime() - new Date(year, 0, 1).getTime()) / 86400000;
       const angle = (doy / daysInYear) * 2 * Math.PI - Math.PI / 2;
-      const value = byDay.get(day) ?? null;
+      const future = d > today;
+      const value = future ? null : (byDay.get(day) ?? null);
       let fill = "var(--muted)";
       if (value !== null && max > min) {
         const t = (value - min) / (max - min);
         fill = RAMP[Math.min(RAMP.length - 1, Math.floor(t * RAMP.length))];
       }
-      spokes.push({ day, value, angle, fill });
+      spokes.push({ day, value, angle, fill, future });
     }
     return {
       spokes,
@@ -84,8 +85,8 @@ export function RingYear({
               stroke={s.fill}
               strokeWidth={2.4}
               strokeLinecap="round"
-              opacity={hover && hover.day !== s.day ? 0.45 : 1}
-              onMouseEnter={() => setHover({ day: s.day, value: s.value })}
+              opacity={s.future ? 0.35 : hover && hover.day !== s.day ? 0.45 : 1}
+              onMouseEnter={() => !s.future && setHover({ day: s.day, value: s.value })}
               style={{ transition: "opacity 200ms var(--ease-premium)" }}
             />
           );

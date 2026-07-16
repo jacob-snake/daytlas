@@ -68,12 +68,13 @@
   --border: oklch(0.9 0.01 95);
   --input: oklch(0.9 0.01 95);
   --ring: oklch(0.55 0.1 60);
-  /* Validated vivid light palette (dataviz six-checks, WARN band → legends everywhere) */
-  --chart-1: #2a63c9; /* sleep — blue */
-  --chart-2: #5a6b1f; /* readiness — olive */
-  --chart-3: #e8622c; /* activity — orange */
-  --chart-4: #7a4fb8; /* HRV — violet */
-  --chart-5: #0e8a6b; /* temperature — teal */
+  /* better-colors pass: high-chroma OKLCH-tuned palette, dataviz six-checks FULL PASS
+     (CVD worst-adjacent ΔE 12.9, all ≥3:1 on light surface) */
+  --chart-1: #2e6be6; /* sleep — vivid blue      oklch(0.55 0.19 262) */
+  --chart-2: #456f10; /* readiness — vivid green oklch(0.50 0.13 131) */
+  --chart-3: #e26e0a; /* activity — vivid orange oklch(0.63 0.17 55)  */
+  --chart-4: #8a4de0; /* HRV — vivid violet      oklch(0.53 0.20 296) */
+  --chart-5: #00996e; /* temperature — vivid teal oklch(0.58 0.12 168) */
   --radius: 0.875rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);

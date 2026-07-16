@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ export function ExportDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Download data-icon="inline-start" /> Export
+          <DownloadSimpleIcon weight="fill" data-icon="inline-start" /> Export
         </Button>
       </DialogTrigger>
       <DialogContent>

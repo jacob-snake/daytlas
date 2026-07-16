@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "better-colors": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-colors/SKILL.md",
+      "computedHash": "018f47015d71a146963d05aa592ded3f885917b11d021b981d8b0148422f953e"
+    },
     "data-analysis": {
       "source": "claude-office-skills/skills",
       "sourceType": "github",

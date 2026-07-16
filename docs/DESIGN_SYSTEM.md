@@ -22,18 +22,17 @@ mechanism — never reorder.
 
 | Slot | Metric | Light | Dark |
 |---|---|---|---|
-| `--chart-1` | Sleep | `#2a63c9` | `#3987e5` |
-| `--chart-2` | Readiness | `#5a6b1f` | `#199e70` |
-| `--chart-3` | Activity | `#e8622c` | `#c98500` |
-| `--chart-4` | HRV | `#7a4fb8` | `#9085e9` |
-| `--chart-5` | Temperature | `#0e8a6b` | `#e66767` |
+| `--chart-1` | Sleep | `#2e6be6` | `#3987e5` |
+| `--chart-2` | Readiness | `#456f10` | `#199e70` |
+| `--chart-3` | Activity | `#e26e0a` | `#c98500` |
+| `--chart-4` | HRV | `#8a4de0` | `#9085e9` |
+| `--chart-5` | Temperature | `#00996e` | `#e66767` |
 
 CVD separation sits in the 8–12 floor band → legends/direct labels are
 mandatory on every multi-series chart.
 
 **Sequential ramp** (heatmap, sleep barcode — magnitude encoding):
-`#e3ecf9 → #b9d0f0 → #87aee3 → #4f83d2 → #2a63c9 → #1a4694` (single hue,
-monotonic lightness). **Diverging** (correlation r): blue `rgba(57,135,229,α)`
+`#e7efff → #bcd3fb → #84adf5 → #4a80ec → #2058d4 → #0d3695 → #071d55` (7 steps, single hue, monotonic lightness, high span for visible contrast). **Diverging** (correlation r): blue `rgba(57,135,229,α)`
 positive ↔ red `rgba(230,103,103,α)` negative, neutral at zero. These literals
 live only inside viz components; they encode data, not chrome.
 
@@ -63,8 +62,7 @@ live only inside viz components; they encode data, not chrome.
 ## Components
 All UI from shadcn/ui: Card, Button, Badge, Tabs, Select, Input, Label,
 Switch, Dialog, Alert, Table, Skeleton, Separator, Tooltip, Sonner, Command,
-Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Lucide only —
-no emoji as icons.
+Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Phosphor **filled** (`weight="fill"`) for decorative/semantic icons; Lucide outline only for functional glyphs (close, arrows). No emoji as icons.
 
 ## Patterns (beyond base shadcn)
 - **Insight card**: CardDescription (metric dot + window) → big tabular

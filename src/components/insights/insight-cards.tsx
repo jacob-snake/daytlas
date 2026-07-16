@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
+import { SparkleIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { metricInsight } from "@/lib/insights";
@@ -61,7 +62,7 @@ export function InsightCards({ rows }: { rows: DayRow[] }) {
           <CardContent className="space-y-1.5 text-sm text-muted-foreground">
             {i.percentile !== null && (
               <p className="flex items-center gap-1.5 text-foreground">
-                <Sparkles className="size-3.5" style={{ color: s.color }} />
+                <SparkleIcon weight="fill" className="size-3.5" style={{ color: s.color }} />
                 {story(i.percentile)}{" "}
                 <span className="text-muted-foreground">(top {100 - i.percentile}%)</span>
               </p>

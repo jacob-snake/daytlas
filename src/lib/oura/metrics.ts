@@ -147,9 +147,9 @@ export async function fetchWide(startDate: string, endDate: string): Promise<Day
   return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
-export type Period = "daily" | "weekly" | "monthly" | "quarterly";
+export type Period = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
-const FIRST_DAY_KEY = "woura.firstDay";
+const FIRST_DAY_KEY = "woura.firstDay.v2";
 
 /**
  * Earliest day with any Oura data for this user (Oura web's "from the very
@@ -176,12 +176,10 @@ export async function detectFirstDay(): Promise<string> {
       .sort();
     if (setups[0]) first = setups[0];
 
-    // Data can predate the current ring (account migrations) — probe one page
-    // of daily activity starting well before the earliest setup date.
-    const probeStart = new Date(first);
-    probeStart.setFullYear(probeStart.getFullYear() - 5);
+    // Data can predate the current ring (older rings, account migrations) —
+    // probe all the way back to the first Oura ring generation (2015).
     const probe = await fetchAll<{ day: string }>("daily_activity", {
-      start_date: probeStart.toISOString().slice(0, 10),
+      start_date: "2015-01-01",
       end_date: first,
     });
     const days = probe.map((p) => p.day).sort();
@@ -201,7 +199,9 @@ export function aggregate(rows: DayRow[], period: Period): DayRow[] {
   for (const r of rows) {
     const d = new Date(r.day as string);
     let key: string;
-    if (period === "quarterly") {
+    if (period === "yearly") {
+      key = `${d.getFullYear()}-01-01`;
+    } else if (period === "quarterly") {
       const qMonth = Math.floor(d.getMonth() / 3) * 3 + 1;
       key = `${d.getFullYear()}-${String(qMonth).padStart(2, "0")}-01`;
     } else if (period === "monthly") {

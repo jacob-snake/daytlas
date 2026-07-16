@@ -118,13 +118,15 @@ export default function YearPage() {
           <div className="stagger-item">
             <Card>
               <CardHeader>
-                <CardTitle>The ring</CardTitle>
+                <CardTitle>The rings</CardTitle>
                 <CardDescription>
-                  {year} wrapped around a circle — every spoke is one day
+                  {year} wrapped around a circle — every spoke is one day, faint grey is yet to come
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <RingYear rows={rows} metricKey={metricKey} year={year} />
+              <CardContent className="grid gap-6 md:grid-cols-3">
+                <RingYear rows={rows} metricKey="sleep_score" year={year} />
+                <RingYear rows={rows} metricKey="readiness_score" year={year} />
+                <RingYear rows={rows} metricKey="activity_score" year={year} />
               </CardContent>
             </Card>
           </div>

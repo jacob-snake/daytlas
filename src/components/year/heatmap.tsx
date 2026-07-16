@@ -6,7 +6,7 @@ import type { DayRow } from "@/lib/oura/metrics";
 import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 
 // Sequential single-hue ramp (light → dark), monotonic lightness.
-const RAMP = ["#e3ecf9", "#b9d0f0", "#87aee3", "#4f83d2", "#2a63c9", "#1a4694"];
+const RAMP = ["#e7efff", "#bcd3fb", "#84adf5", "#4a80ec", "#2058d4", "#0d3695", "#071d55"];
 const EMPTY = "var(--muted)";
 
 const CELL = 14;

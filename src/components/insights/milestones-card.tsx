@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { Flame, Trophy } from "lucide-react";
+import { FireIcon, TrophyIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { streaksAndRecords } from "@/lib/analytics";
@@ -29,7 +29,7 @@ export function MilestonesCard({ rows }: { rows: DayRow[] }) {
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="flex items-center gap-2">
-          <Flame className="size-4" style={{ color: "var(--chart-3)" }} />
+          <FireIcon weight="fill" className="size-4" style={{ color: "var(--chart-3)" }} />
           <span>
             Sleep ≥ 85 streak: <strong className="tabular-nums">{stats.sleep.current}</strong> days now
             {stats.sleep.best > stats.sleep.current && (
@@ -38,7 +38,7 @@ export function MilestonesCard({ rows }: { rows: DayRow[] }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Flame className="size-4" style={{ color: "var(--chart-2)" }} />
+          <FireIcon weight="fill" className="size-4" style={{ color: "var(--chart-2)" }} />
           <span>
             Readiness ≥ 85 streak: <strong className="tabular-nums">{stats.readiness.current}</strong> days now
             {stats.readiness.best > stats.readiness.current && (
@@ -48,7 +48,7 @@ export function MilestonesCard({ rows }: { rows: DayRow[] }) {
         </div>
         {stats.hrv.record && (
           <div className="flex items-center gap-2">
-            <Trophy className="size-4" style={{ color: "var(--chart-4)" }} />
+            <TrophyIcon weight="fill" className="size-4" style={{ color: "var(--chart-4)" }} />
             <span>
               HRV record: <strong className="tabular-nums">{stats.hrv.record.v.toFixed(0)} ms</strong>{" "}
               <Badge variant="outline">{format(new Date(stats.hrv.record.day), "d MMM yyyy")}</Badge>

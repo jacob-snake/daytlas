@@ -86,19 +86,18 @@ export function DistributionCard({ rows }: { rows: DayRow[] }) {
                       data[0]
                     )?.label}
                     stroke="var(--chart-3)"
+                    strokeWidth={2}
                     strokeDasharray="4 3"
-                    label={{
-                      value: `30-day avg ${dist.recentMean.toFixed(0)}${def.unit ? ` ${def.unit}` : ""}`,
-                      position: "top",
-                      fontSize: 11,
-                      fill: "var(--foreground)",
-                    }}
                   />
                 )}
               </BarChart>
             </ChartContainer>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {dist.total.toLocaleString()} tracked days · {def.label}
+            <p className="mt-2 text-sm text-muted-foreground">
+              {dist.total.toLocaleString()} tracked days · dashed line = your 30-day average{" "}
+              <span className="font-semibold text-foreground tabular-nums">
+                {dist.recentMean?.toFixed(0)}
+                {def.unit ? ` ${def.unit}` : ""}
+              </span>
             </p>
           </>
         )}

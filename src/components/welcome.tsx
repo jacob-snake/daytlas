@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Lock } from "lucide-react";
+import { CoffeeIcon, LockKeyIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,12 +29,12 @@ export function Welcome() {
         <CardContent className="flex flex-col gap-2">
           <Button asChild size="lg">
             <a href="/api/auth/login">
-              <Lock data-icon="inline-start" /> Authorize with Oura
+              <LockKeyIcon weight="fill" data-icon="inline-start" /> Authorize with Oura
             </a>
           </Button>
           <Button asChild variant="ghost">
             <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
-              <Coffee data-icon="inline-start" /> Buy me a coffee
+              <CoffeeIcon weight="fill" data-icon="inline-start" /> Buy me a coffee
             </a>
           </Button>
         </CardContent>

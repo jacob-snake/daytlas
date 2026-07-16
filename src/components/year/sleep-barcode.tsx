@@ -7,7 +7,7 @@ import type { DayRow } from "@/lib/oura/metrics";
 // Each night = one thin vertical bar from bedtime to wake-up on a clock axis
 // (18:00 → 14:00 next day). A year of nights reads like a barcode of rhythm.
 
-const RAMP = ["#e3ecf9", "#b9d0f0", "#87aee3", "#4f83d2", "#2a63c9", "#1a4694"];
+const RAMP = ["#e7efff", "#bcd3fb", "#84adf5", "#4a80ec", "#2058d4", "#0d3695", "#071d55"];
 
 const Y_MIN = 18; // 18:00
 const Y_MAX = 38; // 14:00 next day

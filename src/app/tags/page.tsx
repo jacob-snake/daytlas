@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Tag as TagIcon } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { TagIcon } from "@phosphor-icons/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
@@ -129,7 +130,7 @@ export default function TagLabPage() {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <TagIcon />
+              <TagIcon weight="fill" />
             </EmptyMedia>
             <EmptyTitle>No tags yet</EmptyTitle>
             <EmptyDescription>
