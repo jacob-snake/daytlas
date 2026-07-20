@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { weeklyDeviations } from "@/lib/analytics";
 import type { DayRow } from "@/lib/oura/metrics";
@@ -30,9 +31,9 @@ export function WeekReportCard({ rows }: { rows: DayRow[] }) {
         {devs.map((d) => (
           <div key={d.key} className="flex items-start gap-2 text-sm">
             {d.zScore > 0 ? (
-              <ArrowUp className="mt-0.5 size-4 shrink-0" style={{ color: "var(--chart-2)" }} />
+              <Icon icon={ArrowUp01Icon} className="mt-0.5 size-4 shrink-0" style={{ color: "var(--chart-2)" }} />
             ) : (
-              <ArrowDown className="mt-0.5 size-4 shrink-0 text-destructive" />
+              <Icon icon={ArrowDown01Icon} className="mt-0.5 size-4 shrink-0 text-destructive" />
             )}
             <p className="text-pretty">{sentence(d)}</p>
           </div>

@@ -1,9 +1,10 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ChartDownIcon, ChartUpIcon } from "@hugeicons/core-free-icons";
 
 import { useMemo, useState } from "react";
-import type { Icon } from "@phosphor-icons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { AnimatePresence, motion } from "motion/react";
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -21,7 +22,7 @@ import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 export interface SectionDef {
   id: string;
   title: string;
-  icon: Icon;
+  icon: IconSvgElement;
   color: string;
   headline: string; // metric that summarizes the section
   metrics: string[]; // all metrics belonging to the section
@@ -55,7 +56,7 @@ export function TrendSection({ section, data }: { section: SectionDef; data: Day
           className="flex size-9 items-center justify-center rounded-xl"
           style={{ background: `color-mix(in oklab, ${section.color} 14%, transparent)` }}
         >
-          <section.icon weight="fill" className="size-5" style={{ color: section.color }} />
+          <Icon icon={section.icon} className="size-5" style={{ color: section.color }} />
         </span>
         <h2 className="text-xl font-bold tracking-tight">{section.title}</h2>
         {summary.avg !== null && (
@@ -67,9 +68,9 @@ export function TrendSection({ section, data }: { section: SectionDef; data: Day
         {summary.delta !== null && Math.abs(summary.delta) >= 0.05 && (
           <Badge variant="outline" className="tabular-nums text-sm">
             {summary.delta > 0 ? (
-              <TrendingUp className="size-4" style={{ color: "var(--chart-2)" }} />
+              <Icon icon={ChartUpIcon} className="size-4" style={{ color: "var(--chart-2)" }} />
             ) : (
-              <TrendingDown className="size-4 text-destructive" />
+              <Icon icon={ChartDownIcon} className="size-4 text-destructive" />
             )}
             <span className="font-semibold" style={{ color: summary.delta > 0 ? "var(--chart-2)" : "var(--destructive)" }}>
               {Math.abs(summary.delta).toFixed(1)}

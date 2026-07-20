@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 
 import { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppHeader } from "@/components/app-header";
@@ -85,7 +86,7 @@ export default function Dashboard() {
 
       {error && (
         <Alert variant="destructive">
-          <AlertCircle />
+          <Icon icon={AlertCircleIcon} />
           <AlertTitle>Couldn&apos;t load your data</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-3">
             {error.includes("401") ? "Your Oura session expired." : error}

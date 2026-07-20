@@ -1,8 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { AlertCircleIcon, Tag01Icon } from "@hugeicons/core-free-icons";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { TagIcon } from "@phosphor-icons/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
@@ -118,7 +118,7 @@ export default function TagLabPage() {
 
       {error && (
         <Alert variant="destructive">
-          <AlertCircle />
+          <Icon icon={AlertCircleIcon} />
           <AlertTitle>Couldn&apos;t load your data</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -130,7 +130,7 @@ export default function TagLabPage() {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <TagIcon weight="fill" />
+              <Icon icon={Tag01Icon} />
             </EmptyMedia>
             <EmptyTitle>No tags yet</EmptyTitle>
             <EmptyDescription>

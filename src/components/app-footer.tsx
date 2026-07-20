@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { Coffee02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 
 import Link from "next/link";
-import { CoffeeIcon, TrashIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -36,7 +37,7 @@ export function AppFooter() {
           </Button>
           <Button asChild variant="outline" size="xs">
             <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
-              <CoffeeIcon weight="fill" data-icon="inline-start" /> Buy me a coffee
+              <Icon icon={Coffee02Icon} data-icon="inline-start" /> Buy me a coffee
             </a>
           </Button>
           <Separator orientation="vertical" className="mx-1 h-4" />
@@ -48,7 +49,7 @@ export function AppFooter() {
               toast.success("All locally cached data wiped");
             }}
           >
-            <TrashIcon weight="fill" data-icon="inline-start" /> Wipe local data
+            <Icon icon={Delete02Icon} data-icon="inline-start" /> Wipe local data
           </Button>
         </div>
       </div>

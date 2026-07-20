@@ -1,9 +1,9 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ChartDownIcon, ChartUpIcon, SparklesIcon } from "@hugeicons/core-free-icons";
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { TrendingDown, TrendingUp } from "lucide-react";
-import { SparkleIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { metricInsight } from "@/lib/insights";
@@ -20,7 +20,7 @@ function DeltaBadge({ delta, unit }: { delta: number | null; unit?: string }) {
   const up = delta >= 0;
   return (
     <Badge variant="outline" className="tabular-nums">
-      {up ? <TrendingUp /> : <TrendingDown />}
+      {up ? <Icon icon={ChartUpIcon} /> : <Icon icon={ChartDownIcon} />}
       {up ? "+" : "−"}
       {Math.abs(delta).toFixed(1)}
       {unit ?? ""}
@@ -62,7 +62,7 @@ export function InsightCards({ rows }: { rows: DayRow[] }) {
           <CardContent className="space-y-1.5 text-sm text-muted-foreground">
             {i.percentile !== null && (
               <p className="flex items-center gap-1.5 text-foreground">
-                <SparkleIcon weight="fill" className="size-3.5" style={{ color: s.color }} />
+                <Icon icon={SparklesIcon} className="size-3.5" style={{ color: s.color }} />
                 {story(i.percentile)}{" "}
                 <span className="text-muted-foreground">(top {100 - i.percentile}%)</span>
               </p>

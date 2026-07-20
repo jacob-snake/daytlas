@@ -1,8 +1,9 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ArrowDataTransferHorizontalIcon } from "@hugeicons/core-free-icons";
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { GitCommitHorizontal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { changepoints } from "@/lib/analytics";
 import type { DayRow } from "@/lib/oura/metrics";
@@ -33,7 +34,7 @@ export function ShiftsCard({ rows }: { rows: DayRow[] }) {
           const def = METRIC_BY_KEY[s.key];
           return (
             <div key={`${s.key}-${s.day}`} className="flex items-start gap-2">
-              <GitCommitHorizontal className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <Icon icon={ArrowDataTransferHorizontalIcon} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <p className="text-pretty">
                 Around <strong>{format(new Date(s.day), "d MMM yyyy")}</strong>, {def.label.toLowerCase()}{" "}
                 moved from <span className="tabular-nums">{s.before.toFixed(1)}</span> to{" "}

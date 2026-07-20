@@ -1,9 +1,9 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ArrowExpandIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
 
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { X } from "lucide-react";
-import { ArrowsOutIcon } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -186,10 +186,10 @@ export function MetricPanel({
             onClick={() => setExpanded(true)}
             aria-label={`Expand ${def.label} to full screen`}
           >
-            <ArrowsOutIcon weight="bold" />
+            <Icon icon={ArrowExpandIcon} />
           </Button>
           <Button variant="ghost" size="icon" onClick={onRemove} aria-label={`Remove ${def.label}`}>
-            <X />
+            <Icon icon={Cancel01Icon} />
           </Button>
         </CardAction>
       </CardHeader>
@@ -200,7 +200,7 @@ export function MetricPanel({
             <span>Normalized (z-scores) so different units share one axis.</span>
             {compareKeys.map((k) => (
               <Button key={k} variant="outline" size="xs" onClick={() => onCompareRemove(k)}>
-                {METRIC_BY_KEY[k].label} <X className="size-3" />
+                {METRIC_BY_KEY[k].label} <Icon icon={Cancel01Icon} className="size-3" />
               </Button>
             ))}
           </div>
@@ -230,7 +230,7 @@ export function MetricPanel({
             </Select>
             {compareKeys.map((k) => (
               <Button key={k} variant="outline" size="xs" onClick={() => onCompareRemove(k)}>
-                {METRIC_BY_KEY[k].label} <X className="size-3" />
+                {METRIC_BY_KEY[k].label} <Icon icon={Cancel01Icon} className="size-3" />
               </Button>
             ))}
           </div>

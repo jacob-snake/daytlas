@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AppFooter } from "@/components/app-footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/icon";
+import { Coffee02Icon, GithubIcon, Linkedin01Icon } from "@hugeicons/core-free-icons";
 
 export const metadata = { title: "About — Woura" };
 
@@ -28,23 +30,35 @@ export default function About() {
             servers storing anything, no tracking, no AI reading your health history. Every
             insight is plain statistics you can read in the source code.
           </p>
-          <p>
-            Woura is free. If it&apos;s useful to you, a coffee keeps it going.
-          </p>
+          <p>Woura is free. If it&apos;s useful to you, a coffee keeps it going.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Built by Jakub Had</CardTitle>
+          <CardDescription>Say hi, follow along, or send feedback.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild>
+            <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
+              <Icon icon={Coffee02Icon} data-icon="inline-start" /> Buy me a coffee
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a href="https://www.linkedin.com/in/jakub-had/" target="_blank" rel="noreferrer">
+              <Icon icon={Linkedin01Icon} data-icon="inline-start" /> LinkedIn
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a href="https://github.com/hadjakub/woura" target="_blank" rel="noreferrer">
+              <Icon icon={GithubIcon} data-icon="inline-start" /> GitHub
+            </a>
+          </Button>
         </CardContent>
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <Button asChild>
-          <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
-            ☕ Buy me a coffee
-          </a>
-        </Button>
-        <Button asChild variant="outline">
-          <a href="https://github.com/hadjakub/woura" target="_blank" rel="noreferrer">
-            GitHub
-          </a>
-        </Button>
         <Button asChild variant="ghost">
           <Link href="/privacy">Privacy</Link>
         </Button>

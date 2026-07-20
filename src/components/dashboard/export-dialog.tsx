@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { Download04Icon } from "@hugeicons/core-free-icons";
 
 import { useState } from "react";
-import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export function ExportDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <DownloadSimpleIcon weight="fill" data-icon="inline-start" /> Export
+          <Icon icon={Download04Icon} data-icon="inline-start" /> Export
         </Button>
       </DialogTrigger>
       <DialogContent>

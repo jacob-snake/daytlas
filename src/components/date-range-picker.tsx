@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
 import { format, subDays, subMonths, subYears } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export function DateRangePicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="min-w-[240px] justify-start font-normal">
-          <CalendarIcon data-icon="inline-start" className="text-muted-foreground" />
+          <Icon icon={Calendar03Icon} data-icon="inline-start" className="text-muted-foreground" />
           {format(selected.from!, "d MMM yyyy")} – {format(selected.to!, "d MMM yyyy")}
         </Button>
       </PopoverTrigger>

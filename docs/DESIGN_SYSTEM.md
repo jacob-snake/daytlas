@@ -62,7 +62,13 @@ live only inside viz components; they encode data, not chrome.
 ## Components
 All UI from shadcn/ui: Card, Button, Badge, Tabs, Select, Input, Label,
 Switch, Dialog, Alert, Table, Skeleton, Separator, Tooltip, Sonner, Command,
-Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: Phosphor **filled** (`weight="fill"`) for decorative/semantic icons; Lucide outline only for functional glyphs (close, arrows). No emoji as icons.
+Calendar, Popover, Empty, Spinner, Chart (Recharts). Icons: **Hugeicons**
+(`@hugeicons/react` + `@hugeicons/core-free-icons`, MIT) via the `<Icon icon={XIcon} />`
+wrapper in `src/components/icon.tsx` — used everywhere in app code, including
+close/expand/arrow glyphs. Lucide remains only inside unmodified shadcn `ui/`
+primitives (calendar, command, dialog, dropdown-menu, select, sonner, spinner)
+where it ships as part of the component internals — left as-is rather than
+forked. No emoji as icons.
 
 ## Patterns (beyond base shadcn)
 - **Add-trigger** (`.add-trigger`): every "create/add" control (Add chart,

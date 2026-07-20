@@ -1,6 +1,7 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ChartDownIcon, ChartUpIcon } from "@hugeicons/core-free-icons";
 
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -34,7 +35,7 @@ export function ScoreCard({
         {delta !== null && (
           <CardAction>
             <Badge variant="outline" className="tabular-nums">
-              {delta >= 0 ? <TrendingUp /> : <TrendingDown />}
+              {delta >= 0 ? <Icon icon={ChartUpIcon} /> : <Icon icon={ChartDownIcon} />}
               {Math.abs(delta).toFixed(1)}
             </Badge>
           </CardAction>

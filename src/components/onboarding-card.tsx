@@ -1,7 +1,8 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { ChartLineData01Icon, CircleIcon, DashboardSpeed01Icon, FlaskConicalIcon } from "@hugeicons/core-free-icons";
 
 import Link from "next/link";
-import { ChartLineUpIcon, GaugeIcon, FlaskIcon, CircleDashedIcon } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const STEPS = [
@@ -9,28 +10,28 @@ const STEPS = [
     href: "/",
     title: "Dashboard",
     text: "How you're doing lately vs your own history",
-    icon: GaugeIcon,
+    icon: DashboardSpeed01Icon,
     color: "var(--chart-1)",
   },
   {
     href: "/trends",
     title: "Trends",
     text: "Any metric over your entire timeline, with correlations",
-    icon: ChartLineUpIcon,
+    icon: ChartLineData01Icon,
     color: "var(--chart-2)",
   },
   {
     href: "/year",
     title: "Year",
     text: "Your whole year as rings, heatmap and sleep barcode",
-    icon: CircleDashedIcon,
+    icon: CircleIcon,
     color: "var(--chart-3)",
   },
   {
     href: "/tags",
     title: "Tag Lab",
     text: "What your habits actually do to your body the next day",
-    icon: FlaskIcon,
+    icon: FlaskConicalIcon,
     color: "var(--chart-4)",
   },
 ];
@@ -49,7 +50,7 @@ export function OnboardingCard({ current }: { current?: string }) {
               className="flex size-10 shrink-0 items-center justify-center rounded-xl"
               style={{ background: `color-mix(in oklab, ${s.color} 14%, transparent)` }}
             >
-              <s.icon weight="fill" className="size-5" style={{ color: s.color }} />
+              <Icon icon={s.icon} className="size-5" style={{ color: s.color }} />
             </span>
             <span>
               <span className="block font-bold">{s.title}</span>

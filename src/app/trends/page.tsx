@@ -1,10 +1,10 @@
 "use client";
+import { Icon } from "@/components/icon";
+import { AlertCircleIcon, HeartPulseIcon, Moon02Icon, WorkoutRunIcon } from "@hugeicons/core-free-icons";
 
 import { useEffect, useMemo, useState } from "react";
 import { format, subDays, subYears } from "date-fns";
 import { Area, AreaChart, Brush, ReferenceLine, XAxis } from "recharts";
-import { AlertCircle } from "lucide-react";
-import { MoonIcon, HeartbeatIcon, PersonSimpleRunIcon } from "@phosphor-icons/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
@@ -34,7 +34,7 @@ const SECTIONS: SectionDef[] = [
   {
     id: "sleep",
     title: "Sleep",
-    icon: MoonIcon,
+    icon: Moon02Icon,
     color: "var(--chart-1)",
     headline: "sleep_score",
     metrics: [
@@ -56,7 +56,7 @@ const SECTIONS: SectionDef[] = [
   {
     id: "readiness",
     title: "Readiness & Heart",
-    icon: HeartbeatIcon,
+    icon: HeartPulseIcon,
     color: "var(--chart-2)",
     headline: "readiness_score",
     metrics: [
@@ -74,7 +74,7 @@ const SECTIONS: SectionDef[] = [
   {
     id: "activity",
     title: "Activity",
-    icon: PersonSimpleRunIcon,
+    icon: WorkoutRunIcon,
     color: "var(--chart-3)",
     headline: "activity_score",
     metrics: [
@@ -218,7 +218,7 @@ export default function TrendsPage() {
 
       {error && (
         <Alert variant="destructive">
-          <AlertCircle />
+          <Icon icon={AlertCircleIcon} />
           <AlertTitle>Couldn&apos;t load your data</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -241,7 +241,7 @@ export default function TrendsPage() {
                   document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
               >
-                <s.icon weight="fill" className="size-4" style={{ color: s.color }} />
+                <Icon icon={s.icon} className="size-4" style={{ color: s.color }} />
                 <span className="hidden lg:inline">{s.title}</span>
               </button>
             );
