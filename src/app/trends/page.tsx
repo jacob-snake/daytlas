@@ -218,16 +218,18 @@ export default function TrendsPage() {
         </Alert>
       )}
 
-      {/* Sticky control bar: section anchors + range presets + picker + period */}
-      <div className="sticky top-20 z-10 -mx-2 flex flex-wrap items-center gap-2 rounded-xl border bg-background/85 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-xl">
-        <nav className="flex items-center gap-1">
+      {/* Sticky control bar: section anchors + range presets + picker + period.
+          Stacks into two rows on mobile; each row scrolls horizontally with
+          no visible scrollbar rather than wrapping into a tall block. */}
+      <div className="sticky top-16 z-10 -mx-2 flex flex-col gap-2 rounded-xl border bg-background/85 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-xl sm:top-20 sm:flex-row sm:items-center sm:flex-wrap">
+        <nav className="flex shrink-0 items-center gap-0.5 overflow-x-auto sm:gap-1">
           {SECTIONS.map((s) => {
             const active = activeSection === s.id;
             return (
               <button
                 key={s.id}
                 className={cn(
-                  "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                  "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors sm:px-3",
                   active ? "font-bold" : "font-medium text-muted-foreground hover:bg-muted"
                 )}
                 style={active ? { background: `color-mix(in oklab, ${s.color} 14%, transparent)`, color: s.color } : undefined}
@@ -241,14 +243,14 @@ export default function TrendsPage() {
             );
           })}
         </nav>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 overflow-x-auto sm:ml-auto sm:flex-wrap">
+          <div className="flex shrink-0 items-center gap-1">
             {PRESETS.map((p) => (
               <Button
                 key={p.label}
                 variant={startDate === p.start ? "secondary" : "ghost"}
                 size="sm"
-                className={cn(startDate === p.start && "font-semibold")}
+                className={cn("shrink-0", startDate === p.start && "font-semibold")}
                 disabled={!p.start}
                 onClick={() => p.start && setStartDate(p.start)}
               >
@@ -257,18 +259,20 @@ export default function TrendsPage() {
             ))}
           </div>
           {startDate ? (
-            <DateRangePicker
-              allDataStart={firstDay ?? undefined}
-              value={{ start: startDate, end: endDate }}
-              onChange={(r) => {
-                setStartDate(r.start);
-                setEndDate(r.end);
-              }}
-            />
+            <div className="shrink-0">
+              <DateRangePicker
+                allDataStart={firstDay ?? undefined}
+                value={{ start: startDate, end: endDate }}
+                onChange={(r) => {
+                  setStartDate(r.start);
+                  setEndDate(r.end);
+                }}
+              />
+            </div>
           ) : (
-            <Skeleton className="h-8 w-[220px]" />
+            <Skeleton className="h-8 w-[220px] shrink-0" />
           )}
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
+          <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="shrink-0">
             <TabsList>
               <TabsTrigger value="daily">Day</TabsTrigger>
               <TabsTrigger value="weekly">Week</TabsTrigger>

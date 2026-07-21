@@ -2,7 +2,7 @@
 import { Icon } from "@/components/icon";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, subDays, subMonths, subYears } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,19 @@ const PRESETS: { label: string; range: () => Range }[] = [
   { label: "Last 3 years", range: () => ({ start: iso(subYears(new Date(), 3)), end: iso(new Date()) }) },
 ];
 
+/** True below Tailwind's sm breakpoint — used to drop to a single calendar month. */
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return mobile;
+}
+
 export function DateRangePicker({
   value,
   onChange,
@@ -36,6 +49,7 @@ export function DateRangePicker({
   allDataStart?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
   const selected: DateRange = {
     from: new Date(value.start),
     to: new Date(value.end),
@@ -44,19 +58,21 @@ export function DateRangePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="min-w-[240px] justify-start font-normal">
+        <Button variant="outline" className="min-w-0 justify-start font-normal sm:min-w-[240px]">
           <Icon icon={Calendar03Icon} data-icon="inline-start" className="text-muted-foreground" />
-          {format(selected.from!, "d MMM yyyy")} – {format(selected.to!, "d MMM yyyy")}
+          <span className="truncate">
+            {format(selected.from!, "d MMM yyyy")} – {format(selected.to!, "d MMM yyyy")}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="flex">
-          <div className="flex flex-col gap-1 p-3">
+      <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-0" align="start">
+        <div className="flex max-h-[85vh] flex-col overflow-y-auto sm:max-h-none sm:flex-row">
+          <div className="flex gap-1 overflow-x-auto p-3 sm:flex-col">
             {allDataStart && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="justify-start font-semibold"
+                className="shrink-0 justify-start font-semibold"
                 onClick={() => {
                   onChange({ start: allDataStart, end: iso(new Date()) });
                   setOpen(false);
@@ -70,7 +86,7 @@ export function DateRangePicker({
                 key={p.label}
                 variant="ghost"
                 size="sm"
-                className="justify-start font-normal"
+                className="shrink-0 justify-start font-normal"
                 onClick={() => {
                   onChange(p.range());
                   setOpen(false);
@@ -80,7 +96,8 @@ export function DateRangePicker({
               </Button>
             ))}
           </div>
-          <Separator orientation="vertical" className="h-auto" />
+          <Separator className="sm:hidden" />
+          <Separator orientation="vertical" className="hidden h-auto sm:block" />
           <div>
             <div className="flex items-center gap-3 border-b px-4 py-3 text-sm">
               <div>
@@ -95,7 +112,7 @@ export function DateRangePicker({
             </div>
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
               defaultMonth={selected.from}
               selected={selected}
               onSelect={(r) => {
@@ -105,7 +122,7 @@ export function DateRangePicker({
               }}
               disabled={{ after: new Date() }}
               classNames={{
-                day: "size-10 rounded-full text-[13px] font-medium",
+                day: "size-9 sm:size-10 rounded-full text-[13px] font-medium",
                 range_middle:
                   "bg-[color-mix(in_oklab,var(--chart-1)_16%,transparent)] rounded-none first:rounded-l-full last:rounded-r-full",
                 range_start: "rounded-full bg-primary text-primary-foreground",

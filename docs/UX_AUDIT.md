@@ -50,6 +50,15 @@
 10. Vizuálna hierarchia: score karty zmenšiť, insight karty sú dôležitejšie.
 
 **P3 (strategické):**
-11. Mobile/tablet layout pass (heatmap → mesačný detail na úzkych šírkach).
-12. Self-host onboarding guide (README + screenshoty formulára Oura appky).
-13. Undo toast pattern pre deštruktívne akcie, keď nejaké pribudnú.
+11. ✅ Mobile/tablet layout pass (2026-07-21): AppHeader nav je pod `sm:` icon-only
+    (nie 4 rozpité textové tlačidlá), Trends sticky control bar sa na mobile
+    rozpadá na dva horizontálne scrollovateľné riadky namiesto orezania,
+    DateRangePicker prepína na 1-mesačný kalendár pod `sm:` a celý popover má
+    `max-w-[calc(100vw-2rem)]` + vlastný scroll namiesto pretečenia mimo
+    viewport. Heatmapa/ring/barcode zostávajú husté vizuály s horizontálnym
+    scrollom na úzkych šírkach (rovnaký kompromis ako GitHub/Oura) —
+    zjednodušený „mesačný detail" view sa neimplementoval, zvážiť neskôr ak
+    z analytiky vyjde reálna mobilná návštevnosť.
+12. ✅ Self-host onboarding guide — hotové v README.md.
+13. Undo toast pattern pre deštruktívne akcie — zatiaľ žiadna nová deštruktívna
+    akcia nepribudla (Wipe local data má vlastný potvrdzujúci tok), odložené.
