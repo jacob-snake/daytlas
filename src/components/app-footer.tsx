@@ -16,7 +16,7 @@ export function AppFooter() {
         <p>
           Woura · open source · your data never leaves this browser ·{" "}
           <a
-            href="https://github.com/hadjakub/woura/releases"
+            href="https://github.com/jacob-snake/woura/releases"
             target="_blank"
             rel="noreferrer"
             className="tabular-nums underline-offset-2 hover:underline"

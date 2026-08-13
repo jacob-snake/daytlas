@@ -51,7 +51,7 @@ export default function About() {
             </a>
           </Button>
           <Button asChild variant="outline">
-            <a href="https://github.com/hadjakub/woura" target="_blank" rel="noreferrer">
+            <a href="https://github.com/jacob-snake/woura" target="_blank" rel="noreferrer">
               <Icon icon={GithubIcon} data-icon="inline-start" /> GitHub
             </a>
           </Button>

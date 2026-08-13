@@ -31,7 +31,7 @@ own app registration, and Oura:
    - Tick all scopes, agree, create — copy the Client ID and Client Secret.
 2. **Clone & configure**:
    ```bash
-   git clone https://github.com/hadjakub/woura && cd woura
+   git clone https://github.com/jacob-snake/woura && cd woura
    npm install
    cp .env.example .env.local   # then paste your Client ID/Secret into it
    ```
@@ -48,7 +48,7 @@ serves only you.
 
 Woura uses [SemVer](https://semver.org/) (`MAJOR.MINOR.PATCH`). The running
 version is shown in the footer and links to the
-[releases page](https://github.com/hadjakub/woura/releases) — Woura never
+[releases page](https://github.com/jacob-snake/woura/releases) — Woura never
 checks for updates automatically (no phoning home, by design).
 
 To upgrade a self-hosted install:
