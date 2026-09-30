@@ -80,10 +80,10 @@ export function TrendSection({
     <section
       ref={sectionRef}
       id={`trend-${section.id}`}
-      className="scroll-mt-6 space-y-3 py-8 sm:py-12"
+      className="scroll-mt-6 space-y-3 py-2 sm:py-3"
       aria-label={`${section.title} trends`}
     >
-      <header className="flex flex-wrap items-center justify-between gap-6 border-t border-border/40 pt-8 pb-5">
+      <header className="flex flex-wrap items-center justify-between gap-6 border-t border-border/40 pt-6 pb-3">
         <div className="flex items-center gap-4">
           <span
             className="flex size-12 items-center justify-center rounded-2xl"

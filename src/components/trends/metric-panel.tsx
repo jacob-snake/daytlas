@@ -53,6 +53,7 @@ import type { DayRow, Period } from "@/lib/oura/metrics";
 import { CLOCK_METRICS, METRIC_BY_KEY, METRICS } from "@/lib/oura/metrics";
 import { comparisonColors } from "@/lib/chart-comparison";
 import { ComparisonCorrelations } from "./comparison-correlations";
+import { ResizableChart } from "./resizable-chart";
 
 function comparisonUnit(key: string): string {
   if (CLOCK_METRICS.has(key)) return key;
@@ -150,7 +151,7 @@ export function MetricPanel({
     return [{ key, value, label }];
   });
 
-  const renderChart = (heightClass: string) => (
+  const renderChart = (heightClass: string, height?: number) => (
     <div
       tabIndex={0}
       aria-label={`${def.label} chart. Average lines show the displayed periods. Focus or touch to emphasize them.`}
@@ -164,6 +165,7 @@ export function MetricPanel({
       <ChartContainer
         config={config}
         className={`${heightClass} w-full min-w-0 aspect-auto`}
+        style={height === undefined ? undefined : { height }}
       >
         <ComposedChart
           key={period}
@@ -369,7 +371,9 @@ export function MetricPanel({
         </CardAction>
       </CardHeader>
       <CardContent>
-        {renderChart("h-[220px]")}
+        <ResizableChart label={def.label}>
+          {(height) => renderChart("h-[220px]", height)}
+        </ResizableChart>
         {comparing ? (
           <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
@@ -389,15 +393,13 @@ export function MetricPanel({
               </Button>
             ))}
           </div>
-        ) : (
+        ) : showBaseline || clockMetric ? (
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
             {showBaseline
               ? "Dashed line: prior 60-day mean within this selection. Band: ±1 standard deviation, not a clinical range."
-              : clockMetric
-                ? "Local clock time as recorded. After-midnight bedtimes continue beyond 24; grouped periods use a circular mean."
-                : `${period.charAt(0).toUpperCase() + period.slice(1)} means of available days. Missing measurements are excluded.`}
+              : "Local clock time as recorded. After-midnight bedtimes continue beyond 24; grouped periods use a circular mean."}
           </p>
-        )}
+        ) : null}
         {comparing && (
           <div className="mt-4">
             <ComparisonCorrelations

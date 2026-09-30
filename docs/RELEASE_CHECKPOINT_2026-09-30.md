@@ -1,6 +1,6 @@
 # Me by Day application checkpoint
 
-This is a source checkpoint of the application state preceding the 30 September daily-detail research. It is a draft for review, not a merge or deployment instruction.
+This source checkpoint includes the application baseline and the subsequently approved 30 September cardiovascular-age and chart refinements. It is a draft for review, not a merge or deployment instruction.
 
 ## Included
 
@@ -12,11 +12,13 @@ This is a source checkpoint of the application state preceding the 30 September 
 
 No personal health exports, credentials, user screenshots, DNS backups or internal research/design archives are included. Previously tracked repository documents remain as they were; the local editorial/design documentation is outside this application checkpoint.
 
-The new “How to read this” accordion, cardiovascular-age view, daily detail and metric education proposals are excluded. New product work must be discussed before publication.
+Approved follow-up: cardiovascular age on Overview (Oura estimate, dated latest reading, prior-30-day average and 90-day chart), vertically resizable Trends charts, compact right-aligned average labels, Add chart hover/focus feedback, centered navigation rails, tighter section spacing and collapsed correlation help. Existing Overview content is preserved. The separate Day detail page and metric education remain local proposals and are excluded.
 
 ## Validation
 
 An isolated export of the staged Git tree was installed with `npm ci`, then passed `npm run check` (lint, TypeScript and 106 unit tests) and `npm run build` on Node 24.
+
+Follow-up validation: lint (no errors), TypeScript and 108 unit tests pass. An isolated static Next export and Worker dry-run bundle pass. Browser checks on synthetic data verify 390px/desktop layouts, pointer resizing, Home/End/arrow keyboard resizing, four-series badge separation, exact rail centering, hover feedback and no horizontal overflow. Live-account availability of cardiovascular age has not been verified.
 
 The broader Chromium/WebKit browser suite is **not green**. It reports failures in existing design-system, navigation and onboarding assertions, including an expected font weight of 600 after the interface changed. Remaining failures need individual triage; they must not all be assumed to be stale tests. This checkpoint is not ready to merge on the basis of browser coverage.
 

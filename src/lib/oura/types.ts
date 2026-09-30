@@ -93,6 +93,14 @@ export interface DailyStress {
   day_summary: string | null;
 }
 
+/** Oura OpenAPI 1.41: supplied estimate, never calculated from other scores. */
+export interface DailyCardiovascularAge {
+  id: string;
+  day: string;
+  vascular_age?: number | null;
+  pulse_wave_velocity?: number | null;
+}
+
 export interface DailySpo2 {
   id: string;
   day: string;

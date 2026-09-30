@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { FaqItem } from "@/components/ui/faq-item";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -84,7 +85,7 @@ export function CorrelationMatrixCard({
             </Badge>
           </div>
         )}
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)]">
+        <div className="grid min-w-0 gap-5">
           <div className="min-w-0 overflow-x-auto">
             <Table aria-label="Correlation matrix" className="w-full">
               <TableHeader>
@@ -137,9 +138,8 @@ export function CorrelationMatrixCard({
               </TableBody>
             </Table>
           </div>
-          <aside className="rounded-2xl bg-secondary/60 p-5 text-sm leading-relaxed">
-            <h3 className="font-bold">How to read this</h3>
-            <ul className="mt-3 space-y-2 text-muted-foreground">
+          <FaqItem question="How to read this">
+            <ul className="space-y-2">
               <li>
                 <strong className="text-foreground">Near +1:</strong> the
                 metrics tend to rise together.
@@ -153,21 +153,21 @@ export function CorrelationMatrixCard({
                 linear relationship.
               </li>
             </ul>
-            <p className="mt-4 font-semibold">
+            <p className="mt-4 font-semibold text-foreground">
               A relationship does not prove cause and effect.
             </p>
-            <details className="mt-4">
-              <summary className="min-h-11 cursor-pointer py-2 font-semibold">
+            <div className="mt-4">
+              <h3 className="font-semibold text-foreground">
                 About the calculation
-              </summary>
+              </h3>
               <p className="pt-2 text-muted-foreground">
                 Pearson r uses paired observations in this view. Weekly or
                 monthly averages can appear more strongly related than daily
                 readings. Clock-time metrics are excluded because midnight wraps
                 around.
               </p>
-            </details>
-          </aside>
+            </div>
+          </FaqItem>
         </div>
       </CardContent>
     </Card>

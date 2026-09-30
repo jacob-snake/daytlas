@@ -139,6 +139,13 @@ export function getDemoCollection<T>(
           breathing_disturbance_index: 0,
         };
         break;
+      case "daily_cardiovascular_age":
+        value = {
+          ...shared,
+          vascular_age:
+            i % 19 === 0 ? null : Math.round(37 + Math.sin(i / 36) - i / 600),
+        };
+        break;
       case "daily_stress":
         value = {
           ...shared,

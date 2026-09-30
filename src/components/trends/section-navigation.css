@@ -67,14 +67,16 @@
   }
   .trend-rail-link {
     flex: none;
-    width: 40px;
+    width: 42px;
     min-height: 112px;
     padding: 8px;
     align-items: flex-start;
+    justify-content: center;
   }
   .trend-rail-track {
     position: absolute;
-    inset-inline-start: 19px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
     top: 38px;
     bottom: 2px;
     width: 3px;

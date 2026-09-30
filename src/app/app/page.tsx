@@ -7,6 +7,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { ScoreCard } from "@/components/dashboard/score-card";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { VitalsPanels } from "@/components/dashboard/vitals-panels";
+import { CardiovascularAgeCard } from "@/components/dashboard/cardiovascular-age-card";
 import { CorrelationCard } from "@/components/dashboard/correlation-card";
 import { fetchDayScores, type DayScores } from "@/lib/oura/queries";
 import { detectFirstDay, fetchWide } from "@/lib/oura/metrics";
@@ -115,6 +116,7 @@ export default function Dashboard() {
               ))}
         </section>
       )}
+      <CardiovascularAgeCard session={session} />
       <div className="pt-5">
         <h2 className="text-2xl font-bold tracking-[-0.035em]">
           The longer view

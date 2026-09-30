@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePlotArea, useYAxisScale } from "recharts";
 import {
   numericLabelWidth,
@@ -10,8 +11,6 @@ function AverageLabel({
   value,
   color,
   index,
-  total,
-  widestValue,
   positions,
   viewBox,
 }: {
@@ -23,25 +22,31 @@ function AverageLabel({
   positions?: AveragePosition[];
   viewBox?: unknown;
 }) {
+  const textRef = useRef<SVGTextElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    let active = true;
+    const measure = () => {
+      const width = textRef.current?.getComputedTextLength();
+      if (active && width && Number.isFinite(width))
+        setMeasuredWidth(Math.ceil(width));
+    };
+    measure();
+    void document.fonts.ready.then(measure);
+    return () => {
+      active = false;
+    };
+  }, [value, viewBox]);
   const plot = usePlotArea();
   const primaryScale = useYAxisScale("primary");
   const secondaryScale = useYAxisScale("secondary");
   const defaultScale = useYAxisScale(0);
   if (!plot || !viewBox || typeof viewBox !== "object" || !("y" in viewBox))
     return <g />;
-  const label = `Avg ${value}`;
-  const pillWidth = numericLabelWidth(label) + 20;
-  const columnWidth = numericLabelWidth(`Avg ${widestValue}`) + 28;
-  const columns = Math.max(
-    1,
-    Math.min(total, Math.floor(plot.width / columnWidth)),
-  );
-  const column = index % columns;
-
-  const x =
-    plot.x +
-    4 +
-    (columns > 1 ? (column * (plot.width - columnWidth)) / (columns - 1) : 0);
+  const label = `${value} avg`;
+  const pillWidth = (measuredWidth ?? numericLabelWidth(label, 11)) + 14;
+  const columns = 1;
+  const x = plot.x + plot.width - pillWidth - 2;
   const desired = (positions ?? [{ value: 0, axisId: 0 }]).map((item) => {
     const scale =
       item.axisId === "primary"
@@ -50,16 +55,16 @@ function AverageLabel({
           ? secondaryScale
           : defaultScale;
     return (
-      (positions && scale ? Number(scale(item.value)) : Number(viewBox.y)) - 12
+      (positions && scale ? Number(scale(item.value)) : Number(viewBox.y)) - 10
     );
   });
   const ys = averageBadgePositions(
     desired,
     columns,
-    plot.y + 4,
-    plot.y + plot.height - 28,
+    plot.y + 2,
+    plot.y + plot.height - 22,
   );
-  const y = ys[index] ?? Math.max(plot.y + 4, Number(viewBox.y) - 12);
+  const y = ys[index] ?? Math.max(plot.y + 2, Number(viewBox.y) - 10);
   const lineY = Number(viewBox.y);
   return (
     <g
@@ -67,33 +72,35 @@ function AverageLabel({
       className="chart-average-label"
       pointerEvents="none"
     >
-      {Math.abs(y + 12 - lineY) > 4 && (
+      {Math.abs(y + 10 - lineY) > 4 && (
         <path
-          d={`M ${x + 8} ${lineY} V ${y + 12}`}
+          d={`M ${x + pillWidth - 7} ${lineY} V ${y + 10}`}
           stroke={color}
           strokeWidth={1}
           strokeDasharray="2 2"
           opacity={0.7}
         />
       )}
-      <rect x={x} y={y} width={pillWidth} height={24} rx={12} fill={color} />
+      <rect x={x} y={y} width={pillWidth} height={20} rx={10} fill={color} />
       <text
-        x={x + 10}
-        y={y + 16.5}
+        ref={textRef}
+        x={x + 7}
+        y={y + 14}
         style={{
           fill: "#fff",
-          fontSize: 13,
+          fontSize: 11,
           fontWeight: 700,
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        {label}
+        {value}
+        <tspan style={{ fontWeight: 500 }}> avg</tspan>
       </text>
     </g>
   );
 }
 
-/** Spread solid average badges across the plot; never truncate the value. */
+/** Right-align compact badges, measure their text and separate colliding averages. */
 export function averageLineLabel(
   value: string,
   color: string,
