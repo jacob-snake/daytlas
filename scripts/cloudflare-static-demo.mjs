@@ -10,6 +10,9 @@ import { spawn } from 'node:child_process';
 // No environment files, credentials, user exports, docs or private logs are copied.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
+// Operator-selected metadata origin for a staged domain migration; never reads .env files.
+const publicOrigin = process.env.PUBLIC_SITE_URL || 'https://daytlas.com';
+assert(['https://daytlas.com', 'https://mebyday.com'].includes(publicOrigin), 'Unsupported public origin');
 if (args.includes('--help')) {
   console.log('node scripts/cloudflare-static-demo.mjs\nBuilds an isolated sample-only static Next export plus a nonce-injecting Cloudflare Worker; bundles locally only. Never deploys or authenticates.');
   process.exit(0);
@@ -23,7 +26,7 @@ const environment = Object.fromEntries(
 );
 Object.assign(environment, {
   NEXT_TELEMETRY_DISABLED: '1', WRANGLER_SEND_METRICS: 'false',
-  PUBLIC_SITE_URL: 'https://daytlas.com', NEXT_PUBLIC_POSTHOG_ENABLED: 'false',
+  PUBLIC_SITE_URL: publicOrigin, NEXT_PUBLIC_POSTHOG_ENABLED: 'false',
   NEXT_PUBLIC_POSTHOG_KEY: '', OURA_CLIENT_ID: '', OURA_CLIENT_SECRET: '',
   DAYTLAS_ACCOUNTS_ENABLED: 'false', DAYTLAS_ACCOUNT_PREFERENCES_ENABLED: 'false',
 });
