@@ -1,6 +1,7 @@
 import { brand } from "@/lib/brand-config";
 import { cacheClear, cacheGet, cacheSet } from "@/lib/idb-cache";
 import type { OuraListResponse } from "./types";
+import { collectionRange, inCalendarRange } from "./date-range";
 
 export type OuraMode = "demo" | "sandbox" | "live" | "import";
 export interface OuraRange {
@@ -225,13 +226,16 @@ async function fetchPage<T>(
     }
     if (!res.ok) {
       const message =
-        res.status === 401
-          ? "Your Oura connection expired. Connect again to continue."
-          : res.status === 403
-            ? "Oura did not allow access. Check your membership and connection permissions."
-            : res.status === 429
-              ? "Oura is receiving too many requests. Please try again shortly."
-              : "Oura is temporarily unavailable. Please try again.";
+        (res.status === 401 || res.status === 403) &&
+        endpoint === "daily_cardiovascular_age"
+          ? "Oura did not authorise Heart health access. Reconnect and enable Heart health to load cardiovascular age."
+          : res.status === 401
+            ? "Your Oura connection expired. Connect again to continue."
+            : res.status === 403
+              ? "Oura did not allow access. Check your membership and connection permissions."
+              : res.status === 429
+                ? "Oura is receiving too many requests. Please try again shortly."
+                : "Oura is temporarily unavailable. Please try again.";
       throw new OuraApiError(res.status, message);
     }
     let page: OuraListResponse<T>;
@@ -261,6 +265,7 @@ async function fetchPage<T>(
 export async function fetchAll<T>(
   endpoint: string,
   range: OuraRange,
+  options: { fresh?: boolean } = {},
 ): Promise<T[]> {
   if (!/^[a-zA-Z0-9_]+$/.test(endpoint))
     throw new OuraApiError(400, "Invalid collection.");
@@ -286,15 +291,16 @@ export async function fetchAll<T>(
     throw new OuraApiError(401, "Connect Oura or open the demo to continue.");
   const scope = getCacheScope();
   const params = Object.fromEntries(
-    Object.entries(range)
+    Object.entries(collectionRange(endpoint, range))
       .filter(([, value]) => value)
       .sort(([a], [b]) => a.localeCompare(b)),
   ) as Record<string, string>;
-  const cacheKey = `${scope}|${endpoint}|${JSON.stringify(params)}`;
-  const existing = pending.get(cacheKey);
+  const cacheKey = `${scope}|inclusive-v2|${endpoint}|${JSON.stringify(params)}`;
+  const pendingKey = `${cacheKey}|${options.fresh ? "fresh" : "cached"}`;
+  const existing = pending.get(pendingKey);
   if (existing) return existing as Promise<T[]>;
   const operation = (async () => {
-    const cached = await cacheGet<T[]>(cacheKey);
+    const cached = options.fresh ? null : await cacheGet<T[]>(cacheKey);
     assertSession(scope);
     if (cached) return cached;
     const out: T[] = [];
@@ -312,7 +318,7 @@ export async function fetchAll<T>(
         { ...params, ...(next ? { next_token: next } : {}) },
         scope,
       );
-      out.push(...page.data);
+      out.push(...page.data.filter((row) => inCalendarRange(row, range)));
       next = page.next_token || null;
       if (next && seen.has(next))
         throw new OuraApiError(502, "Oura repeated a page. Please try again.");
@@ -323,10 +329,10 @@ export async function fetchAll<T>(
     assertSession(scope);
     return out;
   })();
-  pending.set(cacheKey, operation);
+  pending.set(pendingKey, operation);
   try {
     return await operation;
   } finally {
-    if (pending.get(cacheKey) === operation) pending.delete(cacheKey);
+    if (pending.get(pendingKey) === operation) pending.delete(pendingKey);
   }
 }

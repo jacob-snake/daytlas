@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { oauthConfig, PRIVATE_HEADERS, STATE_COOKIE } from "../_shared";
 
 // Only scopes used by the dashboard and exports. No email/profile permission.
-const SCOPES = "daily heartrate workout tag session spo2";
+const SCOPES = "daily heartrate workout tag session spo2 heart_health";
 
 export async function GET(req: NextRequest) {
   const config = oauthConfig(req);

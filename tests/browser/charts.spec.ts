@@ -165,3 +165,46 @@ test("sleep barcode keyboard navigation reveals the selected night and returns t
   await expectSelectedMarkVisible(chart);
   expect(await page.evaluate(() => scrollY)).toBe(pageY);
 });
+
+test("year charts fill desktop cards and expose anchored tooltips with keyboard dismissal", async ({
+  page,
+}) => {
+  await openDemo(page, "/app/year");
+  for (const name of [/calendar heatmap/, /Sleep rhythm barcode/]) {
+    const chart = page.getByRole("img", { name });
+    await expect(chart).toBeVisible();
+    const sizes = await chart.evaluate((svg) => ({
+      plot: svg.getBoundingClientRect().width,
+      host: svg.parentElement!.getBoundingClientRect().width,
+    }));
+    expect(Math.abs(sizes.plot - sizes.host)).toBeLessThan(2);
+    await chart.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByRole("tooltip")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+  }
+  await expect(
+    page.getByText("Average bedtime", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Average wake-up", { exact: false }),
+  ).toBeVisible();
+});
+
+test("feedback form clearly prepares an email and sends no silent request", async ({
+  page,
+}) => {
+  await openDemo(page, "/app/profile");
+  await page.getByRole("button", { name: "Send us feedback" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText(/nothing is sent automatically/)).toBeVisible();
+  await dialog
+    .getByLabel("Your message")
+    .fill("A synthetic suggestion for the chart controls.");
+  await expect(
+    dialog.getByRole("button", { name: "Open email to send" }),
+  ).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+});

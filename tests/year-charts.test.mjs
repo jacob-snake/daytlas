@@ -61,7 +61,15 @@ test("sleep barcode preserves date gaps and same-day sleep within its clock doma
     ],
   });
   assert.match(html, /<rect[^>]*x="44"[^>]*y="0"/);
-  assert.match(html, /<rect[^>]*x="53"/); // three days apart, not adjacent observations
+  const marks = [
+    ...html.matchAll(/<rect[^>]*data-day="([^"]+)"[^>]* x="([^"]+)"/g),
+  ];
+  const width = Number(html.match(/viewBox="0 0 ([\d.]+) /)[1]);
+  // Three elapsed days in a four-day domain, even when the chart expands.
+  assert.equal(
+    (Number(marks[1][2]) - Number(marks[0][2])) / (width - 44),
+    3 / 4,
+  );
   assert.doesNotMatch(html, /Infinity|NaN/);
   assert.match(render(SleepBarcode, { rows: [] }), /No sleep timing/);
 });

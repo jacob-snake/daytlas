@@ -355,7 +355,7 @@ export async function handleOura(request, env) {
       response_type: "code",
       client_id: env.OURA_CLIENT_ID,
       redirect_uri: CALLBACK,
-      scope: "daily heartrate workout tag session spo2",
+      scope: "daily heartrate workout tag session spo2 heart_health",
       state,
     }).toString();
     const response = redirect(target.toString());

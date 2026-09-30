@@ -9,13 +9,13 @@ import type {
   SleepPeriod,
 } from "./types";
 
-export async function fetchDayDetail(end: string) {
+export async function fetchDayDetail(end: string, fresh = false) {
   const range = { start_date: shiftDay(end, -60), end_date: end };
   const [sleep, readiness, activity, periods] = await Promise.allSettled([
-    fetchAll<DailySleep>("daily_sleep", range),
-    fetchAll<DailyReadiness>("daily_readiness", range),
-    fetchAll<DailyActivity>("daily_activity", range),
-    fetchAll<SleepPeriod>("sleep", range),
+    fetchAll<DailySleep>("daily_sleep", range, { fresh }),
+    fetchAll<DailyReadiness>("daily_readiness", range, { fresh }),
+    fetchAll<DailyActivity>("daily_activity", range, { fresh }),
+    fetchAll<SleepPeriod>("sleep", range, { fresh }),
   ]);
   const data = <T>(result: PromiseSettledResult<T[]>) =>
     result.status === "fulfilled" ? result.value : [];

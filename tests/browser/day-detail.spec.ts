@@ -114,3 +114,46 @@ test("expired daily connection offers reconnection rather than retrying unavaila
     page.getByText("Your connection needs refreshing", { exact: true }),
   ).toBeVisible();
 });
+
+test("inclusive activity range retrieves today's totals and explicit refresh bypasses cached values", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("woura.mode", "live");
+    localStorage.setItem("woura.token", "synthetic-range-test");
+    localStorage.setItem("woura.cacheScope", "inclusive-range-test");
+  });
+  let steps = 4321;
+  let requests = 0;
+  await page.route("**/api/oura/**", (route) => {
+    const url = new URL(route.request().url());
+    const endpoint = url.pathname.split("/").at(-1)!;
+    const end = url.searchParams.get("end_date") ?? "";
+    let data =
+      endpoint === "heartrate"
+        ? []
+        : getDemoCollection<{ day: string; steps?: number }>(endpoint, {
+            start_date: url.searchParams.get("start_date") ?? undefined,
+            end_date: end || undefined,
+          });
+    if (endpoint === "daily_activity") {
+      requests++;
+      data = data
+        .filter((row) => row.day < end)
+        .map((row) => ({ ...row, steps }));
+    }
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ data, next_token: null }),
+    });
+  });
+  await page.goto("/app/day");
+  const activity = page.getByRole("region", { name: "Daytime activity" });
+  await expect(activity.getByText(/4.?321/).first()).toBeVisible();
+  steps = 5678;
+  await page
+    .getByRole("button", { name: "Latest available", exact: true })
+    .click();
+  await expect(activity.getByText(/5.?678/).first()).toBeVisible();
+  expect(requests).toBe(2);
+});

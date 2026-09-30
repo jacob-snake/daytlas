@@ -142,7 +142,7 @@ export function TrendsRangeControls({
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-label={`Edit date range: ${summary}`}
-          className="!h-auto min-h-16 min-w-0 justify-start gap-3 !rounded-2xl !bg-secondary/60 px-3 py-2 text-left hover:!bg-secondary sm:px-4"
+          className="!h-auto min-h-16 min-w-0 justify-start gap-3 !rounded-xl !bg-secondary/60 px-3 py-2 text-left hover:!bg-secondary sm:px-4"
           onClick={() => setOpen(true)}
         >
           <CalendarDays
