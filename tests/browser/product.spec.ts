@@ -213,33 +213,32 @@ for (const width of [320, 390, 768, 1440]) {
   });
 }
 
-test("main views have no serious or critical automated accessibility violations", async ({
-  page,
-}) => {
-  await page.goto("/");
-  expect(
-    (await new AxeBuilder({ page }).analyze()).violations.filter((v) =>
-      ["serious", "critical"].includes(v.impact ?? ""),
-    ),
-  ).toEqual([]);
-  await demo(page);
-  for (const path of [
-    "/app",
-    "/app/day",
-    "/app/trends",
-    "/app/year",
-    "/app/tags",
-    "/privacy",
-    "/connect",
-  ]) {
+for (const path of [
+  "/",
+  "/app",
+  "/app/day",
+  "/app/trends",
+  "/app/year",
+  "/app/tags",
+  "/privacy",
+  "/connect",
+]) {
+  test(`${path} has no serious or critical automated accessibility violations`, async ({
+    page,
+  }) => {
+    await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
     await page.goto(path);
     await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator('[data-slot="skeleton"]')).toHaveCount(0);
+    await expect(
+      page.getByText("Preparing your history.", { exact: false }),
+    ).toHaveCount(0);
     const results = await new AxeBuilder({ page }).analyze();
     expect(
       results.violations
         .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
         .map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
-      `${path}: ${JSON.stringify(results.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })))}`,
+      `${path}: ${JSON.stringify(results.violations)}`,
     ).toEqual([]);
-  }
-});
+  });
+}

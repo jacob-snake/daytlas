@@ -26,6 +26,8 @@ Initial latest-day selection searches the last 60 days. Older dates can be selec
 
 ## Verification
 
-112 unit tests pass, TypeScript passes, lint has no errors. Full Chromium and WebKit suite: 110 pass, two pre-existing analytics opt-in tests skipped because analytics is disabled. Coverage includes 320/390/768/1440 layouts, serious/critical accessibility checks, session preservation, stale history responses, real-format synthetic export, keyboard controls, nightly series and optional heart-rate failure.
+112 unit tests pass, TypeScript passes, lint has no errors. Full Chromium and WebKit suite: 126 pass, two pre-existing analytics opt-in tests skipped because analytics is disabled. Coverage includes 320/390/768/1440 layouts, serious/critical accessibility checks, session preservation, stale history responses, real-format synthetic export, keyboard controls, nightly series and optional heart-rate failure.
 
 Fixed actual accessibility naming errors in chart containers and repeated table landmarks; repaired calendar overflow at 320px. Updated obsolete test assumptions about header navigation, export location, period/date controls and demo return links. The history race test now exercises the current single-history-fetch architecture instead of waiting for requests that no longer exist.
+
+Accessibility checks run per page so slower CI WebKit runs keep the same coverage without sharing one 30-second timeout across eight pages. Expired Oura credentials keep their original error classification and offer reconnection; optional sample failures do not hide nightly data.
