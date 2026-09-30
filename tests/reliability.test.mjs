@@ -96,6 +96,9 @@ test("login uses registered redirect, reduced scopes and secure short-lived stat
     origin + "/api/auth/callback",
   );
   assert(!destination.searchParams.get("scope").includes("email"));
+  assert(
+    destination.searchParams.get("scope").split(" ").includes("heart_health"),
+  );
   const cookie = response.headers.get("set-cookie");
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /Secure/i);
@@ -515,4 +518,34 @@ test("cache erasure waits for transaction commit and reports failure", async () 
 test("unavailable local cache is a best-effort miss", async () => {
   assert.equal(await cacheGet("synthetic"), null);
   await assert.doesNotReject(cacheSet("synthetic", []));
+});
+
+test("timestamp collections include the selected final day but filter the widened response", async () => {
+  connect();
+  globalThis.fetch = async (url) => {
+    assert.equal(url.searchParams.get("end_date"), "2026-10-01");
+    return json({
+      data: [
+        { day: "2026-09-30", steps: 4321 },
+        { day: "2026-10-01", steps: 5 },
+      ],
+      next_token: null,
+    });
+  };
+  assert.deepEqual(
+    await fetchAll("daily_activity", {
+      start_date: "2026-09-30",
+      end_date: "2026-09-30",
+    }),
+    [{ day: "2026-09-30", steps: 4321 }],
+  );
+});
+
+test("heart-health authorization failures do not falsely claim the connection expired", async () => {
+  connect();
+  globalThis.fetch = async () => json({}, 401);
+  await assert.rejects(
+    fetchAll("daily_cardiovascular_age", {}),
+    /authorise Heart health access/,
+  );
 });

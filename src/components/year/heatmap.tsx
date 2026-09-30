@@ -1,11 +1,16 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { DayRow } from "@/lib/oura/metrics";
 import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 import { isDay, localDay, parseDay, shiftDay } from "@/lib/dates";
 import { revealChartMark } from "@/lib/chart-navigation";
+import {
+  chartMarkAnchor,
+  useChartWidth,
+  YearChartTooltip,
+} from "./chart-interaction";
 
 // Sequential single-hue ramp (light → dark), monotonic lightness.
 const RAMP = [
@@ -33,7 +38,12 @@ export function YearHeatmap({
   year: number;
 }) {
   const [hoverDay, setHover] = useState<string | null>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const { ref: scrollerRef, width: availableWidth } = useChartWidth(53 * STEP);
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
+  const select = (day: string, mark: SVGRectElement | null) => {
+    setHover(day);
+    setAnchor(chartMarkAnchor(scrollerRef.current, mark));
+  };
   const def = METRIC_BY_KEY[metricKey];
 
   const byDay = useMemo(
@@ -103,8 +113,10 @@ export function YearHeatmap({
   }, [byDay, year]);
   const hover = cells.find((c) => c.day === hoverDay) ?? null;
 
-  const width = weeks * STEP;
-  const height = 7 * STEP;
+  const width = Math.max(weeks * STEP, availableWidth);
+  const step = width / weeks;
+  const cell = step - GAP;
+  const height = 7 * step;
 
   return (
     <div>
@@ -136,88 +148,131 @@ export function YearHeatmap({
           {domain.max === null ? "" : Math.round(domain.max)}
         </span>
       </div>
-      <div ref={scrollerRef} className="overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${width} ${height + 18}`}
-          width={width}
-          height={height + 18}
-          onMouseLeave={() => setHover(null)}
-          tabIndex={0}
-          role="img"
-          aria-label={`${def.label} calendar heatmap for ${year}. Use arrow keys to browse days. ${domain.min === null || domain.max === null ? "No recorded data." : `Values from ${domain.min} to ${domain.max} ${def.unit}.`}`}
-          className="[&_text]:font-medium rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          onKeyDown={(e) => {
-            const deltas: Record<string, number> = {
-              ArrowRight: 7,
-              ArrowLeft: -7,
-              ArrowDown: 1,
-              ArrowUp: -1,
-            };
-            const delta = deltas[e.key];
-            if (!delta && e.key !== "Home" && e.key !== "End") return;
-            e.preventDefault();
-            const idx = hover
-              ? cells.findIndex((c) => c.day === hover.day)
-              : -delta;
-            const nextIndex =
-              e.key === "Home"
-                ? 0
-                : e.key === "End"
-                  ? cells.length - 1
-                  : idx + delta;
-            const next =
-              cells[Math.max(0, Math.min(cells.length - 1, nextIndex))];
-            if (next) {
-              setHover(next.day);
-              revealChartMark(
-                scrollerRef.current,
-                e.currentTarget.querySelector<SVGRectElement>(
-                  `[data-day="${next.day}"]`,
-                ),
-              );
-            }
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto"
+          onMouseLeave={() => {
+            setHover(null);
+            setAnchor(null);
           }}
+          onScroll={() =>
+            setAnchor(
+              chartMarkAnchor(
+                scrollerRef.current,
+                scrollerRef.current?.querySelector('[data-selected="true"]') ??
+                  null,
+              ),
+            )
+          }
         >
-          {cells.map((c) => (
-            <rect
-              key={c.day}
-              data-day={c.day}
-              data-selected={hover?.day === c.day || undefined}
-              x={c.x}
-              y={c.y}
-              width={CELL}
-              height={CELL}
-              rx={3.5}
-              fill={c.fill}
-              stroke={hover?.day === c.day ? "var(--foreground)" : undefined}
-              strokeWidth={hover?.day === c.day ? 1.5 : 0}
-              opacity={
-                c.future ? 0.35 : hover && hover.day !== c.day ? 0.75 : 1
+          <svg
+            viewBox={`0 0 ${width} ${height + 18}`}
+            width={width}
+            height={height + 18}
+            onBlur={() => {
+              setHover(null);
+              setAnchor(null);
+            }}
+            tabIndex={0}
+            role="img"
+            aria-label={`${def.label} calendar heatmap for ${year}. Use arrow keys to browse days. ${domain.min === null || domain.max === null ? "No recorded data." : `Values from ${domain.min} to ${domain.max} ${def.unit}.`}`}
+            className="[&_text]:font-medium rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setHover(null);
+                setAnchor(null);
+                return;
               }
-              onMouseEnter={() => setHover(c.day)}
-            >
-              <title>{`${c.day}: ${c.value ?? "–"}`}</title>
-            </rect>
-          ))}
-          {Array.from({ length: 12 }, (_, m) => {
-            const first = new Date(year, m, 1);
-            const offset = (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7;
-            const dayOffset =
-              (Date.UTC(year, m, 1) - Date.UTC(year, 0, 1)) / 86400000;
-            const week = Math.floor((dayOffset + offset) / 7);
-            return (
-              <text
-                key={m}
-                x={week * STEP}
-                y={height + 13}
-                fontSize={10}
-                fill="var(--muted-foreground)"
+              const deltas: Record<string, number> = {
+                ArrowRight: 7,
+                ArrowLeft: -7,
+                ArrowDown: 1,
+                ArrowUp: -1,
+              };
+              const delta = deltas[e.key];
+              if (!delta && e.key !== "Home" && e.key !== "End") return;
+              e.preventDefault();
+              const idx = hover
+                ? cells.findIndex((c) => c.day === hover.day)
+                : -delta;
+              const nextIndex =
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? cells.length - 1
+                    : idx + delta;
+              const next =
+                cells[Math.max(0, Math.min(cells.length - 1, nextIndex))];
+              if (next) {
+                const mark = e.currentTarget.querySelector<SVGRectElement>(
+                  `[data-day="${next.day}"]`,
+                );
+                revealChartMark(scrollerRef.current, mark);
+                select(next.day, mark);
+              }
+            }}
+          >
+            {cells.map((c) => (
+              <rect
+                key={c.day}
+                data-day={c.day}
+                data-selected={hover?.day === c.day || undefined}
+                x={(c.x / STEP) * step}
+                y={(c.y / STEP) * step}
+                width={cell}
+                height={cell}
+                rx={3.5}
+                fill={c.fill}
+                stroke={hover?.day === c.day ? "var(--foreground)" : undefined}
+                strokeWidth={hover?.day === c.day ? 1.5 : 0}
+                opacity={
+                  c.future ? 0.35 : hover && hover.day !== c.day ? 0.75 : 1
+                }
+                onMouseEnter={(e) => select(c.day, e.currentTarget)}
+                onClick={(e) => select(c.day, e.currentTarget)}
               >
-                {format(first, "MMM")}
-              </text>
-            );
-          })}
-        </svg>
+                <title>{`${c.day}: ${c.value ?? "–"}`}</title>
+              </rect>
+            ))}
+            {Array.from({ length: 12 }, (_, m) => {
+              const first = new Date(year, m, 1);
+              const offset =
+                (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7;
+              const dayOffset =
+                (Date.UTC(year, m, 1) - Date.UTC(year, 0, 1)) / 86400000;
+              const week = Math.floor((dayOffset + offset) / 7);
+              return (
+                <text
+                  key={m}
+                  x={week * step}
+                  y={height + 13}
+                  fontSize={10}
+                  fill="var(--muted-foreground)"
+                >
+                  {format(first, "MMM")}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+        <YearChartTooltip anchor={anchor}>
+          {hover && (
+            <>
+              <p className="text-xs opacity-70">
+                {format(parseDay(hover.day), "EEE, d MMM yyyy")}
+              </p>
+              <p className="mt-1 font-semibold tabular-nums">
+                {hover.future
+                  ? "Future day"
+                  : hover.value === null
+                    ? "No reading"
+                    : `${hover.value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${def.unit || ""}`}
+              </p>
+              <p className="text-xs opacity-70">{def.label}</p>
+            </>
+          )}
+        </YearChartTooltip>
       </div>
       <p className="mt-2 text-xs text-muted-foreground md:hidden">
         Scroll horizontally to explore every day.

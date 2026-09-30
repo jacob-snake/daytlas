@@ -1,5 +1,6 @@
 "use client";
 import { brand } from "@/lib/brand-config";
+import { FeedbackDialog } from "@/components/feedback-dialog";
 
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
@@ -63,6 +64,7 @@ export function AppFooter() {
               {label}
             </Link>
           ))}
+          <FeedbackDialog />
           {connected && (
             <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
               Disconnect & clear local data

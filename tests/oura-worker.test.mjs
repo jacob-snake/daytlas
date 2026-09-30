@@ -53,6 +53,7 @@ test("login creates secure short-lived state, canonicalizes domains and never ex
     env.OURA_REDIRECT_URI,
   );
   assert.equal(location.searchParams.get("scope").includes("email"), false);
+  assert(location.searchParams.get("scope").split(" ").includes("heart_health"));
   assert.match(
     result.headers.get("Set-Cookie"),
     /Max-Age=600; HttpOnly; Secure; SameSite=Lax/,

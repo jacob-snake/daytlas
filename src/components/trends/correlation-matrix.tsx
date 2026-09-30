@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { FaqItem } from "@/components/ui/faq-item";
+import { ChevronDown, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -118,7 +118,7 @@ export function CorrelationMatrixCard({
                             <span className="text-muted-foreground">—</span>
                           ) : s ? (
                             <span
-                              className="inline-flex w-16 justify-center rounded-md px-2 py-1.5 font-mono text-sm font-semibold tabular-nums"
+                              className="inline-flex min-w-14 justify-center rounded-lg px-2.5 py-1.5 font-sans text-sm font-semibold tabular-nums"
                               style={{ background: cellColor(s.r) }}
                             >
                               {s.r.toFixed(2)}
@@ -138,36 +138,46 @@ export function CorrelationMatrixCard({
               </TableBody>
             </Table>
           </div>
-          <FaqItem question="How to read this">
-            <ul className="space-y-2">
-              <li>
-                <strong className="text-foreground">Near +1:</strong> the
-                metrics tend to rise together.
-              </li>
-              <li>
-                <strong className="text-foreground">Near −1:</strong> they tend
-                to move in opposite directions.
-              </li>
-              <li>
-                <strong className="text-foreground">Near 0:</strong> no clear
-                linear relationship.
-              </li>
-            </ul>
-            <p className="mt-4 font-semibold text-foreground">
-              A relationship does not prove cause and effect.
-            </p>
-            <div className="mt-4">
-              <h3 className="font-semibold text-foreground">
-                About the calculation
-              </h3>
-              <p className="pt-2 text-muted-foreground">
-                Pearson r uses paired observations in this view. Weekly or
-                monthly averages can appear more strongly related than daily
-                readings. Clock-time metrics are excluded because midnight wraps
-                around.
+          <details className="group/correlation-help border-t border-border/60 pt-1">
+            <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+              <Info className="size-4" aria-hidden="true" />
+              How to read this
+              <ChevronDown
+                className="size-4 transition-transform group-open/correlation-help:rotate-180 motion-reduce:transition-none"
+                aria-hidden="true"
+              />
+            </summary>
+            <div className="max-w-2xl pb-2 pt-2 text-sm leading-relaxed text-muted-foreground">
+              <ul className="space-y-2">
+                <li>
+                  <strong className="text-foreground">Near +1:</strong> the
+                  metrics tend to rise together.
+                </li>
+                <li>
+                  <strong className="text-foreground">Near −1:</strong> they
+                  tend to move in opposite directions.
+                </li>
+                <li>
+                  <strong className="text-foreground">Near 0:</strong> no clear
+                  linear relationship.
+                </li>
+              </ul>
+              <p className="mt-4 font-semibold text-foreground">
+                A relationship does not prove cause and effect.
               </p>
+              <div className="mt-4">
+                <h3 className="font-semibold text-foreground">
+                  About the calculation
+                </h3>
+                <p className="pt-2 text-muted-foreground">
+                  Pearson r uses paired observations in this view. Weekly or
+                  monthly averages can appear more strongly related than daily
+                  readings. Clock-time metrics are excluded because midnight
+                  wraps around.
+                </p>
+              </div>
             </div>
-          </FaqItem>
+          </details>
         </div>
       </CardContent>
     </Card>

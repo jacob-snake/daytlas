@@ -123,7 +123,10 @@ export default function DayDetail() {
     [attempt, setAttempt] = useState(0),
     [episode, setEpisode] = useState("");
   const end = selected ?? today;
-  const load = useCallback(() => fetchDayDetail(end), [end]);
+  const load = useCallback(
+    () => fetchDayDetail(end, attempt > 0),
+    [end, attempt],
+  );
   const query = useOuraQuery(
     session && `${session}:day:${end}:${attempt}`,
     load,
@@ -465,6 +468,29 @@ export default function DayDetail() {
                   : "Daily totals compared with the previous 30 calendar days."}
               </p>
             </div>
+            {!activity && (
+              <div
+                role="status"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 px-4 py-3 text-sm"
+              >
+                <p className="max-w-2xl text-muted-foreground">
+                  {imported
+                    ? "This import has no activity record for the selected day."
+                    : "Oura has not returned activity for this date. Sync your ring in the Oura app, then refresh here."}{" "}
+                  The averages below describe earlier days; missing readings are
+                  not zero.
+                </p>
+                {!imported && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAttempt((v) => v + 1)}
+                  >
+                    Refresh activity
+                  </Button>
+                )}
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Reading
                 label="Steps"

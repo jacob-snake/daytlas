@@ -60,13 +60,19 @@ export function CardiovascularAgeCard({ session }: { session: string }) {
         ) : error ? (
           <div role="status" className="space-y-3 text-sm">
             <p>Cardiovascular age could not be loaded. {error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAttempt((value) => value + 1)}
-            >
-              Try again
-            </Button>
+            {/Heart health|expired|permission/i.test(error) ? (
+              <Button asChild variant="outline" size="sm">
+                <a href="/api/auth/login">Reconnect with Oura</a>
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAttempt((value) => value + 1)}
+              >
+                Try again
+              </Button>
+            )}
           </div>
         ) : !summary ? (
           <p className="text-sm text-muted-foreground">
