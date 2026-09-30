@@ -1,0 +1,13 @@
+{$SITE_DOMAIN} {
+    encode zstd gzip
+    # Access logging is deliberately not enabled: OAuth callbacks contain codes.
+    request_body {
+        max_size 64KB
+    }
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy app:3000
+}
+
+www.{$SITE_DOMAIN} {
+    redir https://{$SITE_DOMAIN}{uri} permanent
+}

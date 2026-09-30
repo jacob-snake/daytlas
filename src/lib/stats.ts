@@ -1,6 +1,14 @@
 /** Pearson correlation coefficient over paired non-null values. */
-export function pearson(pairs: [number | null, number | null][]): { r: number; n: number } | null {
-  const clean = pairs.filter((p): p is [number, number] => p[0] !== null && p[1] !== null);
+export function pearson(
+  pairs: [number | null | undefined, number | null | undefined][],
+): { r: number; n: number } | null {
+  const clean = pairs.filter(
+    (p): p is [number, number] =>
+      typeof p[0] === "number" &&
+      Number.isFinite(p[0]) &&
+      typeof p[1] === "number" &&
+      Number.isFinite(p[1]),
+  );
   const n = clean.length;
   if (n < 5) return null;
   const mx = clean.reduce((s, [x]) => s + x, 0) / n;
@@ -14,5 +22,7 @@ export function pearson(pairs: [number | null, number | null][]): { r: number; n
     dy += (y - my) ** 2;
   }
   if (dx === 0 || dy === 0) return null;
-  return { r: num / Math.sqrt(dx * dy), n };
+  const r = num / Math.sqrt(dx * dy);
+  if (!Number.isFinite(r)) return null;
+  return { r: Math.max(-1, Math.min(1, r)), n };
 }

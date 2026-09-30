@@ -1,0 +1,112 @@
+.trend-rail {
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.trend-rail-nav {
+  display: flex;
+  gap: 12px;
+  padding: 4px 10px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 4px #00000006,
+    0 6px 18px #0000000a;
+}
+.trend-rail-link {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--muted-foreground);
+}
+.trend-rail-link[aria-current],
+.trend-rail-link:hover,
+.trend-rail-link:focus-visible {
+  color: var(--section-color);
+}
+.trend-rail-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.trend-rail-track {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  overflow: hidden;
+  border-radius: 2px;
+}
+.trend-rail-track > span {
+  display: block;
+  width: var(--progress);
+  height: 100%;
+  background: var(--section-color);
+}
+@media (min-width: 900px) {
+  .trend-rail {
+    position: fixed;
+    top: 50% !important;
+    left: var(--rail-left, 2px);
+    transform: translateY(-50%) !important;
+    transition: none;
+  }
+  .trend-rail-nav {
+    position: relative;
+    width: 42px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .trend-rail-link {
+    flex: none;
+    width: 40px;
+    min-height: 112px;
+    padding: 8px;
+    align-items: flex-start;
+  }
+  .trend-rail-track {
+    position: absolute;
+    inset-inline-start: 19px;
+    top: 38px;
+    bottom: 2px;
+    width: 3px;
+    height: auto;
+  }
+  .trend-rail-track > span {
+    width: 100%;
+    height: var(--progress);
+  }
+  .trend-rail-label {
+    clip-path: none;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    inset-inline-start: 44px;
+    top: 0;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    background: var(--background);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .trend-rail-link:hover .trend-rail-label,
+  .trend-rail-link:focus-visible .trend-rail-label {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trend-rail {
+    transition: none;
+  }
+}

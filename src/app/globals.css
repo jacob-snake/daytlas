@@ -1,15 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/design-system.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-jakarta);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,7 +51,7 @@
 
 :root {
   /* Editorial light: warm paper background, ink-black type */
-  --background: oklch(0.97 0.007 95);
+  --background: oklch(0.978 0.003 95);
   --foreground: oklch(0.17 0.005 90);
   --card: oklch(0.995 0.002 95);
   --card-foreground: oklch(0.17 0.005 90);
@@ -70,12 +71,12 @@
   --ring: oklch(0.55 0.1 60);
   /* better-colors pass: high-chroma OKLCH-tuned palette, dataviz six-checks FULL PASS
      (CVD worst-adjacent ΔE 12.9, all ≥3:1 on light surface) */
-  --chart-1: #2e6be6; /* sleep — vivid blue      oklch(0.55 0.19 262) */
-  --chart-2: #456f10; /* readiness — vivid green oklch(0.50 0.13 131) */
-  --chart-3: #e26e0a; /* activity — vivid orange oklch(0.63 0.17 55)  */
+  --chart-1: oklch(0.55 0.12 262); /* muted category color */
+  --chart-2: oklch(0.54 0.08 135); /* muted category color */
+  --chart-3: oklch(0.55 0.10 55); /* muted category color */
   --chart-4: #8a4de0; /* HRV — vivid violet      oklch(0.53 0.20 296) */
   --chart-5: #00996e; /* temperature — vivid teal oklch(0.58 0.12 168) */
-  --radius: 0.875rem;
+  --radius: 1rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -140,38 +141,18 @@
   --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.13);
 }
 
-[data-slot="card"] {
-  border-color: transparent;
-  box-shadow: var(--shadow-border);
-  transition-property: box-shadow, translate;
-  transition-duration: 400ms;
-  transition-timing-function: var(--ease-premium);
-}
-[data-slot="card"]:hover {
-  box-shadow: var(--shadow-border-hover);
-  translate: 0 -1px;
-}
-
-/* Film-grain overlay — physical paper feel, invisible until you look for it */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* No ugly scrollbars — scroll still works, the bar is invisible */
-.overflow-x-auto,
-.overflow-y-auto {
-  scrollbar-width: none;
-}
-.overflow-x-auto::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar {
-  display: none;
-}
+[data-slot="card"] { border-color: transparent; box-shadow: var(--shadow-border); }
+.preview-shell { border-radius: 28px; background: var(--secondary); box-shadow: 0 0 0 1px rgb(0 0 0 / .045), 0 8px 16px -10px rgb(0 0 0 / .12), 0 36px 80px -34px rgb(0 0 0 / .16); }
+.preview-note { background: oklch(0.24 0.012 265); color: white; }
+.app-page { margin-inline: auto; width: 100%; max-width: 1240px; padding: 20px 24px 24px; }
+.app-page > * + * { margin-top: 24px; }
+.eyebrow { font-size: 11px; font-weight: 500; color: var(--muted-foreground); }
+.skip-link { position: fixed; top: 12px; left: 12px; z-index: 60; transform: translateY(-200%); background: var(--foreground); color: var(--background); padding: 12px 18px; border-radius: 10px; }
+.skip-link:focus { transform: translateY(0); }
+:focus-visible:not(.ds-select-option) { outline: 2px solid var(--chart-1); outline-offset: 3px; }
+@media (min-width: 768px) { .app-page { padding: 28px 48px 32px; } }
+@media (max-width: 639px) { .app-page { padding-inline: 16px; } [data-slot="card-header"]:has([data-slot="card-action"]) { grid-template-columns: 1fr; } [data-slot="card-action"] { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 8px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 
 /* Add-trigger: the "create something" affordance — dashed, bold, never a plain pill */
 .add-trigger {
@@ -185,8 +166,8 @@ body::before {
 }
 .add-trigger:hover {
   border-style: solid !important;
-  background: var(--foreground) !important;
-  color: var(--background);
+  background: var(--secondary) !important;
+  color: var(--foreground);
 }
 
 /* Staggered enter animation for dashboard sections */
@@ -194,20 +175,20 @@ body::before {
   .stagger-item {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
-    animation: fadeInUp 400ms ease-out forwards;
+
+    animation: fadeInUp 240ms var(--ease-premium) forwards;
   }
   .stagger-item:nth-child(1) { animation-delay: 0ms; }
-  .stagger-item:nth-child(2) { animation-delay: 100ms; }
-  .stagger-item:nth-child(3) { animation-delay: 200ms; }
-  .stagger-item:nth-child(4) { animation-delay: 300ms; }
-  .stagger-item:nth-child(5) { animation-delay: 400ms; }
+  .stagger-item:nth-child(2) { animation-delay: 40ms; }
+  .stagger-item:nth-child(3) { animation-delay: 80ms; }
+  .stagger-item:nth-child(4) { animation-delay: 120ms; }
+  .stagger-item:nth-child(5) { animation-delay: 160ms; }
 }
 @keyframes fadeInUp {
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
+
   }
 }
 
@@ -239,3 +220,44 @@ body::before {
     @apply font-sans;
   }
 }
+
+@layer components {
+  .site-footer { background: #1d2026; color: #ffffff; }
+}
+
+/* Dark tooltip study requested30Sep: neutral ink, readable labels and values. */
+.chart-tooltip-dark { background:#20211f; color:#fafaf8; border-color:#ffffff24; box-shadow:0 4px 8px #0002,0 12px 28px #0003; }
+.chart-tooltip-dark .text-muted-foreground { color:#d3d5cf; }
+.chart-tooltip-dark .text-foreground { color:#fafaf8; }
+
+.add-chart-trigger, .add-chart-trigger:hover { background: transparent !important; border-style: dashed !important; box-shadow: none !important; }
+.history-timeline-surface { padding:16px 22px 10px; border-radius:16px; background:color-mix(in oklab,var(--chart-2) 8%,var(--background)); border:1px solid color-mix(in oklab,var(--chart-2) 14%,transparent); }
+.history-timeline-plot { position:relative; height:144px; touch-action:pan-y; user-select:none; }
+.history-timeline-plot svg { width:100%; height:100%; display:block; }
+.history-window { position:absolute; inset-block:0; border:1.5px solid var(--chart-2); border-radius:8px; background:color-mix(in oklab,var(--chart-2) 6%,transparent); cursor:grab; touch-action:none; }
+.history-window:active { cursor:grabbing; }
+.history-handle { position:absolute; width:44px; height:48px; margin-left:-22px; display:flex; justify-content:center; align-items:center; cursor:ew-resize; touch-action:none; border-radius:10px; }
+.history-handle-start { top:12px; }
+.history-handle-end { bottom:12px; }
+.history-handle span { display:flex; align-items:center; justify-content:center; width:24px; height:44px; font-weight:700; border:1px solid var(--chart-2); color:var(--chart-2); background:var(--background); border-radius:8px; box-shadow:0 2px 4px #0001,0 5px 12px #0001; }
+.history-handle:active span { background:color-mix(in oklab,var(--chart-2) 12%,var(--background)); }
+/* Native month/year menus, clear range bands, generous day targets. */
+.range-calendar { --cell-size:40px; --cell-radius:999px; padding:8px; }
+.range-calendar .rdp-months { gap:24px; }
+.range-calendar .rdp-month { gap:16px; }
+.range-calendar .rdp-dropdowns { gap:8px; }
+.range-calendar .rdp-caption_label { font-size:16px; font-weight:700; gap:8px; padding:6px 4px; }
+.range-calendar .rdp-dropdown_root:focus-within { outline:2px solid var(--chart-1); outline-offset:2px; }
+.range-calendar .rdp-dropdown { cursor:pointer; }
+.range-calendar .rdp-button_previous, .range-calendar .rdp-button_next { border:1px solid var(--border); border-radius:50%; }
+.range-calendar .rdp-weekday { font-weight:500; }
+.range-calendar .rdp-day button { font-weight:600; }
+.range-calendar .rdp-range_start, .range-calendar .rdp-range_end,
+.range-calendar .rdp-range_start:after, .range-calendar .rdp-range_end:after,
+.range-calendar [data-range-middle=true] { background:color-mix(in oklab,var(--chart-1) 18%,var(--background)); }
+.range-calendar [data-range-start=true], .range-calendar [data-range-end=true], .range-calendar [data-selected-single=true] { background:var(--chart-1); color:white; border-radius:50%; }
+.range-calendar .rdp-range_start { border-radius:999px 0 0 999px; }
+.range-calendar .rdp-range_end { border-radius:0 999px 999px 0; }
+.range-calendar .rdp-day:first-child [data-range-middle=true] { border-radius:999px 0 0 999px; }
+.range-calendar .rdp-day:last-child [data-range-middle=true] { border-radius:0 999px 999px 0; }
+@media(min-width:640px) { .range-calendar { --cell-size:44px; } .range-calendar .rdp-months { flex-direction:row; } }

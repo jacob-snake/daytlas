@@ -1,120 +1,332 @@
-import { cacheGet, cacheSet } from "@/lib/idb-cache";
+import { brand } from "@/lib/brand-config";
+import { cacheClear, cacheGet, cacheSet } from "@/lib/idb-cache";
 import type { OuraListResponse } from "./types";
 
-// Client-side Oura API client. Talks to our stateless /api/oura proxy.
-// In sandbox mode no token is needed (Oura's official fake-data endpoints).
-
-export type OuraMode = "sandbox" | "live";
+export type OuraMode = "demo" | "sandbox" | "live" | "import";
+export interface OuraRange {
+  start_date?: string;
+  end_date?: string;
+  start_datetime?: string;
+  end_datetime?: string;
+}
 
 const TOKEN_KEY = "woura.token";
 const MODE_KEY = "woura.mode";
+const SCOPE_KEY = "woura.cacheScope";
+const MAX_RATE_RETRIES = 3;
+const MAX_PAGES = 1_000;
+const pending = new Map<string, Promise<unknown[]>>();
+
+function readStorage(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
 
 export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+  return readStorage(TOKEN_KEY)?.trim() || null;
 }
 
 export function setToken(token: string | null) {
-  if (token) window.localStorage.setItem(TOKEN_KEY, token);
-  else window.localStorage.removeItem(TOKEN_KEY);
+  const storage = window.localStorage;
+  if (token?.trim()) {
+    if (token !== getToken()) {
+      storage.setItem(SCOPE_KEY, crypto.randomUUID());
+      storage.removeItem("woura.refresh");
+      storage.removeItem("woura.expiresAt");
+    }
+    storage.setItem(TOKEN_KEY, token);
+  } else {
+    for (const key of [
+      TOKEN_KEY,
+      "woura.refresh",
+      "woura.expiresAt",
+      SCOPE_KEY,
+    ])
+      storage.removeItem(key);
+  }
 }
 
 export function hasToken(): boolean {
   return getToken() !== null;
 }
+export function hasSession(): boolean {
+  return (
+    getMode() === "import" ||
+    getMode() === "demo" ||
+    (getMode() === "live" && hasToken())
+  );
+}
 
 export function getMode(): OuraMode {
-  if (typeof window === "undefined") return "sandbox";
-  return (window.localStorage.getItem(MODE_KEY) as OuraMode) ?? "sandbox";
+  const mode = readStorage(MODE_KEY);
+  if (mode === "import") return "import";
+  if (mode === "demo") return "demo";
+  if (mode === "sandbox") return "sandbox";
+  return hasToken() ? "live" : "sandbox";
 }
 
 export function setMode(mode: OuraMode) {
   window.localStorage.setItem(MODE_KEY, mode);
 }
 
-let refreshing: Promise<boolean> | null = null;
+/** A document navigation deliberately drops all React-held health data. */
+export function reloadSession(path: "/" | "/app" | "/?clear=failed" = "/") {
+  window.location.assign(path);
+}
 
-/** Exchange the stored refresh token for a new access token. Deduplicated. */
-async function tryRefresh(): Promise<boolean> {
-  refreshing ??= (async () => {
-    try {
-      const refresh_token = window.localStorage.getItem("woura.refresh");
-      if (!refresh_token) return false;
-      const res = await fetch("/api/auth/refresh", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ refresh_token }),
-      });
-      if (!res.ok) return false;
-      const t = await res.json();
-      setToken(t.access_token);
-      if (t.refresh_token) window.localStorage.setItem("woura.refresh", t.refresh_token);
-      return true;
-    } catch {
-      return false;
-    } finally {
-      setTimeout(() => (refreshing = null), 0);
-    }
-  })();
-  return refreshing;
+/** Random per-connection scope: never put credentials in cache keys. */
+export function getCacheScope(): string {
+  const mode = getMode();
+  if (mode === "import")
+    return `import:${readStorage("woura.importRevision") ?? "history"}`;
+  if (mode !== "live") return mode;
+  let scope = readStorage(SCOPE_KEY);
+  if (!scope) {
+    scope = crypto.randomUUID();
+    window.localStorage.setItem(SCOPE_KEY, scope);
+  }
+  return `live:${scope}`;
+}
+
+/** Disconnect locally, remove preferences and credentials, and await cache erasure. */
+export async function disconnectAndClear(): Promise<void> {
+  const storage = window.localStorage;
+  for (const key of Object.keys(storage))
+    if (key.startsWith("woura.")) storage.removeItem(key);
+  pending.clear();
+  await cacheClear();
 }
 
 export class OuraApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
+    this.name = "OuraApiError";
   }
+}
+
+function assertSession(scope: string) {
+  if (getCacheScope() !== scope)
+    throw new OuraApiError(
+      401,
+      `Your connection changed. Reload ${brand.name} to continue.`,
+    );
+}
+
+let refreshing: { scope: string; promise: Promise<boolean> } | null = null;
+
+/** Refresh once for simultaneous callers; never restore a disconnected session. */
+async function tryRefresh(scope: string): Promise<boolean> {
+  if (refreshing?.scope === scope) return refreshing.promise;
+  const promise = (async () => {
+    try {
+      const refreshToken = readStorage("woura.refresh");
+      if (!refreshToken) return false;
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) return false;
+      const tokens = await res.json();
+      if (
+        typeof tokens.access_token !== "string" ||
+        !tokens.access_token.trim()
+      )
+        return false;
+      assertSession(scope);
+      if (readStorage("woura.refresh") !== refreshToken) return false;
+      // Refresh keeps the same connection and its isolated cache scope.
+      window.localStorage.setItem(TOKEN_KEY, tokens.access_token);
+      if (typeof tokens.refresh_token === "string" && tokens.refresh_token)
+        window.localStorage.setItem("woura.refresh", tokens.refresh_token);
+      if (typeof tokens.expires_in === "number" && tokens.expires_in > 0)
+        window.localStorage.setItem(
+          "woura.expiresAt",
+          String(Date.now() + tokens.expires_in * 1000),
+        );
+      else window.localStorage.removeItem("woura.expiresAt");
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  refreshing = { scope, promise };
+  try {
+    return await promise;
+  } finally {
+    if (refreshing?.promise === promise) refreshing = null;
+  }
+}
+
+function retryDelay(header: string | null, attempt: number): number {
+  if (header) {
+    const seconds = Number(header);
+    const milliseconds = Number.isFinite(seconds)
+      ? seconds * 1000
+      : Date.parse(header) - Date.now();
+    if (Number.isFinite(milliseconds))
+      return Math.max(250, Math.min(milliseconds, 30_000));
+  }
+  return Math.min(1_000 * 2 ** attempt, 30_000);
 }
 
 async function fetchPage<T>(
   endpoint: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  scope: string,
 ): Promise<OuraListResponse<T>> {
-  // Live whenever a token exists; sandbox remains only as a dev fallback.
-  const mode: OuraMode = getToken() ? "live" : "sandbox";
-  const base = mode === "sandbox" ? "v2/sandbox/usercollection" : "v2/usercollection";
+  const mode = getMode();
+  const base =
+    mode === "sandbox" ? "v2/sandbox/usercollection" : "v2/usercollection";
   const url = new URL(`/api/oura/${base}/${endpoint}`, window.location.origin);
-  Object.entries(params).forEach(([k, v]) => v && url.searchParams.set(k, v));
-
-  // Sandbox accepts any non-empty Authorization value.
-  const token = mode === "sandbox" ? "sandbox" : getToken();
-  const res = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) url.searchParams.set(key, value);
   });
-
-  if (res.status === 401 && mode === "live" && (await tryRefresh())) {
-    return fetchPage(endpoint, params);
+  let refreshed = false;
+  let rateRetries = 0;
+  for (;;) {
+    assertSession(scope);
+    const token = mode === "sandbox" ? "sandbox" : getToken();
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch {
+      throw new OuraApiError(
+        0,
+        "Could not reach Oura. Check your connection and try again.",
+      );
+    }
+    assertSession(scope);
+    if (res.status === 401 && mode === "live" && !refreshed) {
+      refreshed = true;
+      if (getToken() !== token || (await tryRefresh(scope))) continue;
+    }
+    if (res.status === 429 && rateRetries < MAX_RATE_RETRIES) {
+      await new Promise((resolve) =>
+        setTimeout(
+          resolve,
+          retryDelay(res.headers.get("retry-after"), rateRetries++),
+        ),
+      );
+      continue;
+    }
+    if (!res.ok) {
+      const message =
+        res.status === 401
+          ? "Your Oura connection expired. Connect again to continue."
+          : res.status === 403
+            ? "Oura did not allow access. Check your membership and connection permissions."
+            : res.status === 429
+              ? "Oura is receiving too many requests. Please try again shortly."
+              : "Oura is temporarily unavailable. Please try again.";
+      throw new OuraApiError(res.status, message);
+    }
+    let page: OuraListResponse<T>;
+    try {
+      page = await res.json();
+    } catch {
+      throw new OuraApiError(
+        502,
+        "Oura returned an unreadable response. Please try again.",
+      );
+    }
+    if (
+      !page ||
+      !Array.isArray(page.data) ||
+      (page.next_token != null && typeof page.next_token !== "string")
+    ) {
+      throw new OuraApiError(
+        502,
+        "Oura returned an unexpected response. Please try again.",
+      );
+    }
+    return page;
   }
-  if (res.status === 429) {
-    const wait = Number(res.headers.get("retry-after") ?? "5");
-    await new Promise((r) => setTimeout(r, Math.min(wait, 60) * 1000));
-    return fetchPage(endpoint, params);
-  }
-  if (!res.ok) {
-    throw new OuraApiError(res.status, `Oura API ${res.status} on ${endpoint}`);
-  }
-  return res.json();
 }
 
-/** Fetch all pages of a collection endpoint for a date range (IndexedDB-cached). */
+/** Fetch a complete collection. Demo data stays entirely in this browser. */
 export async function fetchAll<T>(
   endpoint: string,
-  range: { start_date?: string; end_date?: string; start_datetime?: string; end_datetime?: string }
+  range: OuraRange,
 ): Promise<T[]> {
-  const cacheKey = `${getToken() ? "live" : "sandbox"}|${endpoint}|${JSON.stringify(range)}`;
-  const cached = await cacheGet<T[]>(cacheKey);
-  if (cached) return cached;
-
-  const out: T[] = [];
-  let next: string | null = null;
-  do {
-    const page: OuraListResponse<T> = await fetchPage<T>(endpoint, {
-      ...Object.fromEntries(Object.entries(range).filter(([, v]) => v)) as Record<string, string>,
-      ...(next ? { next_token: next } : {}),
-    });
-    out.push(...page.data);
-    next = page.next_token;
-  } while (next);
-
-  void cacheSet(cacheKey, out);
-  return out;
+  if (!/^[a-zA-Z0-9_]+$/.test(endpoint))
+    throw new OuraApiError(400, "Invalid collection.");
+  if (getMode() === "import") {
+    const { importedData } = await import("@/lib/idb-cache");
+    const data = await importedData<import("./import-file").OuraImport>();
+    if (!data)
+      throw new OuraApiError(
+        404,
+        "Imported history is no longer in this browser. Import your file again.",
+      );
+    return (data.collections[endpoint] ?? []).filter(
+      (row) =>
+        (!range.start_date || row.day >= range.start_date) &&
+        (!range.end_date || row.day <= range.end_date),
+    ) as T[];
+  }
+  if (getMode() === "demo") {
+    const { getDemoCollection } = await import("@/lib/demo-data");
+    return getDemoCollection<T>(endpoint, range);
+  }
+  if (!hasToken() && readStorage(MODE_KEY) !== "sandbox")
+    throw new OuraApiError(401, "Connect Oura or open the demo to continue.");
+  const scope = getCacheScope();
+  const params = Object.fromEntries(
+    Object.entries(range)
+      .filter(([, value]) => value)
+      .sort(([a], [b]) => a.localeCompare(b)),
+  ) as Record<string, string>;
+  const cacheKey = `${scope}|${endpoint}|${JSON.stringify(params)}`;
+  const existing = pending.get(cacheKey);
+  if (existing) return existing as Promise<T[]>;
+  const operation = (async () => {
+    const cached = await cacheGet<T[]>(cacheKey);
+    assertSession(scope);
+    if (cached) return cached;
+    const out: T[] = [];
+    const seen = new Set<string>();
+    let next: string | null = null;
+    let count = 0;
+    do {
+      if (++count > MAX_PAGES)
+        throw new OuraApiError(
+          502,
+          "This date range is too large. Try a shorter range.",
+        );
+      const page: OuraListResponse<T> = await fetchPage<T>(
+        endpoint,
+        { ...params, ...(next ? { next_token: next } : {}) },
+        scope,
+      );
+      out.push(...page.data);
+      next = page.next_token || null;
+      if (next && seen.has(next))
+        throw new OuraApiError(502, "Oura repeated a page. Please try again.");
+      if (next) seen.add(next);
+    } while (next);
+    assertSession(scope);
+    await cacheSet(cacheKey, out);
+    assertSession(scope);
+    return out;
+  })();
+  pending.set(cacheKey, operation);
+  try {
+    return await operation;
+  } finally {
+    if (pending.get(cacheKey) === operation) pending.delete(cacheKey);
+  }
 }

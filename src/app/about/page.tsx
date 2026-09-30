@@ -1,73 +1,61 @@
-import Link from "next/link";
-import { AppFooter } from "@/components/app-footer";
+import { brand } from "@/lib/brand-config";
+import { DocumentShell } from "@/components/document-shell";
+import { DemoButton } from "@/components/demo-button";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Icon } from "@/components/icon";
-import { Coffee02Icon, GithubIcon, Linkedin01Icon } from "@hugeicons/core-free-icons";
-
-export const metadata = { title: "About — Woura" };
-
+export const metadata = { title: `The story — ${brand.name}` };
 export default function About() {
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6 p-6 md:p-10">
-      <h1 className="text-3xl font-bold tracking-tight">About Woura</h1>
-
-      <Card>
-        <CardContent className="space-y-4 pt-5 text-[15px] leading-relaxed">
-          <p>
-            In 2026, Oura announced it was retiring <em>Oura on the Web</em> — the only place
-            where years of ring data could be explored on a big screen. I had been meaning to
-            build my own dashboard anyway; that email just made the decision for me.
-          </p>
-          <p>
-            Woura is the result: an open-source, local-first dashboard for your Oura data.
-            Long-term trends, correlations, a year wrapped into rings, a barcode of your
-            sleep rhythm, and Tag Lab — what your habits actually do to your body the next
-            day. Everything the retired web app did, plus the things it never dared to.
-          </p>
-          <p>
-            The rules are simple: <strong>your data never leaves your browser</strong>. No
-            servers storing anything, no tracking, no AI reading your health history. Every
-            insight is plain statistics you can read in the source code.
-          </p>
-          <p>Woura is free. If it&apos;s useful to you, a coffee keeps it going.</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Built by Jakub Had</CardTitle>
-          <CardDescription>Say hi, follow along, or send feedback.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button asChild>
-            <a href="https://buymeacoffee.com/hadjakub" target="_blank" rel="noreferrer">
-              <Icon icon={Coffee02Icon} data-icon="inline-start" /> Buy me a coffee
+    <DocumentShell
+      title="For the bigger picture."
+      intro="I wanted a quiet place to spend more time with my own data. So I started building one."
+    >
+      <section>
+        <h2>Built by Jakub Had</h2>
+        <p>
+          A daily score is useful. But I wanted to see the weeks behind it: how
+          my sleep shifts, how my routines differ, and which questions are worth
+          exploring. {brand.name} brings that perspective to a bigger screen.
+        </p>
+        <p>
+          It’s a personal project with an open source codebase. The focus is
+          simple: readable long-term trends, transparent comparisons, useful
+          exports, and a clear explanation of where your data goes.
+        </p>
+      </section>
+      <section>
+        <h2>Curiosity over certainty</h2>
+        <p>
+          A chart can help you notice something. It cannot tell you why it
+          happened. {brand.name} shows the numbers behind a comparison, uses
+          ordinary statistics, and avoids treating an association as health
+          advice.
+        </p>
+        <p>
+          The demo lets you explore the product with fictional data before
+          connecting anything personal.
+        </p>
+        <div className="mt-5">
+          <DemoButton />
+        </div>
+      </section>
+      <section>
+        <h2>Built in the open</h2>
+        <p>
+          Have feedback, found a bug, or want to help? Follow the project and
+          tell me which question you wish your data could answer. Keep personal
+          readings and account details out of public messages.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button asChild variant="outline">
+            <a href="https://www.linkedin.com/in/jakub-had/">
+              Follow Jakub on LinkedIn
             </a>
           </Button>
           <Button asChild variant="outline">
-            <a href="https://www.linkedin.com/in/jakub-had/" target="_blank" rel="noreferrer">
-              <Icon icon={Linkedin01Icon} data-icon="inline-start" /> LinkedIn
-            </a>
+            <a href={brand.sourceUrl}>Explore the source</a>
           </Button>
-          <Button asChild variant="outline">
-            <a href="https://github.com/jacob-snake/woura" target="_blank" rel="noreferrer">
-              <Icon icon={GithubIcon} data-icon="inline-start" /> GitHub
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-wrap gap-2">
-        <Button asChild variant="ghost">
-          <Link href="/privacy">Privacy</Link>
-        </Button>
-        <Button asChild variant="ghost">
-          <Link href="/">Open the app</Link>
-        </Button>
-      </div>
-
-      <AppFooter />
-    </main>
+        </div>
+      </section>
+    </DocumentShell>
   );
 }

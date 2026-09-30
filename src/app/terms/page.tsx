@@ -1,23 +1,70 @@
+import { brand } from "@/lib/brand-config";
+import { DocumentShell } from "@/components/document-shell";
+export const metadata = { title: `Terms — ${brand.name}` };
 export default function Terms() {
   return (
-    <main className="prose prose-invert mx-auto max-w-2xl p-10">
-      <h1>Terms of Service</h1>
-      <p>
-        Woura is free, open-source software provided “as is”, without warranty
-        of any kind, including implied warranties of merchantability, fitness
-        for a particular purpose, and non-infringement. Third-party service
-        providers (including Oura) are excluded from all liability for
-        consequential, special, punitive, or indirect damages.
-      </p>
-      <p>
-        Woura is not a medical device and provides no medical advice. It is an
-        independent project and is not affiliated with, endorsed, or approved
-        by Ōura Health Oy or Ouraring Inc.
-      </p>
-      <p>
-        Your use of Oura data through this application is subject to the Oura
-        API and MCP Agreement and Oura&apos;s Terms of Use.
-      </p>
-    </main>
+    <DocumentShell
+      title="A few clear terms."
+      intro={`${brand.name} is independent, open-source software for exploring your own recorded data.`}
+    >
+      <section>
+        <h2>Independent software</h2>
+        <p>
+          {brand.name} is not affiliated with, endorsed by or approved by Ōura
+          Health Oy or Ouraring Inc. Oura names and marks belong to their
+          respective owners. The source is available under the MIT license.
+        </p>
+      </section>
+      <section>
+        <h2>Your data and account</h2>
+        <p>
+          Only connect an account you are authorized to access. Oura’s
+          membership, permissions, API limits and availability determine which
+          data is available. Use of Oura data remains subject to the{" "}
+          <a href="https://cloud.ouraring.com/legal/api-agreement">
+            Oura API and MCP Agreement
+          </a>{" "}
+          and applicable Oura terms. Self-hosting does not remove these
+          obligations.
+        </p>
+      </section>
+      <section>
+        <h2>Understanding the numbers</h2>
+        <p>
+          This application is not a medical device and does not provide medical
+          advice, diagnosis or treatment. Comparisons describe recorded data and
+          may be affected by missing readings, sensor estimates and other
+          factors. Associations do not establish that a habit caused a change.
+          Demo values are fictional.
+        </p>
+      </section>
+      <section>
+        <h2>Provided as is</h2>
+        <p>
+          To the extent permitted by law, the software is provided “as is”,
+          without warranties of merchantability, fitness for a particular
+          purpose or non-infringement. The authors and third-party service
+          providers, including Oura, disclaim liability for indirect,
+          consequential, special or punitive damages. Nothing here excludes
+          rights or liabilities that cannot lawfully be excluded.
+        </p>
+        <p>
+          Availability, features and API access may change. Keep copies of
+          exports that matter to you; browser storage can be cleared by you or
+          your browser.
+        </p>
+      </section>
+      <section>
+        <h2>About this notice</h2>
+        <p>
+          This notice describes the software project. A public installation’s
+          operator is responsible for any additional terms and contact details
+          applicable to their service.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Updated 22 September 2026.
+        </p>
+      </section>
+    </DocumentShell>
   );
 }

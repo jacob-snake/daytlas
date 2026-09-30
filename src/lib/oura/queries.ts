@@ -1,5 +1,12 @@
 import { fetchAll } from "./client";
-import type { DailySleep, DailyReadiness, DailyActivity, SleepPeriod } from "./types";
+import type {
+  DailySleep,
+  DailyReadiness,
+  DailyActivity,
+  SleepPeriod,
+} from "./types";
+import { localDay, shiftDay } from "../dates";
+import { mainSleepByDay } from "./metrics";
 
 export interface DayScores {
   day: string;
@@ -14,14 +21,15 @@ export interface DayScores {
 }
 
 function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
+  return shiftDay(localDay(), -days);
 }
 
 /** Fetch the three daily score collections and merge them per day. */
 export async function fetchDayScores(days: number): Promise<DayScores[]> {
-  const range = { start_date: isoDaysAgo(days), end_date: isoDaysAgo(0) };
+  const range = {
+    start_date: isoDaysAgo(Math.max(0, days - 1)),
+    end_date: isoDaysAgo(0),
+  };
   const [sleep, readiness, activity, periods] = await Promise.all([
     fetchAll<DailySleep>("daily_sleep", range),
     fetchAll<DailyReadiness>("daily_readiness", range),
@@ -33,7 +41,17 @@ export async function fetchDayScores(days: number): Promise<DayScores[]> {
   const get = (day: string) => {
     let row = byDay.get(day);
     if (!row) {
-      row = { day, sleep: null, readiness: null, activity: null, temperature_deviation: null, resting_hr: null, steps: null, hrv: null, total_sleep_h: null };
+      row = {
+        day,
+        sleep: null,
+        readiness: null,
+        activity: null,
+        temperature_deviation: null,
+        resting_hr: null,
+        steps: null,
+        hrv: null,
+        total_sleep_h: null,
+      };
       byDay.set(day, row);
     }
     return row;
@@ -52,20 +70,15 @@ export async function fetchDayScores(days: number): Promise<DayScores[]> {
   }
 
   // Take the longest (main) sleep period per day for vitals.
-  const mainByDay = new Map<string, SleepPeriod>();
-  for (const p of periods) {
-    if (p.type === "rest") continue;
-    const prev = mainByDay.get(p.day);
-    if (!prev || (p.total_sleep_duration ?? 0) > (prev.total_sleep_duration ?? 0)) {
-      mainByDay.set(p.day, p);
-    }
-  }
+  const mainByDay = mainSleepByDay(periods);
   for (const [day, p] of mainByDay) {
     const row = get(day);
     row.hrv = p.average_hrv;
     row.resting_hr = p.lowest_heart_rate;
     row.total_sleep_h =
-      p.total_sleep_duration === null ? null : Math.round((p.total_sleep_duration / 3600) * 100) / 100;
+      p.total_sleep_duration == null
+        ? null
+        : Math.round((p.total_sleep_duration / 3600) * 100) / 100;
   }
 
   return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));

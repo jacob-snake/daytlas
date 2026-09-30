@@ -1,8 +1,8 @@
 "use client";
+import { brand } from "@/lib/brand-config";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,7 +12,6 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { cacheClear } from "@/lib/idb-cache";
 import { METRICS } from "@/lib/oura/metrics";
 
 export function CommandPalette({
@@ -46,40 +45,60 @@ export function CommandPalette({
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} title="Command palette" description="Search pages and metrics">
+    <CommandDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="Command palette"
+      description="Search pages and metrics"
+    >
       <CommandInput placeholder="Search pages, metrics, actions…" />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Pages">
-          <CommandItem onSelect={() => run(() => router.push("/"))}>Dashboard</CommandItem>
-          <CommandItem onSelect={() => run(() => router.push("/trends"))}>Trends</CommandItem>
-          <CommandItem onSelect={() => run(() => router.push("/year"))}>Year</CommandItem>
-          <CommandItem onSelect={() => run(() => router.push("/tags"))}>Tag Lab</CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/app/profile"))}>
+            Your profile
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/"))}>
+            {brand.name} website
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/app"))}>
+            Overview
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/app/trends"))}>
+            Trends
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/app/year"))}>
+            Your year
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/app/tags"))}>
+            Tag Lab
+          </CommandItem>
         </CommandGroup>
         {onAddChart && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Add chart">
               {METRICS.map((m) => (
-                <CommandItem key={m.key} onSelect={() => run(() => onAddChart(m.key))}>
+                <CommandItem
+                  key={m.key}
+                  onSelect={() => run(() => onAddChart(m.key))}
+                >
                   {m.label}
-                  <span className="ml-auto text-xs text-muted-foreground">{m.group}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {m.group}
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
           </>
         )}
         <CommandSeparator />
-        <CommandGroup heading="Privacy">
-          <CommandItem
-            onSelect={() =>
-              run(async () => {
-                await cacheClear();
-                toast.success("Local cache wiped");
-              })
-            }
-          >
-            Wipe locally cached data
+        <CommandGroup heading="Privacy & connection">
+          <CommandItem onSelect={() => run(() => router.push("/privacy"))}>
+            Privacy and local data
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => router.push("/connect"))}>
+            Manage Oura connection
           </CommandItem>
         </CommandGroup>
       </CommandList>

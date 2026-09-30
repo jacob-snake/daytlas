@@ -1,0 +1,53 @@
+.brand-home-roll {
+  min-height: 44px;
+}
+.brand-roll-window {
+  display: grid;
+  overflow: hidden;
+  perspective: 480px;
+}
+.brand-roll-face {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  backface-visibility: hidden;
+  transition:
+    transform 240ms cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 180ms ease-out;
+}
+.brand-roll-destination {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(100%) rotateX(-75deg);
+}
+@media (hover: hover) and (pointer: fine) {
+  .brand-home-roll:hover .brand-roll-logo {
+    opacity: 0;
+    transform: translateY(-100%) rotateX(75deg);
+  }
+  .brand-home-roll:hover .brand-roll-destination {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+.brand-home-roll:focus-visible .brand-roll-face {
+  transition: none;
+}
+.brand-home-roll:focus-visible .brand-roll-logo {
+  opacity: 0;
+}
+.brand-home-roll:focus-visible .brand-roll-destination {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-home-roll .brand-roll-face,
+  .brand-home-roll:is(:hover, :focus-visible) .brand-roll-face {
+    transition: none;
+    transform: none;
+  }
+}
