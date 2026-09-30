@@ -1,12 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import type { DayRow } from "@/lib/oura/metrics";
 import { METRIC_BY_KEY } from "@/lib/oura/metrics";
+import { isDay, localDay, parseDay, shiftDay } from "@/lib/dates";
+import { revealChartMark } from "@/lib/chart-navigation";
 
 // Sequential single-hue ramp (light → dark), monotonic lightness.
-const RAMP = ["#e7efff", "#bcd3fb", "#84adf5", "#4a80ec", "#2058d4", "#0d3695", "#071d55"];
+const RAMP = [
+  "#e7efff",
+  "#bcd3fb",
+  "#84adf5",
+  "#4a80ec",
+  "#2058d4",
+  "#0d3695",
+  "#071d55",
+];
 const EMPTY = "var(--muted)";
 
 const CELL = 14;
@@ -22,67 +32,111 @@ export function YearHeatmap({
   metricKey: string;
   year: number;
 }) {
-  const [hover, setHover] = useState<{ day: string; value: number | null } | null>(null);
+  const [hoverDay, setHover] = useState<string | null>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const def = METRIC_BY_KEY[metricKey];
 
   const byDay = useMemo(
-    () => new Map(rows.map((r) => [r.day as string, r[metricKey] as number | null])),
-    [rows, metricKey]
+    () =>
+      new Map(
+        rows
+          .filter(
+            (r) =>
+              isDay(r.day) &&
+              r.day.startsWith(`${year}-`) &&
+              r.day <= localDay(),
+          )
+          .map((r) => [
+            r.day,
+            typeof r[metricKey] === "number" && Number.isFinite(r[metricKey])
+              ? (r[metricKey] as number)
+              : null,
+          ]),
+      ),
+    [rows, metricKey, year],
   );
 
   const { cells, weeks, domain } = useMemo(() => {
-    const values = rows
-      .map((r) => r[metricKey])
-      .filter((v): v is number => typeof v === "number");
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const values = [...byDay.values()].filter(
+      (v): v is number => typeof v === "number",
+    );
+    const min = values.length ? Math.min(...values) : null;
+    const max = values.length ? Math.max(...values) : null;
 
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31); // full grid; future days drawn as faint placeholders
-    const today = new Date();
-    const startCol = new Date(start);
-    startCol.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // back to Monday
+    const today = localDay();
+    const firstWeekday = (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7;
+    const dayCount =
+      (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / 86400000;
 
-    const cells: { x: number; y: number; day: string; value: number | null; fill: string; future: boolean }[] = [];
-    for (let d = new Date(startCol), i = 0; d <= end; d.setDate(d.getDate() + 1), i++) {
-      if (d < start) continue;
-      const day = format(d, "yyyy-MM-dd");
-      const week = Math.floor((d.getTime() - startCol.getTime()) / (7 * 86400000));
-      const future = d > today;
+    const cells: {
+      x: number;
+      y: number;
+      day: string;
+      value: number | null;
+      fill: string;
+      future: boolean;
+    }[] = [];
+    for (let i = 0; i < dayCount; i++) {
+      const day = shiftDay(`${year}-01-01`, i);
+      const week = Math.floor((i + firstWeekday) / 7);
+      const future = day > today;
       const value = future ? null : (byDay.get(day) ?? null);
       let fill = EMPTY;
-      if (value !== null && max > min) {
-        const t = (value - min) / (max - min);
+      if (value !== null) {
+        const t =
+          min !== null && max !== null && max > min
+            ? (value - min) / (max - min)
+            : 0.5;
         fill = RAMP[Math.min(RAMP.length - 1, Math.floor(t * RAMP.length))];
       }
-      cells.push({ x: week * STEP, y: ((d.getDay() + 6) % 7) * STEP, day, value, fill, future });
+      cells.push({
+        x: week * STEP,
+        y: ((i + firstWeekday) % 7) * STEP,
+        day,
+        value,
+        fill,
+        future,
+      });
     }
-    const weeks = Math.ceil(((end.getTime() - startCol.getTime()) / 86400000 + 1) / 7);
+    const weeks = Math.ceil((dayCount + firstWeekday) / 7);
     return { cells, weeks, domain: { min, max } };
-  }, [rows, byDay, metricKey, year]);
+  }, [byDay, year]);
+  const hover = cells.find((c) => c.day === hoverDay) ?? null;
 
   const width = weeks * STEP;
   const height = 7 * STEP;
 
   return (
     <div>
-      <div className="mb-2 flex h-5 items-center justify-between text-sm">
-        <span className="text-muted-foreground" aria-live="polite">
+      <div className="mb-2 flex min-h-5 flex-col items-start justify-between gap-2 text-sm sm:flex-row sm:items-center">
+        <span
+          className="min-h-10 text-muted-foreground sm:min-h-5"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {hover
-            ? `${format(new Date(hover.day), "EEE, d MMM yyyy")} — ${
-                hover.value !== null ? `${hover.value}${def.unit && ` ${def.unit}`}` : "no data"
+            ? `${format(parseDay(hover.day), "EEE, d MMM yyyy")} — ${
+                hover.future
+                  ? "future day"
+                  : hover.value !== null
+                    ? `${hover.value}${def.unit && ` ${def.unit}`}`
+                    : "no data"
               }`
             : `${def.label}, ${year}`}
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          {Math.round(domain.min)}
+          {domain.min === null ? "No data" : Math.round(domain.min)}
           {RAMP.map((c) => (
-            <span key={c} className="size-3 rounded-[3px]" style={{ background: c }} />
+            <span
+              key={c}
+              className="size-3 rounded-[3px]"
+              style={{ background: c }}
+            />
           ))}
-          {Math.round(domain.max)}
+          {domain.max === null ? "" : Math.round(domain.max)}
         </span>
       </div>
-      <div className="overflow-x-auto">
+      <div ref={scrollerRef} className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${height + 18}`}
           width={width}
@@ -90,48 +144,67 @@ export function YearHeatmap({
           onMouseLeave={() => setHover(null)}
           tabIndex={0}
           role="img"
-          aria-label={`${def.label} calendar heatmap for ${year}. Use arrow keys to browse days; values from ${Math.round(domain.min)} to ${Math.round(domain.max)}.`}
-          className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`${def.label} calendar heatmap for ${year}. Use arrow keys to browse days. ${domain.min === null || domain.max === null ? "No recorded data." : `Values from ${domain.min} to ${domain.max} ${def.unit}.`}`}
+          className="[&_text]:font-medium rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onKeyDown={(e) => {
-            const deltas: Record<string, number> = { ArrowRight: 7, ArrowLeft: -7, ArrowDown: 1, ArrowUp: -1 };
+            const deltas: Record<string, number> = {
+              ArrowRight: 7,
+              ArrowLeft: -7,
+              ArrowDown: 1,
+              ArrowUp: -1,
+            };
             const delta = deltas[e.key];
-            if (!delta) return;
+            if (!delta && e.key !== "Home" && e.key !== "End") return;
             e.preventDefault();
-            const idx = hover ? cells.findIndex((c) => c.day === hover.day) : 0;
-            const next = cells[Math.max(0, Math.min(cells.length - 1, idx + delta))];
-            if (next) setHover({ day: next.day, value: next.value });
+            const idx = hover
+              ? cells.findIndex((c) => c.day === hover.day)
+              : -delta;
+            const nextIndex =
+              e.key === "Home"
+                ? 0
+                : e.key === "End"
+                  ? cells.length - 1
+                  : idx + delta;
+            const next =
+              cells[Math.max(0, Math.min(cells.length - 1, nextIndex))];
+            if (next) {
+              setHover(next.day);
+              revealChartMark(
+                scrollerRef.current,
+                e.currentTarget.querySelector<SVGRectElement>(
+                  `[data-day="${next.day}"]`,
+                ),
+              );
+            }
           }}
         >
-          {["Mon", "Wed", "Fri", "Sun"].map((d, i) => (
-            <text
-              key={d}
-              x={-6}
-              y={[0, 2, 4, 6][i] * STEP + CELL - 3}
-              fontSize={9}
-              fill="var(--muted-foreground)"
-              textAnchor="end"
-            />
-          ))}
           {cells.map((c) => (
             <rect
               key={c.day}
+              data-day={c.day}
+              data-selected={hover?.day === c.day || undefined}
               x={c.x}
               y={c.y}
               width={CELL}
               height={CELL}
               rx={3.5}
               fill={c.fill}
-              opacity={c.future ? 0.35 : hover && hover.day !== c.day ? 0.75 : 1}
-              onMouseEnter={() => !c.future && setHover({ day: c.day, value: c.value })}
+              stroke={hover?.day === c.day ? "var(--foreground)" : undefined}
+              strokeWidth={hover?.day === c.day ? 1.5 : 0}
+              opacity={
+                c.future ? 0.35 : hover && hover.day !== c.day ? 0.75 : 1
+              }
+              onMouseEnter={() => setHover(c.day)}
             >
               <title>{`${c.day}: ${c.value ?? "–"}`}</title>
             </rect>
           ))}
           {Array.from({ length: 12 }, (_, m) => {
             const first = new Date(year, m, 1);
-            const startCol = new Date(year, 0, 1);
-            startCol.setDate(startCol.getDate() - ((startCol.getDay() + 6) % 7));
-            const week = Math.floor((first.getTime() - startCol.getTime()) / (7 * 86400000));
+            const offset = (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7;
+            const dayOffset =
+              (Date.UTC(year, m, 1) - Date.UTC(year, 0, 1)) / 86400000;
+            const week = Math.floor((dayOffset + offset) / 7);
             return (
               <text
                 key={m}
@@ -146,6 +219,9 @@ export function YearHeatmap({
           })}
         </svg>
       </div>
+      <p className="mt-2 text-xs text-muted-foreground md:hidden">
+        Scroll horizontally to explore every day.
+      </p>
     </div>
   );
 }

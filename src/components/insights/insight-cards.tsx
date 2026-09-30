@@ -1,85 +1,138 @@
 "use client";
-import { Icon } from "@/components/icon";
-import { ChartDownIcon, ChartUpIcon, SparklesIcon } from "@hugeicons/core-free-icons";
-
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricDelta } from "@/components/ui/metric-delta";
+import { Icon } from "@/components/icon";
+import {
+  Moon02Icon,
+  HeartPulseIcon,
+  WorkoutRunIcon,
+} from "@hugeicons/core-free-icons";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { metricInsight } from "@/lib/insights";
+import { parseDay } from "@/lib/dates";
 import type { DayRow } from "@/lib/oura/metrics";
 
 const SUBJECTS = [
-  { key: "sleep_score", label: "Sleep", color: "var(--chart-1)" },
-  { key: "readiness_score", label: "Readiness", color: "var(--chart-2)" },
-  { key: "avg_hrv", label: "HRV", color: "var(--chart-4)", unit: " ms" },
+  {
+    key: "readiness_score",
+    label: "Readiness",
+    icon: HeartPulseIcon,
+    color: "var(--chart-2)",
+  },
+  {
+    key: "sleep_score",
+    label: "Sleep",
+    icon: Moon02Icon,
+    color: "var(--chart-1)",
+  },
+  {
+    key: "activity_score",
+    label: "Activity",
+    icon: WorkoutRunIcon,
+    color: "var(--chart-3)",
+  },
+] as const;
+const HRV = [
+  {
+    key: "avg_hrv",
+    label: "HRV",
+    icon: HeartPulseIcon,
+    color: "var(--chart-4)",
+    unit: " ms",
+  },
 ] as const;
 
-function DeltaBadge({ delta, unit }: { delta: number | null; unit?: string }) {
-  if (delta === null) return null;
-  const up = delta >= 0;
-  return (
-    <Badge variant="outline" className="tabular-nums">
-      {up ? <Icon icon={ChartUpIcon} /> : <Icon icon={ChartDownIcon} />}
-      {up ? "+" : "−"}
-      {Math.abs(delta).toFixed(1)}
-      {unit ?? ""}
-    </Badge>
-  );
-}
-
-function story(percentile: number | null): string | null {
-  if (percentile === null) return null;
-  if (percentile >= 90) return "One of your best stretches ever.";
-  if (percentile >= 70) return "Better than most of your history.";
-  if (percentile >= 40) return "A typical stretch for you.";
-  if (percentile >= 15) return "Below your usual level.";
-  return "One of your rougher patches — be kind to yourself.";
-}
-
-export function InsightCards({ rows }: { rows: DayRow[] }) {
+export function InsightCards({
+  rows,
+  hrv = false,
+}: {
+  rows: DayRow[];
+  hrv?: boolean;
+}) {
   const insights = useMemo(
-    () => SUBJECTS.map((s) => ({ s, i: metricInsight(rows, s.key, 30) })),
-    [rows]
+    () =>
+      (hrv ? HRV : SUBJECTS).map((s) => ({
+        s,
+        i: metricInsight(rows, s.key, 30),
+      })),
+    [rows, hrv],
   );
 
   return (
-    <section className="grid gap-4 md:grid-cols-3">
+    <section className={hrv ? "grid gap-4" : "grid gap-4 md:grid-cols-3"}>
       {insights.map(({ s, i }) => (
         <Card key={s.key}>
           <CardHeader>
-            <CardDescription className="flex items-center gap-2">
-              <span className="size-2 rounded-full" style={{ background: s.color }} />
-              {s.label} — last 30 days
-            </CardDescription>
-            <CardTitle className="flex items-baseline gap-3 text-3xl tabular-nums">
-              {i.current !== null ? i.current.toFixed(0) : "–"}
-              <span className="flex gap-1.5">
-                <DeltaBadge delta={i.deltaPrev} unit={"unit" in s ? s.unit : undefined} />
+            <div className="flex items-center gap-3">
+              <span
+                className="flex size-10 items-center justify-center rounded-xl"
+                style={{
+                  background: `color-mix(in oklab, ${s.color} 10%, transparent)`,
+                  color: s.color,
+                }}
+              >
+                <Icon icon={s.icon} className="size-5" />
               </span>
+              <div>
+                <h3 className="text-lg font-bold">{s.label}</h3>
+                <p className="text-sm text-muted-foreground">Last 30 days</p>
+              </div>
+            </div>
+            <CardTitle className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-4xl tabular-nums">
+              {i.current !== null ? i.current.toFixed(0) : "–"}
+              {"unit" in s && (
+                <span className="text-base font-medium text-muted-foreground">
+                  {s.unit.trim()}
+                </span>
+              )}
+              <MetricDelta
+                value={i.deltaPrev}
+                unit={"unit" in s ? s.unit : "pts"}
+                polarity="direction"
+              />
             </CardTitle>
+            <CardDescription className="mt-1 text-xs">
+              Average · change vs previous 30 days
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-1.5 text-sm text-muted-foreground">
-            {i.percentile !== null && (
-              <p className="flex items-center gap-1.5 text-foreground">
-                <Icon icon={SparklesIcon} className="size-3.5" style={{ color: s.color }} />
-                {story(i.percentile)}{" "}
-                <span className="text-muted-foreground">(top {100 - i.percentile}%)</span>
-              </p>
-            )}
-            {i.deltaLastYear !== null && (
-              <p>
-                {i.deltaLastYear >= 0 ? "Up" : "Down"}{" "}
-                <span className="tabular-nums">{Math.abs(i.deltaLastYear).toFixed(1)}</span> vs this
-                time last year.
-              </p>
-            )}
-            {i.bestDay && (
-              <p>
-                Best day: {format(new Date(i.bestDay.day), "d MMM")} (
-                <span className="tabular-nums">{i.bestDay.value}</span>).
-              </p>
-            )}
+          <CardContent className="space-y-4 text-sm">
+            <dl className="divide-y divide-border/35">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3 first:pt-0">
+                <dt className="text-muted-foreground">
+                  Vs this time last year
+                </dt>
+                <dd>
+                  <MetricDelta
+                    value={i.deltaLastYear}
+                    unit={"unit" in s ? s.unit : "pts"}
+                    polarity="direction"
+                  />
+                </dd>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3">
+                <dt className="text-muted-foreground">Highest recorded day</dt>
+                <dd className="text-right font-semibold tabular-nums">
+                  {i.bestDay ? (
+                    <>
+                      {i.bestDay.value}
+                      {"unit" in s ? s.unit : ""}
+                      <span className="ml-2 font-medium text-muted-foreground">
+                        {format(parseDay(i.bestDay.day), "d MMM")}
+                      </span>
+                    </>
+                  ) : (
+                    "No recorded days"
+                  )}
+                </dd>
+              </div>
+            </dl>
           </CardContent>
         </Card>
       ))}

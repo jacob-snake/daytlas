@@ -1,0 +1,50 @@
+name: personal-days
+services:
+  app:
+    image: personal-days:${RELEASE_TAG:-local}
+    build:
+      context: ..
+      args:
+        NEXT_PUBLIC_POSTHOG_ENABLED: ${NEXT_PUBLIC_POSTHOG_ENABLED:-false}
+        NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+        NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-https://eu.i.posthog.com}
+    environment:
+      PUBLIC_SITE_URL: https://${SITE_DOMAIN:?Set SITE_DOMAIN}
+      OURA_REDIRECT_URI: https://${SITE_DOMAIN}/api/auth/callback
+      OURA_CLIENT_ID: ${OURA_CLIENT_ID:-}
+      OURA_CLIENT_SECRET: ${OURA_CLIENT_SECRET:-}
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+  web:
+    image: caddy:2
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,84 +1,118 @@
-import { subDays, subYears, format } from "date-fns";
+import { subYears } from "date-fns";
+import { mean, numericDays } from "./analytics";
+import { isDay, localDay, parseDay, shiftDay } from "./dates";
 import type { DayRow } from "./oura/metrics";
 
-// Turns raw history into "how am I doing lately vs what's normal for me".
-
-const iso = (d: Date) => format(d, "yyyy-MM-dd");
-
-function mean(values: number[]): number | null {
-  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-}
-
-function windowValues(rows: DayRow[], key: string, start: string, end: string): number[] {
-  return rows
-    .filter((r) => (r.day as string) >= start && (r.day as string) <= end)
-    .map((r) => r[key])
-    .filter((v): v is number => typeof v === "number");
-}
+// Compare calendar windows of a person's own recorded history.
 
 export interface MetricInsight {
   key: string;
-  /** Mean over the last `windowDays`. */
+  /** Mean of available measurements over exactly `windowDays` calendar days. */
   current: number | null;
-  /** vs the window immediately before. */
   deltaPrev: number | null;
-  /** vs the same window one year ago (null if no data back then). */
   deltaLastYear: number | null;
-  /** 0–100: where the current window mean sits among all rolling windows. */
+  /** 0–100 midrank among well-covered historical windows, not a health rating. */
   percentile: number | null;
-  /** Best single day in the current window. */
+  /** Highest single value in the current window. */
   bestDay: { day: string; value: number } | null;
+  currentN: number;
+  previousN: number;
+  historicalWindows: number;
 }
 
-export function metricInsight(rows: DayRow[], key: string, windowDays = 30): MetricInsight {
-  const today = new Date();
-  const curStart = iso(subDays(today, windowDays));
-  const prevStart = iso(subDays(today, windowDays * 2));
-  const lyEnd = iso(subYears(today, 1));
-  const lyStart = iso(subDays(subYears(today, 1), windowDays));
-
-  const cur = windowValues(rows, key, curStart, iso(today));
-  const prev = windowValues(rows, key, prevStart, curStart);
-  const lastYear = windowValues(rows, key, lyStart, lyEnd);
-
-  const current = mean(cur);
-  const prevMean = mean(prev);
-  const lyMean = mean(lastYear);
-
-  // Rolling windows across full history for the percentile.
-  const daily = rows
-    .map((r) => ({ day: r.day as string, v: r[key] }))
-    .filter((r): r is { day: string; v: number } => typeof r.v === "number");
-  const windows: number[] = [];
-  for (let i = 0; i + windowDays <= daily.length; i += Math.max(7, Math.floor(windowDays / 4))) {
-    const m = mean(daily.slice(i, i + windowDays).map((d) => d.v));
-    if (m !== null) windows.push(m);
-  }
-  let percentile: number | null = null;
-  if (current !== null && windows.length >= 4) {
-    percentile = Math.round((windows.filter((w) => w <= current).length / windows.length) * 100);
-  }
-
-  let bestDay: MetricInsight["bestDay"] = null;
-  for (const d of daily.filter((d) => d.day >= curStart)) {
-    if (!bestDay || d.v > bestDay.value) bestDay = { day: d.day, value: d.v };
-  }
-
-  return {
+export function metricInsight(
+  rows: DayRow[],
+  key: string,
+  windowDays = 30,
+  today = localDay(),
+): MetricInsight {
+  const result: MetricInsight = {
     key,
-    current,
-    deltaPrev: current !== null && prevMean !== null ? current - prevMean : null,
-    deltaLastYear: current !== null && lyMean !== null ? current - lyMean : null,
-    percentile,
-    bestDay,
+    current: null,
+    deltaPrev: null,
+    deltaLastYear: null,
+    percentile: null,
+    bestDay: null,
+    currentN: 0,
+    previousN: 0,
+    historicalWindows: 0,
   };
+  if (!isDay(today) || !Number.isInteger(windowDays) || windowDays < 1)
+    return result;
+  const curStart = shiftDay(today, 1 - windowDays);
+  const prevStart = shiftDay(curStart, -windowDays);
+  const prevEnd = shiftDay(curStart, -1);
+  const lyEnd = localDay(subYears(parseDay(today), 1));
+  const lyStart = shiftDay(lyEnd, 1 - windowDays);
+  const daily = numericDays(rows, key).filter((d) => d.day <= today);
+  const values = (start: string, end: string) =>
+    daily.filter((r) => r.day >= start && r.day <= end).map((r) => r.v);
+  const cur = values(curStart, today);
+  const prev = values(prevStart, prevEnd);
+  const lastYear = values(lyStart, lyEnd);
+  result.current = mean(cur);
+  result.currentN = cur.length;
+  result.previousN = prev.length;
+  const minimum = Math.ceil(windowDays / 2);
+  if (cur.length >= minimum) {
+    if (prev.length >= minimum)
+      result.deltaPrev = result.current! - mean(prev)!;
+    if (lastYear.length >= minimum)
+      result.deltaLastYear = result.current! - mean(lastYear)!;
+  }
+
+  // Use dated windows, not N observations that can span months of missing data.
+  // Exclude the current period from its own reference distribution.
+  const windows: number[] = [];
+  const minCoverage = Math.ceil(windowDays * 0.8);
+  const first = daily[0]?.day;
+  if (first && cur.length >= minCoverage) {
+    for (
+      let end = shiftDay(first, windowDays - 1);
+      end < curStart;
+      end = shiftDay(end, 7)
+    ) {
+      const window = values(shiftDay(end, 1 - windowDays), end);
+      if (window.length >= minCoverage) windows.push(mean(window)!);
+    }
+  }
+  result.historicalWindows = windows.length;
+  if (result.current !== null && windows.length >= 4) {
+    // Midrank makes a constant history typical (50th percentile), not "top 0%".
+    const lower = windows.filter((w) => w < result.current! - 1e-9).length;
+    const equal = windows.filter(
+      (w) => Math.abs(w - result.current!) <= 1e-9,
+    ).length;
+    result.percentile = Math.round(
+      ((lower + equal / 2) / windows.length) * 100,
+    );
+  }
+
+  for (const d of daily.filter((d) => d.day >= curStart)) {
+    if (!result.bestDay || d.v > result.bestDay.value)
+      result.bestDay = { day: d.day, value: d.v };
+  }
+  return result;
 }
 
-/** Histogram of all daily values + where the recent window sits. */
-export function distribution(rows: DayRow[], key: string, bins = 24, windowDays = 30) {
-  const values = rows
-    .map((r) => r[key])
-    .filter((v): v is number => typeof v === "number");
+/** Histogram of recorded daily values, with an exactly dated recent window. */
+export function distribution(
+  rows: DayRow[],
+  key: string,
+  bins = 24,
+  windowDays = 30,
+  today = localDay(),
+) {
+  if (
+    !Number.isInteger(bins) ||
+    bins < 1 ||
+    bins > 1000 ||
+    !Number.isInteger(windowDays) ||
+    windowDays < 1
+  )
+    return null;
+  const daily = numericDays(rows, key).filter((d) => d.day <= today);
+  const values = daily.map((d) => d.v);
   if (values.length < 10) return null;
 
   const min = Math.min(...values);
@@ -90,14 +124,14 @@ export function distribution(rows: DayRow[], key: string, bins = 24, windowDays 
     count: 0,
     recent: 0,
   }));
-  const curStart = iso(subDays(new Date(), windowDays));
-  for (const r of rows) {
-    const v = r[key];
-    if (typeof v !== "number") continue;
-    const idx = Math.min(bins - 1, Math.floor((v - min) / step));
+  const curStart = shiftDay(today, 1 - windowDays);
+  for (const { day, v } of daily) {
+    const idx = Math.max(0, Math.min(bins - 1, Math.floor((v - min) / step)));
     counts[idx].count++;
-    if ((r.day as string) >= curStart) counts[idx].recent++;
+    if (day >= curStart) counts[idx].recent++;
   }
-  const recentMean = mean(windowValues(rows, key, curStart, iso(new Date())));
+  const recentMean = mean(
+    daily.filter((r) => r.day >= curStart).map((r) => r.v),
+  );
   return { counts, min, max, recentMean, total: values.length };
 }

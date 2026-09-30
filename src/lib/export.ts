@@ -1,5 +1,12 @@
 import { fetchAll } from "./oura/client";
-import type { DailySleep, DailyReadiness, DailyActivity, SleepPeriod } from "./oura/types";
+import { isDay } from "./dates";
+import { mainSleepByDay } from "./oura/metrics";
+import type {
+  DailySleep,
+  DailyReadiness,
+  DailyActivity,
+  SleepPeriod,
+} from "./oura/types";
 
 export interface ExportOptions {
   startDate: string;
@@ -15,14 +22,37 @@ export interface ExportOptions {
   units: "hours" | "seconds";
 }
 
-type Row = Record<string, string | number | null>;
+export type ExportRow = Record<string, string | number | null>;
 
-function dur(seconds: number | null, units: "hours" | "seconds"): number | null {
-  if (seconds === null) return null;
+interface ExportCollections {
+  sleep: DailySleep[];
+  readiness: DailyReadiness[];
+  activity: DailyActivity[];
+  periods: SleepPeriod[];
+}
+
+function validateOptions(opts: ExportOptions) {
+  if (
+    !isDay(opts.startDate) ||
+    !isDay(opts.endDate) ||
+    opts.startDate > opts.endDate
+  ) {
+    throw new Error("Choose a valid start and end date.");
+  }
+  if (!Object.values(opts.metrics).some(Boolean))
+    throw new Error("Select at least one metric group.");
+}
+
+function dur(
+  seconds: number | null,
+  units: "hours" | "seconds",
+): number | null {
+  if (seconds == null || !Number.isFinite(seconds)) return null;
   return units === "hours" ? Math.round((seconds / 3600) * 100) / 100 : seconds;
 }
 
-export async function buildExport(opts: ExportOptions): Promise<Row[]> {
+export async function buildExport(opts: ExportOptions): Promise<ExportRow[]> {
+  validateOptions(opts);
   const range = { start_date: opts.startDate, end_date: opts.endDate };
   const [sleep, readiness, activity, periods] = await Promise.all([
     opts.metrics.scores ? fetchAll<DailySleep>("daily_sleep", range) : [],
@@ -35,7 +65,17 @@ export async function buildExport(opts: ExportOptions): Promise<Row[]> {
     opts.metrics.sleepDetail ? fetchAll<SleepPeriod>("sleep", range) : [],
   ]);
 
-  const byDay = new Map<string, Row>();
+  return buildExportRows(opts, { sleep, readiness, activity, periods });
+}
+
+/** Pure construction for reliable tests and consistent main-sleep selection. */
+export function buildExportRows(
+  opts: ExportOptions,
+  collections: ExportCollections,
+): ExportRow[] {
+  validateOptions(opts);
+  const { sleep, readiness, activity, periods } = collections;
+  const byDay = new Map<string, ExportRow>();
   const get = (day: string) => {
     let r = byDay.get(day);
     if (!r) {
@@ -51,7 +91,8 @@ export async function buildExport(opts: ExportOptions): Promise<Row[]> {
     for (const a of activity) get(a.day).activity_score = a.score;
   }
   if (opts.metrics.temperature) {
-    for (const r of readiness) get(r.day).temperature_deviation_c = r.temperature_deviation;
+    for (const r of readiness)
+      get(r.day).temperature_deviation_c = r.temperature_deviation;
   }
   if (opts.metrics.steps) {
     for (const a of activity) {
@@ -63,7 +104,7 @@ export async function buildExport(opts: ExportOptions): Promise<Row[]> {
   if (opts.metrics.sleepDetail) {
     const u = opts.units;
     const suffix = u === "hours" ? "_h" : "_s";
-    for (const p of periods.filter((p) => p.type !== "rest")) {
+    for (const p of mainSleepByDay(periods).values()) {
       const row = get(p.day);
       row.bedtime_start = p.bedtime_start;
       row.bedtime_end = p.bedtime_end;
@@ -79,26 +120,88 @@ export async function buildExport(opts: ExportOptions): Promise<Row[]> {
     }
   }
 
-  return [...byDay.values()].sort((a, b) => String(a.day).localeCompare(String(b.day)));
+  // Include every selected column in every row; a missing value stays null,
+  // never zero or an omitted field that shifts spreadsheet interpretation.
+  const columns = ["day"];
+  if (opts.metrics.scores)
+    columns.push("sleep_score", "readiness_score", "activity_score");
+  if (opts.metrics.temperature) columns.push("temperature_deviation_c");
+  if (opts.metrics.steps) columns.push("steps", "active_calories");
+  if (opts.metrics.sleepDetail) {
+    const suffix = opts.units === "hours" ? "_h" : "_s";
+    columns.push(
+      "bedtime_start",
+      "bedtime_end",
+      ...["total_sleep", "deep_sleep", "rem_sleep", "light_sleep", "awake"].map(
+        (c) => c + suffix,
+      ),
+      "sleep_efficiency_pct",
+      "avg_hrv_ms",
+      "avg_hr_bpm",
+      "lowest_hr_bpm",
+    );
+  }
+  return [...byDay.values()]
+    .filter(
+      (r) => isDay(r.day) && r.day >= opts.startDate && r.day <= opts.endDate,
+    )
+    .map((r) =>
+      Object.fromEntries(
+        columns.map((c) => [
+          c,
+          typeof r[c] === "number" && !Number.isFinite(r[c])
+            ? null
+            : (r[c] ?? null),
+        ]),
+      ),
+    )
+    .sort((a, b) => String(a.day).localeCompare(String(b.day)));
 }
 
-export function download(rows: Row[], format: "csv" | "json", filename: string) {
-  let blob: Blob;
-  if (format === "json") {
-    blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
-  } else {
-    const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
-    const escape = (v: string | number | null) => {
-      const s = v === null || v === undefined ? "" : String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const lines = [cols.join(","), ...rows.map((r) => cols.map((c) => escape(r[c] ?? null)).join(","))];
-    blob = new Blob([lines.join("\n")], { type: "text/csv" });
-  }
+export function serializeExport(
+  rows: ExportRow[],
+  format: "csv" | "json",
+): string {
+  if (format === "json") return JSON.stringify(rows, null, 2);
+  const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  const escape = (v: string | number | null | undefined) => {
+    let s =
+      v == null || (typeof v === "number" && !Number.isFinite(v))
+        ? ""
+        : String(v);
+    // Quoting alone does not stop spreadsheet formula execution. Protect text
+    // cells and headers, while preserving legitimate negative numeric values.
+    if (typeof v === "string" && (/^\s*[=+@-]/.test(s) || /^[\t\r\n]/.test(s)))
+      s = `'${s}`;
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [
+    cols.map(escape).join(","),
+    ...rows.map((r) => cols.map((c) => escape(r[c])).join(",")),
+  ].join("\r\n");
+}
+
+export function download(
+  rows: ExportRow[],
+  format: "csv" | "json",
+  filename: string,
+) {
+  if (!rows.length)
+    throw new Error("No records found for this date range and selection.");
+  const content = serializeExport(rows, format);
+  const blob = new Blob([format === "csv" ? `\uFEFF${content}` : content], {
+    type:
+      format === "json"
+        ? "application/json;charset=utf-8"
+        : "text/csv;charset=utf-8",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = `${filename}.${format}`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  // WebKit may begin consuming the URL after the click handler returns.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -1,0 +1,17 @@
+.git
+.next
+node_modules
+.env*
+docs
+tests
+test-results
+playwright-report
+.agents
+.claude
+.codex
+.github
+*.tsbuildinfo
+*.pem
+*.key
+*.log
+.DS_Store

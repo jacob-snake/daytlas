@@ -1,62 +1,224 @@
 "use client";
-
 import Link from "next/link";
+import { UserRound, Menu, ArrowLeft } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Icon } from "@/components/icon";
+import { getMode, hasToken, setMode, reloadSession } from "@/lib/oura/client";
 import {
-  DashboardSpeed01Icon,
-  ChartLineData01Icon,
-  CircleIcon,
-  FlaskConicalIcon,
-} from "@hugeicons/core-free-icons";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", key: "dashboard", label: "Dashboard", icon: DashboardSpeed01Icon },
-  { href: "/trends", key: "trends", label: "Trends", icon: ChartLineData01Icon },
-  { href: "/year", key: "year", label: "Year", icon: CircleIcon },
-  { href: "/tags", key: "tags", label: "Tag Lab", icon: FlaskConicalIcon },
+  { href: "/app/day", key: "day", label: "Day detail" },
+  { href: "/app", key: "dashboard", label: "Overview" },
+  { href: "/app/trends", key: "trends", label: "Trends" },
+  { href: "/app/year", key: "year", label: "Your year" },
+  { href: "/app/tags", key: "tags", label: "Tag Lab" },
 ] as const;
-
-export function AppHeader({ active }: { active: "dashboard" | "trends" | "year" | "tags" }) {
+const subscribe = () => () => {};
+export function AppHeader({
+  active,
+}: {
+  active: "day" | "dashboard" | "trends" | "year" | "tags" | "profile";
+}) {
+  const [hidden, setHidden] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const header = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let previous = window.scrollY,
+      travel = 0,
+      frame = 0;
+    const update = () => {
+      const next = Math.max(0, window.scrollY);
+      const delta = next - previous;
+      if (Math.abs(delta) >= 2) {
+        travel =
+          Math.sign(delta) === Math.sign(travel) ? travel + delta : delta;
+        if (next < 100 || travel < -36 || menuOpen) setHidden(false);
+        else if (
+          travel > 64 &&
+          !header.current?.contains(document.activeElement)
+        )
+          setHidden(true);
+        previous = next;
+      }
+    };
+    const schedule = () => {
+      if (!frame)
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          update();
+        });
+    };
+    window.addEventListener("scroll", schedule, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+    };
+  }, [menuOpen]);
+  useEffect(() => {
+    const node = header.current;
+    const main = node?.closest("main");
+    if (!node || !main) return;
+    const update = () =>
+      main.style.setProperty(
+        "--app-header-offset",
+        hidden
+          ? "0px"
+          : `${node.offsetHeight + (innerWidth >= 640 ? 20 : 12)}px`,
+      );
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    update();
+    return () => observer.disconnect();
+  }, [hidden]);
+  const demo = useSyncExternalStore(
+    subscribe,
+    () => getMode() === "demo",
+    () => false,
+  );
+  const imported = useSyncExternalStore(
+    subscribe,
+    () => getMode() === "import",
+    () => false,
+  );
   return (
-    <header className="sticky top-2 z-20 mx-auto w-fit max-w-full rounded-full border bg-background/70 px-2 shadow-[var(--shadow-border)] backdrop-blur-xl sm:top-4 sm:px-3">
-      <div className="flex h-11 items-center gap-1.5 sm:h-12 sm:gap-3">
-        <Link href="/" className="pl-1.5 text-base font-bold tracking-tight sm:pl-2 sm:text-lg">
-          Woura
-        </Link>
-        <Badge variant="secondary" className="hidden gap-1.5 sm:inline-flex">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
-          Local only
-        </Badge>
-        <Separator orientation="vertical" className="hidden h-6 sm:block" />
-        <nav className="flex items-center gap-0.5 overflow-x-auto sm:gap-1">
-          {NAV.map((item) => (
-            <Button
-              key={item.key}
-              asChild
-              variant="ghost"
-              size="sm"
-              className={cn("shrink-0 px-2 sm:px-2.5", active === item.key && "bg-muted font-semibold")}
-            >
-              <Link href={item.href}>
-                <Icon icon={item.icon} className="size-4 sm:hidden" />
-                <span className="hidden sm:inline">{item.label}</span>
+    <>
+      <header
+        ref={header}
+        onFocusCapture={() => setHidden(false)}
+        data-hidden={hidden}
+        className="motion-safe:transition-transform motion-safe:duration-[220ms] motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] data-[hidden=true]:-translate-y-[calc(100%+2rem)] app-header sticky top-3 z-40 rounded-2xl bg-background/90 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-xl sm:top-5 sm:px-5"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <Brand revealWebsite />
+          <nav
+            aria-label="Main navigation"
+            className="hidden items-center gap-1 min-[1100px]:flex"
+          >
+            {NAV.map((item) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                aria-current={active === item.key ? "page" : undefined}
+                className={cn(
+                  "flex min-h-11 items-center border-b-2 px-3 text-sm font-medium transition-colors",
+                  active === item.key
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="hidden items-center gap-2 min-[1100px]:flex">
+            <Button asChild variant="ghost" size="sm" className="min-h-11">
+              <Link
+                href="/app/profile"
+                aria-current={active === "profile" ? "page" : undefined}
+                className="aria-[current=page]:bg-muted"
+              >
+                <UserRound className="size-4" aria-hidden="true" />
+                Your profile
               </Link>
             </Button>
-          ))}
-        </nav>
-        <button
-          className="hidden cursor-pointer rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:bg-foreground hover:text-background md:inline-block"
-          title="Command palette — search pages, metrics, actions"
-          aria-label="Open command palette"
-          onClick={() => window.dispatchEvent(new CustomEvent("woura:cmdk"))}
-        >
-          ⌘K
-        </button>
-      </div>
-    </header>
+          </div>
+          <Dialog
+            open={menuOpen}
+            onOpenChange={(open) => {
+              setMenuOpen(open);
+              if (open) setHidden(false);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-[1100px]:hidden"
+                aria-label="Open navigation"
+              >
+                <Menu aria-hidden="true" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="top-4 translate-y-0 rounded-3xl sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Navigation</DialogTitle>
+              </DialogHeader>
+              <nav
+                aria-label="Mobile main navigation"
+                className="flex flex-col gap-1"
+              >
+                {[
+                  ...NAV,
+                  {
+                    href: "/app/profile",
+                    key: "profile",
+                    label: "Your profile",
+                  },
+                ].map((item) => (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={active === item.key ? "page" : undefined}
+                    className="rounded-xl px-4 py-3 text-base font-medium hover:bg-muted aria-[current=page]:bg-secondary aria-[current=page]:font-semibold"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <Link
+                  href="/"
+                  className="mt-3 flex items-center gap-3 border-t border-border/40 px-4 py-4 text-sm text-muted-foreground"
+                >
+                  <ArrowLeft className="size-4" aria-hidden="true" /> Back to
+                  website
+                </Link>
+              </nav>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </header>
+      {imported && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3 text-sm">
+          <p>
+            <strong>Imported Oura data.</strong> Updates when you upload another
+            file.
+          </p>
+          <Link
+            href="/connect#import"
+            className="font-semibold underline underline-offset-4"
+          >
+            Update import
+          </Link>
+        </div>
+      )}
+      {demo && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl bg-secondary px-4 py-2 text-xs">
+          <p>
+            <span className="font-semibold">You’re exploring the demo.</span>{" "}
+            <span className="text-muted-foreground">
+              All data is fictional.
+            </span>
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setMode(hasToken() ? "live" : "sandbox");
+              reloadSession(hasToken() ? "/app" : "/");
+            }}
+          >
+            Exit demo
+          </Button>
+        </div>
+      )}
+    </>
   );
 }

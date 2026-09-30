@@ -2,12 +2,16 @@
 import { Icon } from "@/components/icon";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 
-import { useEffect, useState } from "react";
-import { format, subDays, subMonths, subYears } from "date-fns";
+import { useState, useSyncExternalStore } from "react";
+import { format, parseISO, subDays, subMonths, subYears } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
 export interface Range {
@@ -18,24 +22,56 @@ export interface Range {
 const iso = (d: Date) => format(d, "yyyy-MM-dd");
 
 const PRESETS: { label: string; range: () => Range }[] = [
-  { label: "Last 30 days", range: () => ({ start: iso(subDays(new Date(), 30)), end: iso(new Date()) }) },
-  { label: "Last 90 days", range: () => ({ start: iso(subDays(new Date(), 90)), end: iso(new Date()) }) },
-  { label: "Last 6 months", range: () => ({ start: iso(subMonths(new Date(), 6)), end: iso(new Date()) }) },
-  { label: "Last year", range: () => ({ start: iso(subYears(new Date(), 1)), end: iso(new Date()) }) },
-  { label: "Last 3 years", range: () => ({ start: iso(subYears(new Date(), 3)), end: iso(new Date()) }) },
+  {
+    label: "Last 30 days",
+    range: () => ({
+      start: iso(subDays(new Date(), 29)),
+      end: iso(new Date()),
+    }),
+  },
+  {
+    label: "Last 90 days",
+    range: () => ({
+      start: iso(subDays(new Date(), 89)),
+      end: iso(new Date()),
+    }),
+  },
+  {
+    label: "Last 6 months",
+    range: () => ({
+      start: iso(subMonths(new Date(), 6)),
+      end: iso(new Date()),
+    }),
+  },
+  {
+    label: "Last year",
+    range: () => ({
+      start: iso(subYears(new Date(), 1)),
+      end: iso(new Date()),
+    }),
+  },
+  {
+    label: "Last 3 years",
+    range: () => ({
+      start: iso(subYears(new Date(), 3)),
+      end: iso(new Date()),
+    }),
+  },
 ];
 
 /** True below Tailwind's sm breakpoint — used to drop to a single calendar month. */
-function useIsMobile() {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return mobile;
+const mobileQuery = "(max-width: 639px)";
+function subscribeMobile(changed: () => void) {
+  const query = window.matchMedia(mobileQuery);
+  query.addEventListener("change", changed);
+  return () => query.removeEventListener("change", changed);
+}
+export function useIsMobile() {
+  return useSyncExternalStore(
+    subscribeMobile,
+    () => window.matchMedia(mobileQuery).matches,
+    () => false,
+  );
 }
 
 export function DateRangePicker({
@@ -50,22 +86,40 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [draft, setDraft] = useState<DateRange | undefined>();
   const selected: DateRange = {
-    from: new Date(value.start),
-    to: new Date(value.end),
+    from: parseISO(value.start),
+    to: parseISO(value.end),
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open);
+        setDraft(undefined);
+      }}
+    >
       <PopoverTrigger asChild>
-        <Button variant="outline" className="min-w-0 justify-start font-normal sm:min-w-[240px]">
-          <Icon icon={Calendar03Icon} data-icon="inline-start" className="text-muted-foreground" />
+        <Button
+          variant="outline"
+          className="min-w-0 justify-start font-normal sm:min-w-[240px]"
+        >
+          <Icon
+            icon={Calendar03Icon}
+            data-icon="inline-start"
+            className="text-muted-foreground"
+          />
           <span className="truncate">
-            {format(selected.from!, "d MMM yyyy")} – {format(selected.to!, "d MMM yyyy")}
+            {format(selected.from!, "d MMM yyyy")} –{" "}
+            {format(selected.to!, "d MMM yyyy")}
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-0" align="start">
+      <PopoverContent
+        className="w-auto max-w-[calc(100vw-2rem)] p-0"
+        align="start"
+      >
         <div className="flex max-h-[85vh] flex-col overflow-y-auto sm:max-h-none sm:flex-row">
           <div className="flex gap-1 overflow-x-auto p-3 sm:flex-col">
             {allDataStart && (
@@ -97,28 +151,45 @@ export function DateRangePicker({
             ))}
           </div>
           <Separator className="sm:hidden" />
-          <Separator orientation="vertical" className="hidden h-auto sm:block" />
+          <Separator
+            orientation="vertical"
+            className="hidden h-auto sm:block"
+          />
           <div>
             <div className="flex items-center gap-3 border-b px-4 py-3 text-sm">
               <div>
-                <p className="text-xs font-medium text-muted-foreground">From</p>
-                <p className="font-semibold tabular-nums">{format(selected.from!, "d MMM yyyy")}</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  From
+                </p>
+                <p className="font-semibold tabular-nums">
+                  {format(selected.from!, "d MMM yyyy")}
+                </p>
               </div>
               <span className="text-muted-foreground">→</span>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">To</p>
-                <p className="font-semibold tabular-nums">{format(selected.to!, "d MMM yyyy")}</p>
+                <p className="font-semibold tabular-nums">
+                  {format(selected.to!, "d MMM yyyy")}
+                </p>
               </div>
             </div>
             <Calendar
               mode="range"
+              captionLayout="dropdown"
+              className="range-calendar"
+              showOutsideDays={false}
+              startMonth={parseISO(allDataStart ?? "2000-01-01")}
+              endMonth={new Date()}
               numberOfMonths={isMobile ? 1 : 2}
               defaultMonth={selected.from}
-              selected={selected}
-              onSelect={(r) => {
-                if (r?.from && r?.to) {
-                  onChange({ start: iso(r.from), end: iso(r.to) });
-                }
+              selected={draft ?? selected}
+              onSelect={(_, day) => {
+                if (draft?.from && !draft.to) {
+                  const from = day < draft.from ? day : draft.from;
+                  const to = day < draft.from ? draft.from : day;
+                  setDraft({ from, to });
+                  onChange({ start: iso(from), end: iso(to) });
+                } else setDraft({ from: day, to: undefined });
               }}
               disabled={{ after: new Date() }}
               classNames={{

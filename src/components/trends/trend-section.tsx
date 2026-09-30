@@ -1,11 +1,10 @@
 "use client";
 import { Icon } from "@/components/icon";
-import { ChartDownIcon, ChartUpIcon } from "@hugeicons/core-free-icons";
+import { MetricDelta } from "@/components/ui/metric-delta";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { AnimatePresence, motion } from "motion/react";
-import { Badge } from "@/components/ui/badge";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   Select,
   SelectContent,
@@ -16,7 +15,7 @@ import {
 import { MetricPanel } from "./metric-panel";
 import { CorrelationMatrixCard } from "./correlation-matrix";
 import { mean } from "@/lib/analytics";
-import type { DayRow } from "@/lib/oura/metrics";
+import type { DayRow, Period } from "@/lib/oura/metrics";
 import { METRIC_BY_KEY } from "@/lib/oura/metrics";
 
 export interface SectionDef {
@@ -29,14 +28,42 @@ export interface SectionDef {
   defaults: string[];
 }
 
-export function TrendSection({ section, data }: { section: SectionDef; data: DayRow[] }) {
+export function TrendSection({
+  section,
+  data,
+  period = "daily",
+  rangeControls,
+}: {
+  section: SectionDef;
+  data: DayRow[];
+  period?: Period;
+  rangeControls?: ReactNode;
+}) {
   const [charts, setCharts] = useState<string[]>(section.defaults);
   const [compares, setCompares] = useState<Record<string, string[]>>({});
+  const sectionRef = useRef<HTMLElement>(null);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const addChart = (event: Event) => {
+      const key = (event as CustomEvent<string>).detail;
+      if (!section.metrics.includes(key)) return;
+      setCharts((current) =>
+        current.includes(key) ? current : [...current, key],
+      );
+      sectionRef.current?.scrollIntoView({
+        behavior: reducedMotion ? "instant" : "smooth",
+        block: "start",
+      });
+    };
+    window.addEventListener("woura:add-chart", addChart);
+    return () => window.removeEventListener("woura:add-chart", addChart);
+  }, [section.metrics, reducedMotion]);
 
   const summary = useMemo(() => {
     const vals = data
       .map((d) => d[section.headline])
-      .filter((v): v is number => typeof v === "number");
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
     const avg = mean(vals);
     const half = Math.floor(vals.length / 2);
     const first = mean(vals.slice(0, half));
@@ -50,79 +77,140 @@ export function TrendSection({ section, data }: { section: SectionDef; data: Day
   const headlineDef = METRIC_BY_KEY[section.headline];
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span
-          className="flex size-9 items-center justify-center rounded-xl"
-          style={{ background: `color-mix(in oklab, ${section.color} 14%, transparent)` }}
-        >
-          <Icon icon={section.icon} className="size-5" style={{ color: section.color }} />
-        </span>
-        <h2 className="text-xl font-bold tracking-tight">{section.title}</h2>
-        {summary.avg !== null && (
-          <Badge variant="secondary" className="tabular-nums text-sm">
-            {headlineDef.label} avg {summary.avg.toFixed(0)}
-            {headlineDef.unit ? ` ${headlineDef.unit}` : ""}
-          </Badge>
-        )}
-        {summary.delta !== null && Math.abs(summary.delta) >= 0.05 && (
-          <Badge variant="outline" className="tabular-nums text-sm">
-            {summary.delta > 0 ? (
-              <Icon icon={ChartUpIcon} className="size-4" style={{ color: "var(--chart-2)" }} />
-            ) : (
-              <Icon icon={ChartDownIcon} className="size-4 text-destructive" />
-            )}
-            <span className="font-semibold" style={{ color: summary.delta > 0 ? "var(--chart-2)" : "var(--destructive)" }}>
-              {Math.abs(summary.delta).toFixed(1)}
-            </span>
-            across this range
-          </Badge>
-        )}
-        <div className="ml-auto">
-          <Select value="" onValueChange={(k) => setCharts((c) => (c.includes(k) ? c : [...c, k]))}>
-            <SelectTrigger size="sm" className="add-trigger w-[180px]">
-              <SelectValue placeholder="＋ Add chart" />
-            </SelectTrigger>
-            <SelectContent>
-              {section.metrics.map((k) => (
-                <SelectItem key={k} value={k} disabled={charts.includes(k)}>
-                  {METRIC_BY_KEY[k].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <section
+      ref={sectionRef}
+      id={`trend-${section.id}`}
+      className="scroll-mt-6 space-y-3 py-2 sm:py-3"
+      aria-label={`${section.title} trends`}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-6 border-t border-border/40 pt-6 pb-3">
+        <div className="flex items-center gap-4">
+          <span
+            className="flex size-12 items-center justify-center rounded-2xl"
+            style={{
+              color: section.color,
+              background: `color-mix(in oklab, ${section.color} 10%, transparent)`,
+            }}
+          >
+            <Icon icon={section.icon} className="size-6" />
+          </span>
+          <div>
+            <p className="mb-1 text-sm font-medium text-muted-foreground">
+              Your patterns
+            </p>
+            <h2 className="text-3xl font-bold tracking-tight">
+              {section.title}
+            </h2>
+          </div>
         </div>
-      </div>
+        {summary.avg !== null && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Average {headlineDef.label.toLowerCase()}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-3xl font-bold tabular-nums">
+                {summary.avg.toFixed(0)}
+                <span className="ms-1 text-sm font-medium text-muted-foreground">
+                  {headlineDef.unit || "/ 100"}
+                </span>
+              </p>
+              {summary.delta !== null && (
+                <MetricDelta
+                  value={summary.delta}
+                  unit={headlineDef.unit || "pts"}
+                  polarity="direction"
+                />
+              )}
+            </div>
+            {summary.delta !== null && (
+              <p className="text-xs font-medium text-muted-foreground">
+                Change · later vs earlier half
+              </p>
+            )}
+          </div>
+        )}
+      </header>
+
+      {!charts.length && (
+        <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+          No charts selected. Use Add chart to explore a metric.
+        </p>
+      )}
 
       <AnimatePresence initial={false} mode="popLayout">
         {charts.map((key, i) => (
           <motion.div
             key={key}
-            layout
-            initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+            layout={!reducedMotion}
+            initial={
+              reducedMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }
+            }
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: { duration: 0.15, ease: "easeIn" } }}
-            transition={{ type: "spring", duration: 0.3, bounce: 0 }}
-            className="pb-4"
+            exit={{
+              opacity: 0,
+              y: reducedMotion ? 0 : -12,
+              transition: { duration: reducedMotion ? 0 : 0.15 },
+            }}
+            transition={{
+              type: "spring",
+              duration: reducedMotion ? 0 : 0.3,
+              bounce: 0,
+            }}
+            className="pb-0"
           >
             <MetricPanel
               metricKey={key}
               compareKeys={compares[key] ?? []}
               data={data}
+              period={period}
+              rangeControls={rangeControls}
               index={i}
               onRemove={() => setCharts((c) => c.filter((k) => k !== key))}
               onCompareAdd={(ck) =>
-                setCompares((m) => ({ ...m, [key]: [...(m[key] ?? []), ck].slice(0, 3) }))
+                setCompares((m) => ({
+                  ...m,
+                  [key]: [...new Set([...(m[key] ?? []), ck])].slice(0, 3),
+                }))
               }
               onCompareRemove={(ck) =>
-                setCompares((m) => ({ ...m, [key]: (m[key] ?? []).filter((k) => k !== ck) }))
+                setCompares((m) => ({
+                  ...m,
+                  [key]: (m[key] ?? []).filter((k) => k !== ck),
+                }))
               }
             />
           </motion.div>
         ))}
       </AnimatePresence>
 
-      {charts.length >= 2 && <CorrelationMatrixCard data={data} metricKeys={charts} />}
+      <div className="pb-0">
+        <Select
+          value=""
+          onValueChange={(k) =>
+            setCharts((c) => (c.includes(k) ? c : [...c, k]))
+          }
+        >
+          <SelectTrigger
+            size="sm"
+            className="add-trigger add-chart-trigger min-h-11 w-full justify-center"
+            aria-label={`Add chart to ${section.title}`}
+          >
+            <SelectValue placeholder="＋ Add chart" />
+          </SelectTrigger>
+          <SelectContent>
+            {section.metrics.map((k) => (
+              <SelectItem key={k} value={k} disabled={charts.includes(k)}>
+                {METRIC_BY_KEY[k].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {charts.length >= 2 && (
+        <CorrelationMatrixCard data={data} metricKeys={charts} />
+      )}
     </section>
   );
 }

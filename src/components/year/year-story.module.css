@@ -1,0 +1,212 @@
+.story {
+  --ds-ink: #eaf2fa;
+  --ds-line: #6b8295;
+  --ds-primary: #eaf2fa;
+  --ds-on-primary: #17222e;
+  background: #17222e;
+  color: #eaf2fa;
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 42px);
+  min-width: 0;
+}
+.chapters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chapters button {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 20px 0;
+  cursor: pointer;
+}
+.chapters span {
+  display: block;
+  height: 3px;
+  background: #586e7e;
+  border-radius: 2px;
+}
+.chapters button[aria-pressed="true"] span {
+  background: #d1e2f1;
+}
+.chapters button:focus-visible {
+  outline: 2px solid #d1e2f1;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.period,
+.note {
+  font-size: 12px;
+  color: #b8cad9;
+  line-height: 1.7;
+}
+.period {
+  margin-bottom: 22px;
+}
+.stage {
+  display: grid;
+  min-width: 0;
+}
+.panel {
+  grid-area: 1/1;
+  min-width: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.panel[data-active="true"] {
+  visibility: visible;
+  pointer-events: auto;
+}
+.title {
+  font-size: clamp(29px, 4.5vw, 52px);
+  line-height: 1.13;
+  max-width: 750px;
+  margin-bottom: 24px;
+  color: inherit;
+}
+.panel p {
+  margin-bottom: 18px;
+  max-width: 680px;
+  line-height: 1.7;
+  font-size: 14px;
+}
+.panel .note {
+  font-size: 12px;
+}
+.dots {
+  display: grid;
+  grid-template-columns: repeat(26, minmax(0, 1fr));
+  gap: 7px;
+  max-width: 740px;
+  margin: 26px 0;
+}
+.dots i {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #9cbcf1;
+  box-shadow: inset 0 1px 1px #ffffff40;
+}
+.dots .missing {
+  background: transparent;
+  border: 1px solid #627789;
+  box-shadow: none;
+}
+.heroValue {
+  font-size: clamp(35px, 7.5vw, 90px);
+  line-height: 1.2;
+  letter-spacing: -0.055em;
+  margin: 38px 0;
+}
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 36px 0;
+}
+.comparison > div {
+  min-width: 0;
+}
+.value {
+  font-size: clamp(27px, 4vw, 48px);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+  margin-bottom: 12px;
+}
+.quarters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 24px 0 28px;
+  max-width: 700px;
+}
+.quarter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.quarter strong {
+  font-weight: 500;
+}
+.quarter small {
+  color: #b8cad9;
+}
+.barTrack {
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid #61788a;
+}
+.barTrack i {
+  display: block;
+  width: 100%;
+  background: #9cbcf1;
+  border-radius: 8px 8px 0 0;
+}
+.highlight {
+  background: #e9f0fd;
+  color: #253753;
+  border-radius: 18px;
+  padding: 22px;
+  margin: 22px 0;
+}
+.highlight p:last-child {
+  margin: 0;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+}
+.controls > span {
+  font-size: 12px;
+  color: #b8cad9;
+}
+.controls button {
+  min-width: 90px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .controls button:hover {
+    color: #17222e;
+    background: #d1e2f1;
+  }
+}
+@media (max-width: 480px) {
+  .dots {
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .comparison {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  .quarters {
+    gap: 10px;
+  }
+  .quarter {
+    font-size: 11px;
+  }
+  .value {
+    font-size: 29px;
+  }
+  .controls {
+    gap: 8px;
+  }
+  .controls button {
+    min-width: 76px;
+    padding-inline: 12px;
+  }
+  .highlight {
+    padding: 18px;
+  }
+  .period {
+    font-size: 11px;
+  }
+  .title {
+    font-size: 30px;
+  }
+}

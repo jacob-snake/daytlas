@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mebyday-compatibility-probe",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "mebyday-compatibility-probe"
+    }
+  ],
+  "observability": { "enabled": false },
+  "vars": {
+    "PUBLIC_SITE_URL": "https://mebyday.com",
+    "NEXT_PUBLIC_POSTHOG_ENABLED": "false"
+  }
+}

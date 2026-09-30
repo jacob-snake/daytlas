@@ -1,34 +1,39 @@
 "use client";
 import { Icon } from "@/components/icon";
-import { ChartLineData01Icon, CircleIcon, DashboardSpeed01Icon, FlaskConicalIcon } from "@hugeicons/core-free-icons";
+import {
+  ChartLineData01Icon,
+  CircleIcon,
+  DashboardSpeed01Icon,
+  FlaskConicalIcon,
+} from "@hugeicons/core-free-icons";
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 
 const STEPS = [
   {
-    href: "/",
+    href: "/app",
     title: "Dashboard",
     text: "How you're doing lately vs your own history",
     icon: DashboardSpeed01Icon,
     color: "var(--chart-1)",
   },
   {
-    href: "/trends",
+    href: "/app/trends",
     title: "Trends",
     text: "Any metric over your entire timeline, with correlations",
     icon: ChartLineData01Icon,
     color: "var(--chart-2)",
   },
   {
-    href: "/year",
+    href: "/app/year",
     title: "Year",
     text: "Your whole year as rings, heatmap and sleep barcode",
     icon: CircleIcon,
     color: "var(--chart-3)",
   },
   {
-    href: "/tags",
+    href: "/app/tags",
     title: "Tag Lab",
     text: "What your habits actually do to your body the next day",
     icon: FlaskConicalIcon,
@@ -48,13 +53,21 @@ export function OnboardingCard({ current }: { current?: string }) {
           >
             <span
               className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: `color-mix(in oklab, ${s.color} 14%, transparent)` }}
+              style={{
+                background: `color-mix(in oklab, ${s.color} 14%, transparent)`,
+              }}
             >
-              <Icon icon={s.icon} className="size-5" style={{ color: s.color }} />
+              <Icon
+                icon={s.icon}
+                className="size-5"
+                style={{ color: s.color }}
+              />
             </span>
             <span>
               <span className="block font-bold">{s.title}</span>
-              <span className="block text-sm text-muted-foreground text-pretty">{s.text}</span>
+              <span className="block text-sm text-muted-foreground text-pretty">
+                {s.text}
+              </span>
             </span>
           </Link>
         ))}

@@ -1,0 +1,5 @@
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+
+// Current routes are dynamic and API fetches explicitly use no-store.
+// Do not add a health-data cache or provision R2 implicitly.
+export default defineCloudflareConfig();
