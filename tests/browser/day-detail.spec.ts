@@ -84,3 +84,33 @@ test("live day detail requests heart-rate chunks and retains night data when opt
     expect(end - start).toBeLessThan(8 * 86400000);
   }
 });
+
+test("expired daily connection offers reconnection rather than retrying unavailable credentials", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("woura.mode", "live");
+    localStorage.setItem("woura.token", "synthetic-expired-day");
+  });
+  await page.route("**/api/oura/**", (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Expired session" }),
+    }),
+  );
+  await page.route("**/api/auth/refresh", (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Reconnect required" }),
+    }),
+  );
+  await page.goto("/app/day");
+  await expect(
+    page.getByRole("link", { name: "Review connection" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Your connection needs refreshing", { exact: true }),
+  ).toBeVisible();
+});

@@ -22,7 +22,7 @@ export async function fetchDayDetail(end: string) {
   const failures = [sleep, readiness, activity, periods].filter(
     (r) => r.status === "rejected",
   ).length;
-  if (failures === 4) throw new Error("Daily data could not be loaded.");
+  if (failures === 4 && sleep.status === "rejected") throw sleep.reason;
   return {
     sleep: data(sleep),
     readiness: data(readiness),
@@ -45,10 +45,10 @@ export async function fetchDayHeartRate(day: string) {
   const results = await Promise.allSettled(
     chunks.map((range) => fetchAll<HeartRateSample>("heartrate", range)),
   );
-  if (results.every((r) => r.status === "rejected"))
-    throw new Error(
-      "Heart-rate samples are unavailable. Check your Oura connection and heart-rate permission.",
-    );
+  if (results.every((r) => r.status === "rejected")) {
+    const failure = results.find((r) => r.status === "rejected");
+    if (failure?.status === "rejected") throw failure.reason;
+  }
   return {
     rows: results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])),
     partial: results.some((r) => r.status === "rejected"),
