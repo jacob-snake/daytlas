@@ -1,4 +1,4 @@
-# UX Audit — Woura (ux-audit-rethink / IxDF metodológia, 2026-07-15)
+# UX Audit — Daytlas (ux-audit-rethink / IxDF metodológia, 2026-07-15)
 
 ## Kontext & persóny
 - **P1 „Jakub"** — vlastník, netechnický QS nadšenec; chce odpovede v reči, nie štatistický žargón.

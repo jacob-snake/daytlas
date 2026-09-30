@@ -4,7 +4,7 @@ import { getDemoCollection } from "../../src/lib/demo-data";
 test("daily view preserves Overview and exposes night series, baselines and partial-day context", async ({
   page,
 }) => {
-  await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
   await page.goto("/app/day");
   await expect(
     page.getByRole("heading", { name: "A closer look at your day." }),
@@ -44,9 +44,9 @@ test("live day detail requests heart-rate chunks and retains night data when opt
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.mode", "live");
-    localStorage.setItem("woura.token", "synthetic-day-test");
-    localStorage.setItem("woura.cacheScope", "day-test");
+    localStorage.setItem("daytlas.mode", "live");
+    localStorage.setItem("daytlas.token", "synthetic-day-test");
+    localStorage.setItem("daytlas.cacheScope", "day-test");
   });
   const heartRequests: URL[] = [];
   await page.route("**/api/oura/**", (route) => {
@@ -89,8 +89,8 @@ test("expired daily connection offers reconnection rather than retrying unavaila
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.mode", "live");
-    localStorage.setItem("woura.token", "synthetic-expired-day");
+    localStorage.setItem("daytlas.mode", "live");
+    localStorage.setItem("daytlas.token", "synthetic-expired-day");
   });
   await page.route("**/api/oura/**", (route) =>
     route.fulfill({
@@ -119,9 +119,9 @@ test("inclusive activity range retrieves today's totals and explicit refresh byp
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.mode", "live");
-    localStorage.setItem("woura.token", "synthetic-range-test");
-    localStorage.setItem("woura.cacheScope", "inclusive-range-test");
+    localStorage.setItem("daytlas.mode", "live");
+    localStorage.setItem("daytlas.token", "synthetic-range-test");
+    localStorage.setItem("daytlas.cacheScope", "inclusive-range-test");
   });
   let steps = 4321;
   let requests = 0;

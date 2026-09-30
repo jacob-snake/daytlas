@@ -1,7 +1,7 @@
-# Woura Security Architecture (Draft)
+# Daytlas Security Architecture (Draft)
 
 > **Status:** Draft v0.1 — 2026-07-14
-> **Scope:** Woura, an open-source, local-first web dashboard for Oura ring data. Next.js exported as a fully static, client-side app (no app server, no API routes). UI via shadcn/ui. Core promise: **your health data never touches our servers** — traffic flows browser ↔ `api.ouraring.com` only; all data is cached locally in IndexedDB.
+> **Scope:** Daytlas, an open-source, local-first web dashboard for Oura ring data. Next.js exported as a fully static, client-side app (no app server, no API routes). UI via shadcn/ui. Core promise: **your health data never touches our servers** — traffic flows browser ↔ `api.ouraring.com` only; all data is cached locally in IndexedDB.
 
 ---
 
@@ -11,7 +11,7 @@
 
 ```
 ┌──────────────────────────── User's browser ────────────────────────────┐
-│  Woura static bundle (HTML/JS/CSS served from static hosting/CDN)      │
+│  Daytlas static bundle (HTML/JS/CSS served from static hosting/CDN)      │
 │  ├── Oura access token (Personal Access Token or OAuth token)          │
 │  ├── IndexedDB cache: sleep, HR/HRV, SpO2, temperature, activity,      │
 │  │   workouts, tags — i.e., special-category health data               │
@@ -53,7 +53,7 @@ Because there is no backend, **the browser is the entire trusted computing base*
 
 ### 1.4 Explicit non-goals
 
-We do not defend against: a fully compromised OS/browser, malware with the user's privileges, Oura's own cloud (data already lives there; Woura reads it), nation-state coercion of the CDN. State these openly in the white paper — honest scoping builds more trust than absolute claims.
+We do not defend against: a fully compromised OS/browser, malware with the user's privileges, Oura's own cloud (data already lives there; Daytlas reads it), nation-state coercion of the CDN. State these openly in the white paper — honest scoping builds more trust than absolute claims.
 
 ---
 
@@ -142,7 +142,7 @@ If some endpoint genuinely requires a proxy (or the OAuth token exchange does, s
 
 - **Scope ruthlessly:** proxy *only* the endpoints that need it (ideally only `POST /oauth/token`), hard-allowlist path prefixes and the upstream host `api.ouraring.com`; reject everything else. Never a generic proxy (SSRF/abuse magnet).
 - **No logging by construction:** no `console.log` of request/response, Workers Logs/Logpush/Tail disabled in `wrangler.toml` (`[observability] enabled = false`), no analytics engine bindings, no KV/D1/R2 bindings at all (nothing to write to), no `waitUntil` side channels. The Worker is ~50 lines: validate, forward with the client's `Authorization` header, stream the response back, add CORS headers pinned to the app's origin.
-- **Strip identifying metadata:** don't forward `CF-Connecting-IP` upstream; drop cookies both ways; set `Referrer-Policy` and pinned `Access-Control-Allow-Origin: https://woura.app` (never `*` on authenticated responses).
+- **Strip identifying metadata:** don't forward `CF-Connecting-IP` upstream; drop cookies both ways; set `Referrer-Policy` and pinned `Access-Control-Allow-Origin: https://daytlas.app` (never `*` on authenticated responses).
 - **Open source + verifiability:** the Worker source lives in the main repo; deploy from CI with provenance; publish the `wrangler.toml`. Note honestly that Workers can't (yet) give remote attestation that the deployed code equals the repo — the claim is *"auditable + attested build pipeline"*, not *"cryptographically proven runtime"*.
 
 ### 3.2 Honest communication
@@ -167,8 +167,8 @@ Flow design:
    - **Payload preview:** render the *literal JSON* that will be sent — actual values, not a schema — in a scrollable code block, with per-field checkboxes (e.g., include sleep stages ✓, exclude tags ✗, date range selector). "What you see is exactly what is sent" and make that true: the preview and the request body are produced by the same function.
    - Data minimization defaults: aggregates/summaries rather than raw time series where the insight allows; no names, no email, a random non-persistent request ID only.
 3. **Key options:**
-   - **User-supplied API key (recommended default):** stored with the same CryptoKey-wrapping as the Oura token; requests go browser → provider directly; Woura operators are never in the path and have no usage visibility (say so).
-   - Optional hosted/shared-key mode only if ever needed — that reintroduces a Woura server and must carry its own consent text; recommend not building it in Phase 1.
+   - **User-supplied API key (recommended default):** stored with the same CryptoKey-wrapping as the Oura token; requests go browser → provider directly; Daytlas operators are never in the path and have no usage visibility (say so).
+   - Optional hosted/shared-key mode only if ever needed — that reintroduces a Daytlas server and must carry its own consent text; recommend not building it in Phase 1.
 4. **Every subsequent use:** a compact confirmation showing payload size + field summary with "view exact payload"; a per-session "don't ask again" (never a permanent silent mode across sessions).
 5. **Revocation:** single toggle disables the feature, deletes the stored key, and (where the provider supports it) links to the provider's data-deletion page.
 6. **Record:** keep a local-only log of consent events and payloads sent (timestamps + payload hash) — useful for user trust and for GDPR Art. 7(1) demonstrability, stored only on-device.
@@ -204,14 +204,14 @@ Flow design:
 ## 6. GDPR notes (local-first, health data)
 
 - **Data category:** Oura metrics are health data → **Art. 9 special category**. Processing basis for anything *we* process would need Art. 9(2)(a) explicit consent. But:
-- **Controller analysis (the key point):** if Woura is purely client-side and the operators never receive personal data, the *user* processes their own data — the **household exemption (Art. 2(2)(c))** plausibly applies to their use, and Woura's operators are arguably **not a controller at all** for the health data because they never determine means over, nor receive, any personal data. This is the honest legal payoff of the architecture: *the best GDPR posture is not processing the data.* Do not over-claim ("GDPR does not apply to us") — say "we designed Woura so that we do not act as a controller or processor of your health data."
+- **Controller analysis (the key point):** if Daytlas is purely client-side and the operators never receive personal data, the *user* processes their own data — the **household exemption (Art. 2(2)(c))** plausibly applies to their use, and Daytlas's operators are arguably **not a controller at all** for the health data because they never determine means over, nor receive, any personal data. This is the honest legal payoff of the architecture: *the best GDPR posture is not processing the data.* Do not over-claim ("GDPR does not apply to us") — say "we designed Daytlas so that we do not act as a controller or processor of your health data."
 - **What still touches GDPR:**
   - **Hosting logs:** the CDN sees IP addresses (personal data) when serving static assets. Minimal legitimate-interest processing; pick a host, configure log retention short, disclose it. This is the one unavoidable data point — name it.
   - **CORS proxy (if any):** operator becomes at minimum a transient processor of tokens/health data in flight → needs privacy-policy coverage, a lawful basis (consent when enabling), and the no-log design of §3 as data-protection-by-design (Art. 25).
-  - **AI insights:** enabling it makes the AI provider a recipient chosen by the user. With user-supplied keys, the user contracts directly with the provider; Woura facilitates. Disclose international transfers implications generically; the consent flow of §5 doubles as Art. 7-quality consent if we ever are deemed a controller for that flow.
+  - **AI insights:** enabling it makes the AI provider a recipient chosen by the user. With user-supplied keys, the user contracts directly with the provider; Daytlas facilitates. Disclose international transfers implications generically; the consent flow of §5 doubles as Art. 7-quality consent if we ever are deemed a controller for that flow.
 - **Rights (Art. 15–20) become trivial and self-serve:** access = the app itself; erasure = "wipe data" button; portability = local export (JSON/CSV) — build the export button and cite it.
 - **Docs to write anyway:** a short privacy policy (hosting logs, optional proxy, optional AI), and data-protection-by-design/by-default narrative (Art. 25) — the whole architecture *is* the Art. 25 story; write it up, it's persuasive to both regulators and users.
-- Users in the EU also have rights against **Oura** (the actual controller of the source data); link to Oura's own privacy channels rather than implying Woura controls that.
+- Users in the EU also have rights against **Oura** (the actual controller of the source data); link to Oura's own privacy channels rather than implying Daytlas controls that.
 
 ---
 

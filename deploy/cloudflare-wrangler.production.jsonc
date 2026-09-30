@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "mebyday",
+  "name": "daytlas",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-20",
   "compatibility_flags": ["nodejs_compat"],
@@ -9,15 +9,15 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS",
   },
-  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "mebyday" }],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "daytlas" }],
   "observability": { "enabled": false },
   "vars": {
-    "PUBLIC_SITE_URL": "https://mebyday.com",
+    "PUBLIC_SITE_URL": "https://daytlas.com",
     "OURA_CLIENT_ID": "",
     "OURA_CLIENT_SECRET": "",
     "OURA_REDIRECT_URI": "",
-    "MEBYDAY_ACCOUNTS_ENABLED": "false",
-    "MEBYDAY_ACCOUNT_PREFERENCES_ENABLED": "false",
+    "DAYTLAS_ACCOUNTS_ENABLED": "false",
+    "DAYTLAS_ACCOUNT_PREFERENCES_ENABLED": "false",
     "SUPABASE_URL": "",
     "SUPABASE_PUBLISHABLE_KEY": "",
     "NEXT_PUBLIC_POSTHOG_ENABLED": "false",
@@ -25,7 +25,7 @@
     "NEXT_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com",
   },
   "routes": [
-    { "pattern": "mebyday.com", "custom_domain": true },
-    { "pattern": "www.mebyday.com", "custom_domain": true },
+    { "pattern": "daytlas.com", "custom_domain": true },
+    { "pattern": "www.daytlas.com", "custom_domain": true },
   ],
 }

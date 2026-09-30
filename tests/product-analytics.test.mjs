@@ -105,7 +105,7 @@ test("unknown events, values, object coercion and wrong route contexts cannot se
   assert.equal(runtime.track("website_interacted", action), false);
   state.path = "/app/onboarding";
   assert.equal(runtime.track("setup_step_completed", { step: "goal" }), false);
-  values.set("woura.mode", "demo");
+  values.set("daytlas.mode", "demo");
   assert.equal(
     runtime.track("setup_step_completed", { step: "goal", target: 8 }),
     true,
@@ -124,10 +124,10 @@ test("unknown events, values, object coercion and wrong route contexts cannot se
 });
 test("any Oura credentials or live/sandbox mode block capture, even on homepage", () => {
   for (const [key, value] of [
-    ["woura.token", "synthetic"],
-    ["woura.refresh", "synthetic"],
-    ["woura.mode", "live"],
-    ["woura.mode", "sandbox"],
+    ["daytlas.token", "synthetic"],
+    ["daytlas.refresh", "synthetic"],
+    ["daytlas.mode", "live"],
+    ["daytlas.mode", "sandbox"],
   ]) {
     const { runtime, values, calls, state } = fixture();
     runtime.setConsent("allowed");
@@ -261,5 +261,15 @@ test("environment is selected from the runtime, never caller-supplied fields", (
   } finally {
     if (saved === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = saved;
+  }
+});
+
+test("an unmigrated connection still blocks analytics if a storage migration cannot complete", () => {
+  for (const [key, value] of [["woura.token", "synthetic-old"], ["woura.refresh", "synthetic-old"], ["woura.mode", "import"], ["woura.importRevision", "synthetic-old"]]) {
+    const { runtime, calls, values } = fixture();
+    runtime.setConsent("allowed");
+    values.set(key, value);
+    assert.equal(runtime.track("website_interacted", action), false);
+    assert.equal(calls.length, 0);
   }
 });

@@ -10,13 +10,13 @@ import {execFileSync} from 'node:child_process';
 const project = fileURLToPath(new URL('../', import.meta.url));
 const cssPath = resolve(project, 'src/styles/design-system.css');
 const pairs = [
-  ['woura-email-entry.html', 'email-entry-preview.html'],
-  ['woura-life-journey.html', 'product-journey-preview.html'],
+  ['daytlas-email-entry.html', 'email-entry-preview.html'],
+  ['daytlas-life-journey.html', 'product-journey-preview.html'],
 ];
 const css = (await readFile(cssPath, 'utf8')).trim();
 const digest = createHash('sha256').update(css).digest('hex');
-const block = `<style id="woura-design-system" data-source="src/styles/design-system.css" data-sha256="${digest}">\n${css}\n</style>`;
-const generated = /<style\b[^>]*\bid="woura-design-system"[^>]*>[\s\S]*?<\/style>/g;
+const block = `<style id="daytlas-design-system" data-source="src/styles/design-system.css" data-sha256="${digest}">\n${css}\n</style>`;
+const generated = /<style\b[^>]*\bid="daytlas-design-system"[^>]*>[\s\S]*?<\/style>/g;
 const escapeHtml = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
 const check = process.argv.includes('--check');
 
@@ -26,11 +26,11 @@ async function rendererPath() {
     if (!process.argv[flag + 1]) throw new Error('--renderer requires a render.py path.');
     return resolve(process.argv[flag + 1]);
   }
-  if (process.env.WOURA_VISUALIZE_RENDERER) return resolve(process.env.WOURA_VISUALIZE_RENDERER);
+  if (process.env.DAYTLAS_VISUALIZE_RENDERER) return resolve(process.env.DAYTLAS_VISUALIZE_RENDERER);
   const bundled = join(homedir(), '.codex/plugins/cache/openai-bundled/visualize');
   let versions;
   try { versions = await readdir(bundled); }
-  catch { throw new Error('Set WOURA_VISUALIZE_RENDERER or pass --renderer /path/to/visualize/scripts/render.py.'); }
+  catch { throw new Error('Set DAYTLAS_VISUALIZE_RENDERER or pass --renderer /path/to/visualize/scripts/render.py.'); }
   for (const version of versions.sort((a, b) => b.localeCompare(a, undefined, {numeric: true}))) {
     const candidate = join(bundled, version, 'skills/visualize/scripts/render.py');
     try { await access(candidate); return candidate; } catch { /* Try the next installed version. */ }

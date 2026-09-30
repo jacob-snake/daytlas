@@ -32,10 +32,10 @@ export function CommandPalette({
     };
     const open = () => setOpen(true);
     document.addEventListener("keydown", down);
-    window.addEventListener("woura:cmdk", open);
+    window.addEventListener("daytlas:cmdk", open);
     return () => {
       document.removeEventListener("keydown", down);
-      window.removeEventListener("woura:cmdk", open);
+      window.removeEventListener("daytlas:cmdk", open);
     };
   }, []);
 

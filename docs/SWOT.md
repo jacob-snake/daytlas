@@ -1,4 +1,4 @@
-# Woura — SWOT analýza (2026-07-14)
+# Daytlas — SWOT analýza (2026-07-14)
 
 ## Strengths
 - **Timing:** Oura ruší web dashboard; existujúci užívatelia hľadajú náhradu práve teraz. Retirement je marketing sám o sebe.

@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "mebyday-compatibility-probe",
+  "name": "daytlas-compatibility-probe",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-20",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,12 +12,12 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "mebyday-compatibility-probe"
+      "service": "daytlas-compatibility-probe"
     }
   ],
   "observability": { "enabled": false },
   "vars": {
-    "PUBLIC_SITE_URL": "https://mebyday.com",
+    "PUBLIC_SITE_URL": "https://daytlas.com",
     "NEXT_PUBLIC_POSTHOG_ENABLED": "false"
   }
 }

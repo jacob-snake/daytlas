@@ -96,10 +96,10 @@ export default {
     if (head) return new Response(null, { status, headers });
     const response = new Response(assetResponse.body, { status, headers });
     return new HTMLRewriter()
-      .on(`script[data-mebyday-script="${marker}"]`, {
+      .on(`script[data-daytlas-script="${marker}"]`, {
         element(element) {
           element.setAttribute('nonce', nonce);
-          element.removeAttribute('data-mebyday-script');
+          element.removeAttribute('data-daytlas-script');
         },
       })
       .transform(response);

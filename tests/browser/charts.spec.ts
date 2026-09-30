@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 async function openDemo(page: Page, path: string) {
   // Explicit synthetic mode keeps these layout tests completely offline.
-  await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
   await page.goto(path);
   await expect(
     page.getByText("All data is fictional.", { exact: true }),
@@ -173,11 +173,17 @@ test("year charts fill desktop cards and expose anchored tooltips with keyboard 
   for (const name of [/calendar heatmap/, /Sleep rhythm barcode/]) {
     const chart = page.getByRole("img", { name });
     await expect(chart).toBeVisible();
-    const sizes = await chart.evaluate((svg) => ({
-      plot: svg.getBoundingClientRect().width,
-      host: svg.parentElement!.getBoundingClientRect().width,
-    }));
-    expect(Math.abs(sizes.plot - sizes.host)).toBeLessThan(2);
+    // ResizeObserver updates after the first visible frame, especially in WebKit.
+    await expect
+      .poll(() =>
+        chart.evaluate((svg) =>
+          Math.abs(
+            svg.getBoundingClientRect().width -
+              svg.parentElement!.getBoundingClientRect().width,
+          ),
+        ),
+      )
+      .toBeLessThan(2);
     await chart.focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("tooltip")).toBeVisible();

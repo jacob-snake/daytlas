@@ -6,7 +6,7 @@ for (const width of [320, 390, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+    await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
     await page.route("**/api/oura/**", (route) => route.abort());
     await page.goto("/app/onboarding");
     await expect(
@@ -63,7 +63,7 @@ for (const width of [320, 390, 1440]) {
 test("setup without goal stays optional and local reset needs explicit action", async ({
   page,
 }) => {
-  await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
   await page.goto("/app/onboarding");
   await page.getByRole("button", { name: "Continue to your goal" }).click();
   await page.getByRole("button", { name: "Review your choices" }).click();
@@ -82,10 +82,10 @@ test("setup without goal stays optional and local reset needs explicit action", 
 
 test("failed persistence never claims setup was saved", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.mode", "demo");
+    localStorage.setItem("daytlas.mode", "demo");
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function (key, value) {
-      if (key.startsWith("woura.preferences."))
+      if (key.startsWith("daytlas.preferences."))
         throw new DOMException("Full", "QuotaExceededError");
       return original.call(this, key, value);
     };

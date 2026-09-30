@@ -10,12 +10,15 @@ import { spawn } from 'node:child_process';
 // No environment files, credentials, user exports, docs or private logs are copied.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
+// Operator-selected metadata origin for a staged domain migration; never reads .env files.
+const publicOrigin = process.env.PUBLIC_SITE_URL || 'https://daytlas.com';
+assert(['https://daytlas.com', 'https://mebyday.com'].includes(publicOrigin), 'Unsupported public origin');
 if (args.includes('--help')) {
   console.log('node scripts/cloudflare-static-demo.mjs\nBuilds an isolated sample-only static Next export plus a nonce-injecting Cloudflare Worker; bundles locally only. Never deploys or authenticates.');
   process.exit(0);
 }
 assert.equal(args.length, 0, 'Unsupported arguments');
-const directory = await mkdtemp(join(tmpdir(), 'mebyday-static-demo-'));
+const directory = await mkdtemp(join(tmpdir(), 'daytlas-static-demo-'));
 console.log(`STATIC_DEMO_DIRECTORY=${directory}`);
 const environment = Object.fromEntries(
   ['PATH', 'HOME', 'TMPDIR', 'TMP', 'TEMP', 'LANG', 'LC_ALL', 'SystemRoot', 'COMSPEC']
@@ -23,9 +26,9 @@ const environment = Object.fromEntries(
 );
 Object.assign(environment, {
   NEXT_TELEMETRY_DISABLED: '1', WRANGLER_SEND_METRICS: 'false',
-  PUBLIC_SITE_URL: 'https://mebyday.com', NEXT_PUBLIC_POSTHOG_ENABLED: 'false',
+  PUBLIC_SITE_URL: publicOrigin, NEXT_PUBLIC_POSTHOG_ENABLED: 'false',
   NEXT_PUBLIC_POSTHOG_KEY: '', OURA_CLIENT_ID: '', OURA_CLIENT_SECRET: '',
-  MEBYDAY_ACCOUNTS_ENABLED: 'false', MEBYDAY_ACCOUNT_PREFERENCES_ENABLED: 'false',
+  DAYTLAS_ACCOUNTS_ENABLED: 'false', DAYTLAS_ACCOUNT_PREFERENCES_ENABLED: 'false',
 });
 async function filesUnder(path) {
   const found = [];
@@ -97,7 +100,7 @@ for (const file of outputFiles) {
   assert(!path.startsWith('/api/'), `API should not export: ${path}`);
   if (path.endsWith('.html')) {
     const html = await readFile(file, 'utf8');
-    assert(!/\bnonce\s*=|data-mebyday-script|\bon\w+\s*=|http-equiv\s*=\s*["']?Content-Security-Policy/i.test(html), `Unexpected executable markup: ${path}`);
+    assert(!/\bnonce\s*=|data-daytlas-script|\bon\w+\s*=|http-equiv\s*=\s*["']?Content-Security-Policy/i.test(html), `Unexpected executable markup: ${path}`);
     const tags = html.match(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi) ?? [];
     assert.equal(tags.length, (html.match(/<script\b/gi) ?? []).length, `Malformed script: ${path}`);
     for (const tag of tags) {
@@ -105,7 +108,7 @@ for (const file of outputFiles) {
       assert(!src || src.startsWith('/_next/static/'), `Unexpected script source: ${path}`);
     }
     scriptCount += tags.length;
-    await writeFile(file, html.replace(/<script\b/gi, `<script data-mebyday-script="${marker}"`));
+    await writeFile(file, html.replace(/<script\b/gi, `<script data-daytlas-script="${marker}"`));
     pages[path] = path;
     const route = path === '/index.html' ? '/' : path.slice(0, -5);
     pages[route] = path;
@@ -127,7 +130,7 @@ await cp(join(root, 'deploy/oura-worker.mjs'), join(directory, 'worker/oura-work
 await cp(join(root, 'src/lib/account'), join(directory, 'worker/account'), { recursive: true });
 await writeFile(join(directory, 'worker/static-demo-manifest.mjs'), `export const assets = ${JSON.stringify(assets)};\nexport const pages = ${JSON.stringify(pages)};\nexport const marker = ${JSON.stringify(marker)};\nexport const contentTypes = ${JSON.stringify(contentTypes)};\n`);
 await writeFile(join(directory, 'wrangler.jsonc'), JSON.stringify({
-  name: 'mebyday-static-demo-proof', main: 'worker/index.mjs', compatibility_date: '2026-09-27',
+  name: 'daytlas-static-demo-proof', main: 'worker/index.mjs', compatibility_date: '2026-09-27',
   workers_dev: true, assets: { directory: './out', binding: 'ASSETS', run_worker_first: true, html_handling: 'none' },
   observability: { enabled: false },
 }, null, 2) + '\n');

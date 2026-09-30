@@ -159,7 +159,7 @@ export function OuraImportPanel() {
                 try {
                   await importedData(preview);
                   window.localStorage.setItem(
-                    "woura.importRevision",
+                    "daytlas.importRevision",
                     crypto.randomUUID(),
                   );
                   setMode("import");

@@ -5,7 +5,7 @@ import {
   preferencesKey,
   type LocalPreferences,
 } from "@/lib/onboarding";
-const eventName = "woura:preferences";
+const eventName = "daytlas:preferences";
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
   window.addEventListener(eventName, callback);

@@ -1,4 +1,4 @@
-# Woura
+# Daytlas
 
 **Your Oura data, on your terms.** An open-source, local-first web dashboard for
 Oura ring data — built when Oura retired "Oura on the Web".
@@ -31,7 +31,7 @@ own app registration, and Oura:
    - Tick all scopes, agree, create — copy the Client ID and Client Secret.
 2. **Clone & configure**:
    ```bash
-   git clone https://github.com/jacob-snake/woura && cd woura
+   git clone https://github.com/jacob-snake/daytlas && cd daytlas
    npm install
    cp .env.example .env.local   # then paste your Client ID/Secret into it
    ```
@@ -46,9 +46,9 @@ serves only you.
 
 ## Versioning & upgrades
 
-Woura uses [SemVer](https://semver.org/) (`MAJOR.MINOR.PATCH`). The running
+Daytlas uses [SemVer](https://semver.org/) (`MAJOR.MINOR.PATCH`). The running
 version is shown in the footer and links to the
-[releases page](https://github.com/jacob-snake/woura/releases) — Woura never
+[releases page](https://github.com/jacob-snake/daytlas/releases) — Daytlas never
 checks for updates automatically (no phoning home, by design).
 
 To upgrade a self-hosted install:
@@ -76,7 +76,7 @@ The full threat model and architecture live in
 
 ## Disclaimer
 
-Woura is an independent open-source project, not affiliated with or endorsed
+Daytlas is an independent open-source project, not affiliated with or endorsed
 by Ōura Health Oy / Ouraring Inc. It is not a medical device. Your use of the
 Oura API is subject to the Oura API and MCP Agreement.
 

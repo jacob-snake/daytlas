@@ -1,4 +1,4 @@
-# Woura Design System
+# Daytlas Design System
 
 Single source of truth for visual decisions. All UI chrome uses semantic tokens
 from `src/app/globals.css`; components never hardcode chrome colors.

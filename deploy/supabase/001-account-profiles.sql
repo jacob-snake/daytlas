@@ -1,4 +1,4 @@
--- Apply only in the Me by Day project after reviewing the exact schema.
+-- Apply only in the Daytlas project after reviewing the exact schema.
 -- No health records, Oura tokens, sleep goals, email lists or digest subscriptions.
 begin;
 create table public.account_profiles (

@@ -5,10 +5,10 @@ import { getCacheScope, getMode, hasSession } from "./oura/client";
 
 function subscribeSession(changed: () => void) {
   window.addEventListener("storage", changed);
-  window.addEventListener("woura:session", changed);
+  window.addEventListener("daytlas:session", changed);
   return () => {
     window.removeEventListener("storage", changed);
-    window.removeEventListener("woura:session", changed);
+    window.removeEventListener("daytlas:session", changed);
   };
 }
 
@@ -20,7 +20,7 @@ function sessionSnapshot(): string | null {
   if (getMode() === "demo") return "demo";
   if (getMode() === "import") return getCacheScope();
   try {
-    return `live:${window.localStorage.getItem("woura.cacheScope") ?? "legacy"}`;
+    return `live:${window.localStorage.getItem("daytlas.cacheScope") ?? "legacy"}`;
   } catch {
     return null;
   }

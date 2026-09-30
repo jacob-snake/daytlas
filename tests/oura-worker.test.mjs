@@ -5,10 +5,10 @@ const env = {
   OURA_ENABLED: "true",
   OURA_CLIENT_ID: "synthetic-client",
   OURA_CLIENT_SECRET: "synthetic-server-secret",
-  OURA_REDIRECT_URI: "https://mebyday.com/api/auth/callback",
+  OURA_REDIRECT_URI: "https://daytlas.com/api/auth/callback",
 };
 const request = (path, init = {}) =>
-  new Request(`https://mebyday.com${path}`, init);
+  new Request(`https://daytlas.com${path}`, init);
 const refresh = (body, headers = {}) =>
   request("/api/auth/refresh", {
     method: "POST",
@@ -30,7 +30,7 @@ test("configuration fails closed and ordinary paths are not claimed", async () =
   assert.equal(await handleOura(request("/app"), env), null);
   assert.equal(
     (await handleOura(request("/api/auth/login"), {})).headers.get("Location"),
-    "https://mebyday.com/connect",
+    "https://daytlas.com/connect",
   );
   assert.equal(
     (
@@ -60,8 +60,8 @@ test("login creates secure short-lived state, canonicalizes domains and never ex
   );
   assert.equal(location.href.includes(env.OURA_CLIENT_SECRET), false);
   for (const origin of [
-    "https://www.mebyday.com",
-    "https://mebyday.mebyday.workers.dev",
+    "https://www.daytlas.com",
+    "https://daytlas.daytlas.workers.dev",
   ]) {
     const canonical = await handleOura(
       new Request(`${origin}/api/auth/login?return=https://evil.example`),
@@ -69,7 +69,7 @@ test("login creates secure short-lived state, canonicalizes domains and never ex
     );
     assert.equal(
       canonical.headers.get("Location"),
-      "https://mebyday.com/api/auth/login",
+      "https://daytlas.com/api/auth/login",
     );
     assert.equal(canonical.headers.has("Set-Cookie"), false);
   }
@@ -112,7 +112,7 @@ test("method and origin restrictions reject before any upstream request", async 
   assert.equal(
     (
       await handleOura(
-        new Request("https://www.mebyday.com/api/auth/callback?state=x&code=x"),
+        new Request("https://www.daytlas.com/api/auth/callback?state=x&code=x"),
         env,
       )
     ).status,
@@ -121,7 +121,7 @@ test("method and origin restrictions reject before any upstream request", async 
 });
 
 test("callback validates state, duplicates and denial; clears cookie on failure", async () => {
-  const headers = { Cookie: "woura_oauth_state=expected" };
+  const headers = { Cookie: "daytlas_oauth_state=expected" };
   for (const query of [
     "code=x",
     "state=wrong&code=x",
@@ -141,7 +141,7 @@ test("callback validates state, duplicates and denial; clears cookie on failure"
   const duplicateCookie = await handleOura(
     request("/api/auth/callback?state=expected&code=x", {
       headers: {
-        Cookie: "woura_oauth_state=expected; woura_oauth_state=expected",
+        Cookie: "daytlas_oauth_state=expected; daytlas_oauth_state=expected",
       },
     }),
     env,
@@ -167,7 +167,7 @@ test("callback only posts fixed token endpoint, embeds escaped tokens and strips
   const result = await handleOura(
     request("/api/auth/callback?state=expected&code=synthetic-code", {
       headers: {
-        Cookie: "woura_oauth_state=expected",
+        Cookie: "daytlas_oauth_state=expected",
         "Sec-Fetch-Site": "cross-site",
       },
     }),
@@ -330,9 +330,20 @@ test("upstream redirects are rejected instead of followed or exposed", async (t)
   assert.equal(refreshed.status, 502);
   const callback = await handleOura(
     request("/api/auth/callback?state=expected&code=synthetic", {
-      headers: { Cookie: "woura_oauth_state=expected" },
+      headers: { Cookie: "daytlas_oauth_state=expected" },
     }),
     env,
   );
   assert.equal(callback.status, 502);
+});
+
+test("staged domain cutover keeps the previous origin working without allowing cross-origin API access", async () => {
+  const previous = "https://mebyday.com";
+  const legacyEnv = { ...env, PUBLIC_SITE_URL: previous, OURA_REDIRECT_URI: `${previous}/api/auth/callback` };
+  assert.equal(configured(legacyEnv), true);
+  const login = await handleOura(new Request(`${previous}/api/auth/login`), legacyEnv);
+  assert.equal(new URL(login.headers.get("Location")).searchParams.get("redirect_uri"), `${previous}/api/auth/callback`);
+  assert.equal((await handleOura(new Request(`${previous}/api/oura/v2/usercollection/sleep`, { headers: { ...auth, Origin: "https://daytlas.com" } }), legacyEnv)).status, 403);
+  assert.equal((await handleOura(new Request(`${previous}/api/oura/v2/usercollection/sleep`, { headers: auth }), env)).status, 403);
+  assert.equal(configured({ ...env, PUBLIC_SITE_URL: "https://evil.example" }), false);
 });

@@ -140,8 +140,8 @@ test("synthetic authentication failure has a recovery action", async ({
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.token", "synthetic-test-token");
-    localStorage.setItem("woura.mode", "live");
+    localStorage.setItem("daytlas.token", "synthetic-test-token");
+    localStorage.setItem("daytlas.mode", "live");
   });
   await page.route("**/api/oura/**", (r) =>
     r.fulfill({
@@ -163,12 +163,12 @@ test("synthetic authentication failure has a recovery action", async ({
   ).toBeVisible();
 });
 
-test("disconnect clears only Woura credentials and returns to the landing page", async ({
+test("disconnect clears only Daytlas credentials and returns to the landing page", async ({
   page,
 }) => {
   await demo(page);
   await page.evaluate(() => {
-    localStorage.setItem("woura.token", "synthetic-token");
+    localStorage.setItem("daytlas.token", "synthetic-token");
     localStorage.setItem("unrelated-setting", "preserved");
   });
   await page.reload();
@@ -182,7 +182,7 @@ test("disconnect clears only Woura credentials and returns to the landing page",
     "bigger picture",
   );
   expect(
-    await page.evaluate(() => localStorage.getItem("woura.token")),
+    await page.evaluate(() => localStorage.getItem("daytlas.token")),
   ).toBeNull();
   expect(
     await page.evaluate(() => localStorage.getItem("unrelated-setting")),
@@ -226,7 +226,7 @@ for (const path of [
   test(`${path} has no serious or critical automated accessibility violations`, async ({
     page,
   }) => {
-    await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+    await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
     await page.goto(path);
     await expect(page.locator("h1")).toBeVisible();
     await expect(page.locator('[data-slot="skeleton"]')).toHaveCount(0);

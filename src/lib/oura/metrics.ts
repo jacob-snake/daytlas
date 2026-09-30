@@ -300,7 +300,7 @@ function meanClock(values: number[], shiftEvening: boolean): number | null {
   return Math.round(value * 100) / 100;
 }
 
-const FIRST_DAY_KEY = "woura.firstDay.v3";
+const FIRST_DAY_KEY = "daytlas.firstDay.v3";
 
 /**
  * Earliest activity record, scoped to the current connection. Demo is wholly

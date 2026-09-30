@@ -3,11 +3,11 @@ import { brand } from "../../src/lib/brand-config";
 import { getDemoCollection } from "../../src/lib/demo-data";
 
 const syntheticSession = {
-  "woura.token": "synthetic-homepage-access-token",
-  "woura.refresh": "synthetic-homepage-refresh-token",
-  "woura.expiresAt": "4070908800000",
-  "woura.mode": "live",
-  "woura.cacheScope": "synthetic-homepage-scope",
+  "daytlas.token": "synthetic-homepage-access-token",
+  "daytlas.refresh": "synthetic-homepage-refresh-token",
+  "daytlas.expiresAt": "4070908800000",
+  "daytlas.mode": "live",
+  "daytlas.cacheScope": "synthetic-homepage-scope",
 };
 
 async function seedConnectedSession(page: Page) {
@@ -17,7 +17,7 @@ async function seedConnectedSession(page: Page) {
     for (const [key, value] of Object.entries(entries))
       localStorage.setItem(key, value);
     localStorage.setItem(
-      "woura.firstDay.v3.live:synthetic-homepage-scope",
+      "daytlas.firstDay.v3.live:synthetic-homepage-scope",
       "2025-01-01",
     );
     sessionStorage.setItem("test.homepageSessionSeeded", "true");
@@ -109,7 +109,7 @@ test("connected homepage stays public, requests no Oura data, and reopens the sa
     expect(requests.length).toBeGreaterThan(0);
     expect(
       requests.every(
-        (r) => r.authorization === `Bearer ${syntheticSession["woura.token"]}`,
+        (r) => r.authorization === `Bearer ${syntheticSession["daytlas.token"]}`,
       ),
     ).toBe(true);
     const completedRequests = requests.length;
@@ -208,11 +208,11 @@ test("demo enters /app and can visit the website then resume without a connectio
   await expectHomepage(page);
   await page.reload();
   await expectHomepage(page);
-  expect(await page.evaluate(() => localStorage.getItem("woura.mode"))).toBe(
+  expect(await page.evaluate(() => localStorage.getItem("daytlas.mode"))).toBe(
     "demo",
   );
   expect(
-    await page.evaluate(() => localStorage.getItem("woura.token")),
+    await page.evaluate(() => localStorage.getItem("daytlas.token")),
   ).toBeNull();
   await page
     .getByRole("link", { name: "Open app", exact: true })
@@ -231,7 +231,7 @@ for (const [legacy, destination, heading] of [
   ["/tags", "/app/tags", "Get curious about your habits."],
 ]) {
   test(`legacy ${legacy} redirects to ${destination}`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+    await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
     await page.goto(legacy);
     await expect(page).toHaveURL(new RegExp(`${destination}$`));
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
@@ -247,7 +247,7 @@ for (const [legacy, destination, heading] of [
 test("command palette distinguishes the website from the app overview", async ({
   page,
 }) => {
-  await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
   await page.goto("/app/trends");
   await page.keyboard.press("ControlOrMeta+k");
   await page.getByRole("option", { name: "Overview", exact: true }).click();

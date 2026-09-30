@@ -19,11 +19,11 @@ if (args.length === 1 && args[0] === "--help") {
   console.log(`Usage: node scripts/cloudflare-release.mjs [--deploy]
 Default: fresh sample-only source copy, pinned adapter install, build and bundling dry run.
 --deploy: after those checks, verify the existing Worker has no secrets, then publish
-to the existing mebyday Worker, mebyday.com and www.mebyday.com using Wrangler login.
+to the existing daytlas Worker, daytlas.com and www.daytlas.com using Wrangler login.
 No login, DNS nameserver changes, secrets, database or email setup is performed.
 The original checkout and cloudflare-probe.mjs remain unchanged.
 Dynamic SSR currently exceeds the Free CPU allowance in measured traffic.
-Deployment also requires MEBYDAY_DYNAMIC_RUNTIME_REVIEWED=true after resolving
+Deployment also requires DAYTLAS_DYNAMIC_RUNTIME_REVIEWED=true after resolving
 runtime suitability. Use the separate static-demo release for the Free demo.`);
   process.exit(0);
 }
@@ -31,9 +31,9 @@ if (args.length > 1 || (args.length === 1 && args[0] !== "--deploy")) {
   throw new Error("Unsupported arguments. Use --help.");
 }
 const deploy = args[0] === "--deploy";
-if (deploy && process.env.MEBYDAY_DYNAMIC_RUNTIME_REVIEWED !== "true") {
+if (deploy && process.env.DAYTLAS_DYNAMIC_RUNTIME_REVIEWED !== "true") {
   throw new Error(
-    "Dynamic SSR is not cleared for the Free CPU budget. Resolve runtime suitability before explicitly setting MEBYDAY_DYNAMIC_RUNTIME_REVIEWED=true. No build or upload started.",
+    "Dynamic SSR is not cleared for the Free CPU budget. Resolve runtime suitability before explicitly setting DAYTLAS_DYNAMIC_RUNTIME_REVIEWED=true. No build or upload started.",
   );
 }
 const versions = { adapter: "1.20.6", wrangler: "4.142.0" };
@@ -47,8 +47,8 @@ const expectedVariables = [
   "OURA_CLIENT_ID",
   "OURA_CLIENT_SECRET",
   "OURA_REDIRECT_URI",
-  "MEBYDAY_ACCOUNTS_ENABLED",
-  "MEBYDAY_ACCOUNT_PREFERENCES_ENABLED",
+  "DAYTLAS_ACCOUNTS_ENABLED",
+  "DAYTLAS_ACCOUNT_PREFERENCES_ENABLED",
   "SUPABASE_URL",
   "SUPABASE_PUBLISHABLE_KEY",
   "NEXT_PUBLIC_POSTHOG_ENABLED",
@@ -56,13 +56,13 @@ const expectedVariables = [
   "NEXT_PUBLIC_POSTHOG_HOST",
 ];
 if (
-  config.name !== "mebyday" ||
+  config.name !== "daytlas" ||
   config.services?.[0]?.service !== config.name ||
-  config.vars?.PUBLIC_SITE_URL !== "https://mebyday.com" ||
+  config.vars?.PUBLIC_SITE_URL !== "https://daytlas.com" ||
   config.vars?.OURA_CLIENT_ID !== "" ||
   config.vars?.OURA_CLIENT_SECRET !== "" ||
-  config.vars?.MEBYDAY_ACCOUNTS_ENABLED !== "false" ||
-  config.vars?.MEBYDAY_ACCOUNT_PREFERENCES_ENABLED !== "false" ||
+  config.vars?.DAYTLAS_ACCOUNTS_ENABLED !== "false" ||
+  config.vars?.DAYTLAS_ACCOUNT_PREFERENCES_ENABLED !== "false" ||
   config.vars?.NEXT_PUBLIC_POSTHOG_ENABLED !== "false" ||
   config.vars?.SUPABASE_URL !== "" ||
   config.vars?.SUPABASE_PUBLISHABLE_KEY !== "" ||
@@ -75,7 +75,7 @@ if (
   !config.routes.every(
     (route) =>
       route.custom_domain === true &&
-      ["mebyday.com", "www.mebyday.com"].includes(route.pattern),
+      ["daytlas.com", "www.daytlas.com"].includes(route.pattern),
   ) ||
   new Set(config.routes.map((route) => route.pattern)).size !== 2
 ) {
@@ -84,7 +84,7 @@ if (
   );
 }
 
-const directory = await mkdtemp(join(tmpdir(), "mebyday-release-"));
+const directory = await mkdtemp(join(tmpdir(), "daytlas-release-"));
 const sourcePaths = [
   "src",
   "public",
@@ -204,8 +204,8 @@ function run(
 
 const report = {
   createdAt: new Date().toISOString(),
-  target: "mebyday",
-  domains: ["mebyday.com", "www.mebyday.com"],
+  target: "daytlas",
+  domains: ["daytlas.com", "www.daytlas.com"],
   mode: deploy ? "explicit-deploy" : "build-only",
   sourceFiles: hashes,
   sourceFingerprint: sha256(JSON.stringify(hashes)),

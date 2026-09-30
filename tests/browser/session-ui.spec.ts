@@ -5,10 +5,10 @@ test("a late history response respects the most recently selected Trends range",
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("woura.token", "synthetic-range-test");
-    localStorage.setItem("woura.mode", "live");
-    localStorage.setItem("woura.cacheScope", "range-test");
-    localStorage.setItem("woura.firstDay.v3.live:range-test", "2025-01-01");
+    localStorage.setItem("daytlas.token", "synthetic-range-test");
+    localStorage.setItem("daytlas.mode", "live");
+    localStorage.setItem("daytlas.cacheScope", "range-test");
+    localStorage.setItem("daytlas.firstDay.v3.live:range-test", "2025-01-01");
   });
   let release!: () => void;
   const held = new Promise<void>((resolve) => {
@@ -71,7 +71,7 @@ test("failed IndexedDB erasure closes the dashboard and offers a visible retry",
     page.getByRole("heading", { name: "Your daily perspective." }),
   ).toBeVisible();
   await page.evaluate(() =>
-    localStorage.setItem("woura.token", "synthetic-wipe-test"),
+    localStorage.setItem("daytlas.token", "synthetic-wipe-test"),
   );
   await page.reload();
   await expect(
@@ -112,7 +112,7 @@ test("failed IndexedDB erasure closes the dashboard and offers a visible retry",
     page.getByRole("heading", { name: "Your daily perspective." }),
   ).toHaveCount(0);
   expect(
-    await page.evaluate(() => localStorage.getItem("woura.token")),
+    await page.evaluate(() => localStorage.getItem("daytlas.token")),
   ).toBeNull();
   await page
     .getByRole("button", { name: "Retry clearing local data", exact: true })
@@ -140,7 +140,7 @@ test("disconnecting another tab removes the open dashboard", async ({
   await expect(
     second.getByRole("heading", { name: "Follow your patterns." }),
   ).toBeVisible();
-  await page.evaluate(() => localStorage.removeItem("woura.mode"));
+  await page.evaluate(() => localStorage.removeItem("daytlas.mode"));
   await expect(second.getByRole("heading", { level: 1 })).toContainText(
     "bigger picture",
   );

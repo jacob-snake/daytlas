@@ -14,21 +14,21 @@ const server = createServer();
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = server.address().port;
 await new Promise((resolve) => server.close(resolve));
-const dir = await mkdtemp(join(tmpdir(), "mebyday-oura-smoke-"));
+const dir = await mkdtemp(join(tmpdir(), "daytlas-oura-smoke-"));
 const source = fileURLToPath(new URL("./oura-worker.mjs", import.meta.url));
 await writeFile(
   join(dir, "worker.mjs"),
   `
 import { handleOura } from ${JSON.stringify(source)};
 export default { async fetch() {
-  const request = new Request('https://mebyday.com/api/auth/refresh', {
-    method: 'POST', headers: {'Content-Type':'application/json',Origin:'https://mebyday.com'},
+  const request = new Request('https://daytlas.com/api/auth/refresh', {
+    method: 'POST', headers: {'Content-Type':'application/json',Origin:'https://daytlas.com'},
     body: JSON.stringify({refresh_token:'synthetic-runtime-smoke'})
   });
   return handleOura(request, {
     OURA_ENABLED:'true', OURA_CLIENT_ID:'synthetic-runtime-smoke',
     OURA_CLIENT_SECRET:'synthetic-runtime-smoke',
-    OURA_REDIRECT_URI:'https://mebyday.com/api/auth/callback'
+    OURA_REDIRECT_URI:'https://daytlas.com/api/auth/callback'
   });
 }};
 `,
@@ -36,7 +36,7 @@ export default { async fetch() {
 await writeFile(
   join(dir, "wrangler.jsonc"),
   JSON.stringify({
-    name: "mebyday-oura-runtime-smoke",
+    name: "daytlas-oura-runtime-smoke",
     main: "worker.mjs",
     compatibility_date: "2026-09-27",
     workers_dev: false,

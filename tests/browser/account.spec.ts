@@ -25,7 +25,7 @@ for (const width of [320, 390]) {
     let signedIn = false;
     let displayName = "";
     await page.addInitScript(() =>
-      localStorage.setItem("woura.token", "synthetic-oura-connection"),
+      localStorage.setItem("daytlas.token", "synthetic-oura-connection"),
     );
     await page.route("**/api/account", async (route) => {
       const request = route.request();
@@ -106,7 +106,7 @@ for (const width of [320, 390]) {
     await expect(page.getByLabel("Your email", { exact: true })).toHaveValue(
       "",
     );
-    expect(await page.evaluate(() => localStorage.getItem("woura.token"))).toBe(
+    expect(await page.evaluate(() => localStorage.getItem("daytlas.token"))).toBe(
       "synthetic-oura-connection",
     );
   });

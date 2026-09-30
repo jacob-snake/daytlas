@@ -1,3 +1,8 @@
+import {
+  LEGACY_DATABASE,
+  LEGACY_STORAGE_PREFIX,
+  LEGACY_ANALYTICS_CONSENT,
+} from "@/lib/brand-migration";
 import { brand } from "@/lib/brand-config";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -133,20 +138,20 @@ export async function GET(req: NextRequest) {
         history.replaceState(null, "", "/api/auth/callback");
         try {
           const t = ${payload};
-          for (const key of Object.keys(localStorage)) if (key.startsWith("woura.")) localStorage.removeItem(key);
-          await new Promise((resolve, reject) => {
-            const request = indexedDB.deleteDatabase("woura");
+          for (const key of Object.keys(localStorage)) if (key.startsWith("daytlas.") || key.startsWith(${scriptString(LEGACY_STORAGE_PREFIX)}) || key === ${scriptString(LEGACY_ANALYTICS_CONSENT)}) localStorage.removeItem(key);
+          for (const name of ["daytlas", ${scriptString(LEGACY_DATABASE)}]) await new Promise((resolve, reject) => {
+            const request = indexedDB.deleteDatabase(name);
             request.onsuccess = resolve;
             request.onerror = request.onblocked = () => reject(new Error(${scriptString(`Close other ${brand.name} tabs and try connecting again.`)}));
           });
-          localStorage.setItem("woura.cacheScope", crypto.randomUUID());
-          if (t.refresh) localStorage.setItem("woura.refresh", t.refresh);
-          if (t.expiresAt) localStorage.setItem("woura.expiresAt", String(t.expiresAt));
-          localStorage.setItem("woura.mode", "live");
-          localStorage.setItem("woura.token", t.token);
+          localStorage.setItem("daytlas.cacheScope", crypto.randomUUID());
+          if (t.refresh) localStorage.setItem("daytlas.refresh", t.refresh);
+          if (t.expiresAt) localStorage.setItem("daytlas.expiresAt", String(t.expiresAt));
+          localStorage.setItem("daytlas.mode", "live");
+          localStorage.setItem("daytlas.token", t.token);
           location.replace("/app");
         } catch {
-          try { for (const key of ["woura.token", "woura.refresh", "woura.expiresAt", "woura.cacheScope", "woura.mode"]) localStorage.removeItem(key); } catch {}
+          try { for (const key of ["daytlas.token", "daytlas.refresh", "daytlas.expiresAt", "daytlas.cacheScope", "daytlas.mode"]) localStorage.removeItem(key); } catch {}
           document.getElementById("status").textContent = ${scriptString(`Your browser could not save the connection or clear the previous session. Enable site storage, close other ${brand.name} tabs, and try again.`)};
         }
       })();
