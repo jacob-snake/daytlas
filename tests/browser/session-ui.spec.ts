@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDemoCollection } from "../../src/lib/demo-data";
 
-test("a late response cannot replace the newly selected Trends range", async ({
+test("a late history response respects the most recently selected Trends range", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -10,66 +10,52 @@ test("a late response cannot replace the newly selected Trends range", async ({
     localStorage.setItem("woura.cacheScope", "range-test");
     localStorage.setItem("woura.firstDay.v3.live:range-test", "2025-01-01");
   });
-  let releaseOld!: () => void;
-  const heldResponse = new Promise<void>((resolve) => {
-    releaseOld = resolve;
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
   });
-  let announceOld!: () => void;
-  const oldStarted = new Promise<void>((resolve) => {
-    announceOld = resolve;
-  });
-  let heldCount = 0;
+  let started = false;
   await page.route("**/api/oura/**", async (route) => {
-    const url = new URL(route.request().url());
-    const start = url.searchParams.get("start_date")!;
-    const end = url.searchParams.get("end_date")!;
-    const days = (Date.parse(end) - Date.parse(start)) / 86_400_000;
-    const old = days > 80 && days < 100;
-    if (old) {
-      heldCount++;
-      announceOld();
-      await heldResponse;
+    const url = new URL(route.request().url()),
+      endpoint = url.pathname.split("/").at(-1)!;
+    if (endpoint === "daily_sleep") {
+      started = true;
+      await held;
     }
-    const endpoint = url.pathname.split("/").at(-1)!;
-    const data =
-      endpoint === "enhanced_tag"
-        ? [
-            {
-              id: "synthetic-range-tag",
-              custom_name: old
-                ? "Previous range marker"
-                : days < 40
-                  ? "Current range marker"
-                  : "Initial range marker",
-              start_day: end,
-              end_day: null,
-            },
-          ]
-        : getDemoCollection(endpoint, { start_date: start, end_date: end });
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 29);
+    const first = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+    const data = getDemoCollection<Record<string, unknown>>(endpoint, {
+      start_date: url.searchParams.get("start_date")!,
+      end_date: url.searchParams.get("end_date")!,
+    }).map((row) =>
+      endpoint === "daily_sleep"
+        ? { ...row, score: String(row.day) >= first ? 41 : 93 }
+        : row,
+    );
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ data, next_token: null }),
     });
-    if (old) heldCount--;
   });
   try {
     await page.goto("/app/trends");
-    await expect(page.getByText("Initial range marker × 1")).toBeVisible();
-    await page.getByRole("button", { name: "90 D", exact: true }).click();
-    await oldStarted;
-    // Old data is hidden immediately, while range controls stay usable.
-    await expect(page.locator("#sleep")).toHaveCount(0);
-    await expect(page.getByText("Initial range marker × 1")).toHaveCount(0);
-    await page.getByRole("button", { name: "30 D", exact: true }).click();
-    await expect(page.getByText("Current range marker × 1")).toBeVisible();
-    await expect(page.locator("#sleep")).toBeVisible();
-    releaseOld();
-    await expect.poll(() => heldCount).toBe(0);
-    await page.evaluate(() => new Promise(requestAnimationFrame));
-    await expect(page.getByText("Current range marker × 1")).toBeVisible();
-    await expect(page.getByText("Previous range marker × 1")).toHaveCount(0);
+    await expect.poll(() => started).toBe(true);
+    await page.getByRole("radio", { name: "90 days", exact: true }).click();
+    await page.getByRole("radio", { name: "30 days", exact: true }).click();
+    await expect(page.locator("#trend-sleep")).toHaveCount(0);
+    release();
+    await expect(
+      page.locator("#trend-sleep").getByText("41", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("radio", { name: "30 days", exact: true }),
+    ).toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.locator("#trend-sleep").getByText("93", { exact: true }),
+    ).toHaveCount(0);
   } finally {
-    releaseOld();
+    release();
   }
 });
 
@@ -77,7 +63,10 @@ test("failed IndexedDB erasure closes the dashboard and offers a visible retry",
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /Explore the demo|See demo/ }).first().click();
+  await page
+    .getByRole("button", { name: /Explore the demo|See demo/ })
+    .first()
+    .click();
   await expect(
     page.getByRole("heading", { name: "Your daily perspective." }),
   ).toBeVisible();
@@ -139,7 +128,10 @@ test("disconnecting another tab removes the open dashboard", async ({
   context,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /Explore the demo|See demo/ }).first().click();
+  await page
+    .getByRole("button", { name: /Explore the demo|See demo/ })
+    .first()
+    .click();
   await expect(
     page.getByRole("heading", { name: "Your daily perspective." }),
   ).toBeVisible();
@@ -152,5 +144,5 @@ test("disconnecting another tab removes the open dashboard", async ({
   await expect(second.getByRole("heading", { level: 1 })).toContainText(
     "bigger picture",
   );
-  await expect(second.locator("#sleep")).toHaveCount(0);
+  await expect(second.locator("#trend-sleep")).toHaveCount(0);
 });

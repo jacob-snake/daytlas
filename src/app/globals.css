@@ -250,7 +250,7 @@
 .history-handle span { display:flex; align-items:center; justify-content:center; width:24px; height:44px; font-weight:700; border:1px solid var(--chart-2); color:var(--chart-2); background:var(--background); border-radius:8px; box-shadow:0 2px 4px #0001,0 5px 12px #0001; }
 .history-handle:active span { background:color-mix(in oklab,var(--chart-2) 12%,var(--background)); }
 /* Native month/year menus, clear range bands, generous day targets. */
-.range-calendar { --cell-size:40px; --cell-radius:999px; padding:8px; }
+.range-calendar { --cell-size:44px; --cell-radius:999px; padding:0; }
 .range-calendar .rdp-months { gap:24px; }
 .range-calendar .rdp-month { gap:16px; }
 .range-calendar .rdp-dropdowns { gap:8px; }
@@ -268,4 +268,4 @@
 .range-calendar .rdp-range_end { border-radius:0 999px 999px 0; }
 .range-calendar .rdp-day:first-child [data-range-middle=true] { border-radius:999px 0 0 999px; }
 .range-calendar .rdp-day:last-child [data-range-middle=true] { border-radius:0 999px 999px 0; }
-@media(min-width:640px) { .range-calendar { --cell-size:44px; } .range-calendar .rdp-months { flex-direction:row; } }
+@media(min-width:640px) { .range-calendar { padding:8px; } .range-calendar .rdp-months { flex-direction:row; } }

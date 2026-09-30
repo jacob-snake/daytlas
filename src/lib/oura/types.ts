@@ -1,4 +1,4 @@
-// Oura API v2 response types (subset we use). Source: openapi-1.35.json
+// Oura API v2 response types (subset we use). Source: openapi-1.41.json
 
 export interface OuraListResponse<T> {
   data: T[];
@@ -39,7 +39,16 @@ export interface DailyReadiness {
   };
 }
 
+export interface PublicSample {
+  interval: number;
+  timestamp: string;
+  items: (number | null)[];
+}
+
 export interface DailyActivity {
+  met?: PublicSample | null;
+  contributors?: Record<string, number | null>;
+  inactivity_alerts?: number | null;
   id: string;
   day: string;
   score: number | null;
@@ -58,6 +67,9 @@ export interface DailyActivity {
 }
 
 export interface SleepPeriod {
+  heart_rate?: PublicSample | null;
+  hrv?: PublicSample | null;
+  sleep_phase_30_sec?: string | null;
   id: string;
   day: string;
   period: number;

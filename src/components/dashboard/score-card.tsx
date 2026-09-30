@@ -9,6 +9,8 @@ export function ScoreCard({
   color,
   values = [],
   day,
+  comparison = "vs previous 7 days",
+  neutral = false,
 }: {
   label: string;
   value: number | null;
@@ -16,6 +18,8 @@ export function ScoreCard({
   color: string;
   values?: number[];
   day?: string;
+  comparison?: string;
+  neutral?: boolean;
 }) {
   const points = values
     .map(
@@ -57,8 +61,12 @@ export function ScoreCard({
       <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-muted-foreground">
         {delta !== null ? (
           <>
-            <MetricDelta value={delta} unit="pts" polarity="higher" />
-            <span className="font-medium">vs previous 7 days</span>
+            <MetricDelta
+              value={delta}
+              unit="pts"
+              polarity={neutral ? "neutral" : "higher"}
+            />
+            <span className="font-medium">{comparison}</span>
           </>
         ) : (
           "Waiting for enough recent readings"

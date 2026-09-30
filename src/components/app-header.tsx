@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV = [
+  { href: "/app/day", key: "day", label: "Day detail" },
   { href: "/app", key: "dashboard", label: "Overview" },
   { href: "/app/trends", key: "trends", label: "Trends" },
   { href: "/app/year", key: "year", label: "Your year" },
@@ -24,7 +25,7 @@ const subscribe = () => () => {};
 export function AppHeader({
   active,
 }: {
-  active: "dashboard" | "trends" | "year" | "tags" | "profile";
+  active: "day" | "dashboard" | "trends" | "year" | "tags" | "profile";
 }) {
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

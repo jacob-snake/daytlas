@@ -2,7 +2,10 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 async function demo(page: Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: /Explore the demo|See demo/ }).first().click();
+  await page
+    .getByRole("button", { name: /Explore the demo|See demo/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
     page.getByRole("heading", { name: "Your daily perspective." }),
@@ -32,7 +35,8 @@ test("unavailable connection offers the app demo without developer setup", async
   );
   await page
     .getByRole("link", { name: "Connect with Oura", exact: true })
-    .first().click();
+    .first()
+    .click();
   await expect(
     page.getByRole("heading", {
       name: "Oura connection is not available yet.",
@@ -61,6 +65,7 @@ test("demo covers all main views without sending a health API request", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await demo(page);
   for (const [label, heading] of [
+    ["Day detail", "A closer look at your day."],
     ["Trends", "Follow your patterns."],
     ["Your year", "Every day adds up."],
     ["Tag Lab", "Get curious about your habits."],
@@ -85,6 +90,7 @@ test("export downloads real synthetic rows in both supported formats", async ({
   page,
 }) => {
   await demo(page);
+  await page.goto("/app/profile");
   for (const format of ["csv", "json"]) {
     await page.getByRole("button", { name: "Export", exact: true }).click();
     if (format === "json") {
@@ -112,13 +118,14 @@ test("trends respond to period changes and command-palette chart additions", asy
 }) => {
   await demo(page);
   await page.getByRole("link", { name: "Trends", exact: true }).click();
-  await page.getByRole("radio", { name: "Month", exact: true }).click();
-  await expect(
-    page
-      .getByRole("region", { name: "Timeline range control" })
-      .getByText(/monthly averages/),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Search pages and actions" }).click();
+  const period = page.getByRole("combobox", {
+    name: "Average readings by period",
+  });
+  await period.click();
+  await page.getByRole("option", { name: "Monthly", exact: true }).click();
+  await expect(period).toHaveText("Monthly");
+  await expect(page.locator("#trend-sleep")).toBeVisible();
+  await page.keyboard.press("ControlOrMeta+k");
   await page
     .getByPlaceholder("Search pages, metrics, actions…")
     .fill("Deep Sleep Time");
@@ -190,6 +197,7 @@ for (const width of [320, 390, 768, 1440]) {
     await demo(page);
     await noOverflow(page);
     for (const path of [
+      "/app/day",
       "/app/trends",
       "/app/year",
       "/app/tags",
@@ -217,6 +225,7 @@ test("main views have no serious or critical automated accessibility violations"
   await demo(page);
   for (const path of [
     "/app",
+    "/app/day",
     "/app/trends",
     "/app/year",
     "/app/tags",

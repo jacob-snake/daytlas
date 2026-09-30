@@ -96,7 +96,7 @@ test("connected homepage stays public, requests no Oura data, and reopens the sa
   expect(requests).toEqual([]);
 
   // Both explicit Website navigation and the brand return home without logout.
-  for (const homeLink of ["Website", `${brand.name} home`]) {
+  for (const homeLink of [`${brand.name} — Back to website`]) {
     await openApp.click();
     await expect(page).toHaveURL(/\/app$/);
     await expect(
@@ -152,12 +152,24 @@ for (const width of [320, 390]) {
     ).toHaveCount(0);
     const header = page.locator(".app-header");
     await expect(
-      header.getByRole("link", { name: "Website", exact: true }),
+      header.getByRole("link", {
+        name: `${brand.name} — Back to website`,
+        exact: true,
+      }),
     ).toBeInViewport();
-    for (const label of ["Overview", "Trends", "Your year", "Tag Lab"])
+    await header.getByRole("button", { name: "Open navigation" }).click();
+    const navigation = page.getByRole("dialog", { name: "Navigation" });
+    for (const label of [
+      "Day detail",
+      "Overview",
+      "Trends",
+      "Your year",
+      "Tag Lab",
+    ])
       await expect(
-        header.getByRole("link", { name: label, exact: true }),
+        navigation.getByRole("link", { name: label, exact: true }),
       ).toBeInViewport();
+    await page.keyboard.press("Escape");
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBe(width);
@@ -182,12 +194,17 @@ test("demo enters /app and can visit the website then resume without a connectio
     },
   );
   await page.goto("/");
-  await page.getByRole("button", { name: /Explore the demo|See demo/ }).first().click();
+  await page
+    .getByRole("button", { name: /Explore the demo|See demo/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
     page.getByText("All data is fictional.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Website", exact: true }).click();
+  await page
+    .getByRole("link", { name: `${brand.name} — Back to website`, exact: true })
+    .click();
   await expectHomepage(page);
   await page.reload();
   await expectHomepage(page);
@@ -198,7 +215,7 @@ test("demo enters /app and can visit the website then resume without a connectio
     await page.evaluate(() => localStorage.getItem("woura.token")),
   ).toBeNull();
   await page
-    .getByRole("link", { name: "Continue the demo", exact: true })
+    .getByRole("link", { name: "Open app", exact: true })
     .first()
     .click();
   await expect(page).toHaveURL(/\/app$/);
@@ -232,18 +249,18 @@ test("command palette distinguishes the website from the app overview", async ({
 }) => {
   await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
   await page.goto("/app/trends");
-  await page.getByRole("button", { name: "Search pages and actions" }).click();
+  await page.keyboard.press("ControlOrMeta+k");
   await page.getByRole("option", { name: "Overview", exact: true }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(
     page.getByRole("heading", { name: "Your daily perspective." }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Search pages and actions" }).click();
+  await page.keyboard.press("ControlOrMeta+k");
   await page
     .getByRole("option", { name: `${brand.name} website`, exact: true })
     .click();
   await expectHomepage(page);
   await expect(
-    page.getByRole("link", { name: "Continue the demo", exact: true }).first(),
+    page.getByRole("link", { name: "Open app", exact: true }).first(),
   ).toBeVisible();
 });

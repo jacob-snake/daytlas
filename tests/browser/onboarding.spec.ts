@@ -39,8 +39,8 @@ for (const width of [320, 390, 1440]) {
       page.getByText("Your goal and preferences", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Email delivery unavailable" }),
-    ).toBeDisabled();
+      page.getByRole("heading", { name: "Weekly email digest · Coming soon" }),
+    ).toBeVisible();
     await page.reload();
     await expect(page.getByText("7h 30m", { exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Edit your setup" }).click();

@@ -54,6 +54,18 @@ export function getDemoCollection<T>(
     );
     const shared = { id: `demo-${endpoint}-${day}`, day };
     const steps = Math.round(7600 + Math.sin(i * 0.6) * 2900 + activity * 12);
+    const detailed = Date.parse(to) - Date.parse(from) <= 62 * 86400000;
+    const nightSamples = (base: number) => ({
+      timestamp: bedtime.toISOString(),
+      interval: 300,
+      items: Array.from(
+        { length: Math.ceil((duration + 1800) / 300) },
+        (_, n) =>
+          n % 37 === 20
+            ? null
+            : Math.round((base + Math.sin(n * 0.47) * base * 0.14) * 10) / 10,
+      ),
+    });
     let value: unknown;
     switch (endpoint) {
       case "daily_sleep":
@@ -106,6 +118,29 @@ export function getDemoCollection<T>(
           high_activity_time: 900,
           medium_activity_time: 2500,
           low_activity_time: 6500,
+          contributors: {
+            stay_active: 82,
+            move_every_hour: 90,
+            meet_daily_targets: activity,
+            training_frequency: 89,
+            training_volume: 85,
+            recovery_time: 92,
+          },
+          ...(detailed
+            ? {
+                met: {
+                  timestamp: day + "T00:00:00Z",
+                  interval: 300,
+                  items: Array.from({ length: 288 }, (_, n) =>
+                    n < 84
+                      ? 0.9
+                      : Math.round(
+                          (1.2 + Math.max(0, Math.sin(n * 0.17)) * 2) * 10,
+                        ) / 10,
+                  ),
+                },
+              }
+            : {}),
         };
         break;
       case "sleep":
@@ -129,8 +164,44 @@ export function getDemoCollection<T>(
           lowest_heart_rate: Math.round(49 - wave * 0.25),
           average_hrv: Math.round(48 + wave * 1.1 + trend + sampleOffset * 1.7),
           average_breath: Math.round((14.5 + Math.sin(i) * 0.4) * 10) / 10,
-          sleep_phase_5_min: null,
+          sleep_phase_5_min: detailed
+            ? Array.from(
+                { length: Math.ceil((duration + 1800) / 300) },
+                (_, n) =>
+                  n < 3 || n % 31 === 0
+                    ? "4"
+                    : ["1", "2", "2", "3"][Math.floor(n / 5) % 4],
+              ).join("")
+            : null,
+          ...(detailed
+            ? {
+                heart_rate: nightSamples(
+                  Math.round(56 - wave * 0.3 - sampleOffset * 0.5),
+                ),
+                hrv: nightSamples(
+                  Math.round(48 + wave * 1.1 + trend + sampleOffset * 1.7),
+                ),
+              }
+            : {}),
         };
+        break;
+      case "heartrate":
+        for (let n = 0; n < 288; n++) {
+          const timestamp = stamp + n * 300000;
+          if (
+            timestamp > Date.now() ||
+            (range.start_datetime &&
+              timestamp < Date.parse(range.start_datetime)) ||
+            (range.end_datetime && timestamp > Date.parse(range.end_datetime))
+          )
+            continue;
+          if (n % 71 > 60) continue;
+          records.push({
+            timestamp: new Date(timestamp).toISOString(),
+            bpm: Math.round((n < 84 ? 54 : 67) + Math.sin(n * 0.2) * 5),
+            source: n < 84 ? "sleep" : "awake",
+          });
+        }
         break;
       case "daily_spo2":
         value = {

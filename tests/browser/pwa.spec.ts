@@ -54,7 +54,7 @@ test("installation metadata launches the app with valid home-screen icons", asyn
   // A fresh install can enter the demo without inheriting another browser's storage.
   await page.goto(manifest.start_url);
   await page
-    .getByRole("button", { name: /explore the demo/i })
+    .getByRole("button", { name: /Explore the demo|See demo/i })
     .first()
     .click();
   await expect(

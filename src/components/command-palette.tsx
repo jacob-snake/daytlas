@@ -55,6 +55,9 @@ export function CommandPalette({
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Pages">
+          <CommandItem onSelect={() => run(() => router.push("/app/day"))}>
+            Day detail
+          </CommandItem>
           <CommandItem onSelect={() => run(() => router.push("/app/profile"))}>
             Your profile
           </CommandItem>

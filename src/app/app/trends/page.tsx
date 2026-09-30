@@ -235,7 +235,7 @@ export default function TrendsPage() {
   );
 
   const rangeSummary = startDate
-    ? `${format(new Date(startDate + "T12:00:00"), startDate.slice(0, 4) === endDate.slice(0, 4) ? "d MMM" : "d MMM yy")}–${format(new Date(endDate + "T12:00:00"), "d MMM yy")}`
+    ? `${format(new Date(startDate + "T12:00:00"), "d MMM yyyy")}–${format(new Date(endDate + "T12:00:00"), "d MMM yyyy")}`
     : "Loading history";
 
   if (!session) return <Welcome />;

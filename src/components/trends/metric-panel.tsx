@@ -153,6 +153,7 @@ export function MetricPanel({
 
   const renderChart = (heightClass: string, height?: number) => (
     <div
+      role="group"
       tabIndex={0}
       aria-label={`${def.label} chart. Average lines show the displayed periods. Focus or touch to emphasize them.`}
       className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -322,8 +323,17 @@ export function MetricPanel({
   );
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-1 top-1 z-10"
+        onClick={onRemove}
+        aria-label={`Remove ${def.label}`}
+      >
+        <Icon icon={Cancel01Icon} />
+      </Button>
+      <CardHeader className="pr-12">
         <CardTitle className="text-xl sm:text-2xl">
           {def.label}{" "}
           {def.unit && (
@@ -359,14 +369,6 @@ export function MetricPanel({
             aria-label={`Expand ${def.label} to full screen`}
           >
             <Icon icon={ArrowExpandIcon} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRemove}
-            aria-label={`Remove ${def.label}`}
-          >
-            <Icon icon={Cancel01Icon} />
           </Button>
         </CardAction>
       </CardHeader>

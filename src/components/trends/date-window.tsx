@@ -99,7 +99,7 @@ export function DateWindow({
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="w-auto max-w-[calc(100vw-2rem)] p-2"
+            className="w-auto max-w-[calc(100vw-4px)] p-1 sm:p-2"
           >
             <Calendar
               className="range-calendar"

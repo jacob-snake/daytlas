@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import type { Period } from "@/lib/oura/metrics";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -107,48 +108,57 @@ export function TrendsRangeControls({
       <div
         role="group"
         aria-label="Global Trends date range"
-        className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3"
+        className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2"
       >
-        <div className="flex w-fit min-w-0 max-w-full items-center gap-2 rounded-2xl bg-secondary/50 p-1 pr-3">
-          <Button
-            ref={trigger}
-            aria-describedby={summaryId}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            className="min-h-11 shrink-0 rounded-xl px-3"
-            onClick={() => setOpen(true)}
+        <div className="min-w-0 px-1 sm:px-2">
+          <p className="px-3 text-xs font-medium text-muted-foreground">
+            View by
+          </p>
+          <Select
+            value={period}
+            onValueChange={(value) => onPeriodChange(value as Period)}
           >
-            Edit dates
-          </Button>
-          <div id={summaryId} className="min-w-0">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              Date range
-            </p>
-            <p className="text-[12px] font-semibold tabular-nums sm:text-sm">
-              {summary}
-            </p>
-          </div>
+            <SelectTrigger
+              aria-label="View all charts by period"
+              className="!border-transparent !bg-transparent !shadow-none min-w-24 px-3"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["daily", "weekly", "monthly", "quarterly", "yearly"].map(
+                (value) => (
+                  <SelectItem key={value} value={value}>
+                    {value[0].toUpperCase() + value.slice(1)}
+                  </SelectItem>
+                ),
+              )}
+            </SelectContent>
+          </Select>
         </div>
-        <Select
-          value={period}
-          onValueChange={(value) => onPeriodChange(value as Period)}
+        <Button
+          ref={trigger}
+          variant="ghost"
+          aria-describedby={summaryId}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`Edit date range: ${summary}`}
+          className="!h-auto min-h-16 min-w-0 justify-start gap-3 !rounded-2xl !bg-secondary/60 px-3 py-2 text-left hover:!bg-secondary sm:px-4"
+          onClick={() => setOpen(true)}
         >
-          <SelectTrigger
-            aria-label="View all charts by period"
-            className="w-auto min-w-24 rounded-xl"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {["daily", "weekly", "monthly", "quarterly", "yearly"].map(
-              (value) => (
-                <SelectItem key={value} value={value}>
-                  {value[0].toUpperCase() + value.slice(1)}
-                </SelectItem>
-              ),
-            )}
-          </SelectContent>
-        </Select>
+          <CalendarDays
+            className="hidden size-5 shrink-0 sm:block"
+            aria-hidden="true"
+          />
+          <span id={summaryId} className="min-w-0">
+            <span className="block text-xs font-medium text-muted-foreground">
+              Date range
+            </span>
+            <span className="mt-1 block whitespace-normal text-xs font-bold tabular-nums sm:text-base">
+              {summary}
+            </span>
+          </span>
+          <ChevronDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
+        </Button>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent

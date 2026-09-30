@@ -65,6 +65,7 @@ function ChartContainer({
   return (
     <ChartContext.Provider value={{ config }}>
       <div
+        role={props["aria-label"] ? "group" : undefined}
         data-slot="chart"
         data-chart={chartId}
         className={cn(
