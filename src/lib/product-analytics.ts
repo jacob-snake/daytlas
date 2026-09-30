@@ -1,5 +1,11 @@
+import {
+  hasLegacyConnection,
+  migrateBrowserStorage,
+  LEGACY_STORAGE_PREFIX,
+  LEGACY_ANALYTICS_CONSENT,
+} from "./brand-migration";
 /** Deliberately independent from analytics.ts, which computes health statistics. */
-export const ANALYTICS_CONSENT_KEY = "mebyday.analytics-consent.v1";
+export const ANALYTICS_CONSENT_KEY = "daytlas.analytics-consent.v1";
 export const POSTHOG_EU_HOST = "https://eu.i.posthog.com";
 const CONSENT_LIFETIME = 180 * 24 * 60 * 60 * 1000;
 export type AnalyticsConsent = "unknown" | "allowed" | "declined";
@@ -116,12 +122,13 @@ export function createProductAnalytics(environment: AnalyticsEnvironment) {
       const storage = environment.storage();
       // Deny any live/sandbox connection, even on public routes or with stale demo mode.
       if (
-        storage.getItem("woura.token") ||
-        storage.getItem("woura.refresh") ||
-        storage.getItem("woura.importRevision")
+        hasLegacyConnection(storage) ||
+        storage.getItem("daytlas.token") ||
+        storage.getItem("daytlas.refresh") ||
+        storage.getItem("daytlas.importRevision")
       )
         return null;
-      const mode = storage.getItem("woura.mode");
+      const mode = storage.getItem("daytlas.mode");
       if (mode && mode !== "demo") return null;
       const path = environment.pathname();
       if (["/", "/about", "/privacy", "/terms"].includes(path))
@@ -248,7 +255,10 @@ function browserClient() {
   if (typeof window === "undefined") return null;
   if (!client) {
     client = createProductAnalytics({
-      storage: () => window.localStorage,
+      storage: () => {
+        migrateBrowserStorage(window.localStorage);
+        return window.localStorage;
+      },
       configuration: productAnalyticsConfiguration,
       pathname: () => window.location.pathname,
       fetch: (...args) => window.fetch(...args),
@@ -259,14 +269,16 @@ function browserClient() {
       if (
         event.key === null ||
         event.key === ANALYTICS_CONSENT_KEY ||
-        event.key.startsWith("woura.")
+        event.key.startsWith("daytlas.") ||
+        event.key.startsWith(LEGACY_STORAGE_PREFIX) ||
+        event.key === LEGACY_ANALYTICS_CONSENT
       )
         client?.refresh();
     });
     window.addEventListener("pagehide", () => client?.stop());
-    window.addEventListener("woura:session", () => client?.refresh());
+    window.addEventListener("daytlas:session", () => client?.refresh());
     try {
-      channel = new BroadcastChannel("mebyday.analytics-consent.v1");
+      channel = new BroadcastChannel("daytlas.analytics-consent.v1");
       channel.onmessage = (event) => {
         if (event.data === "withdraw") client?.refresh(true);
       };

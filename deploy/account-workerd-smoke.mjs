@@ -12,12 +12,12 @@ const socket = createServer();
 await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
 const port = socket.address().port;
 await new Promise(resolve => socket.close(resolve));
-const dir = await mkdtemp(join(tmpdir(), 'mebyday-account-smoke-'));
+const dir = await mkdtemp(join(tmpdir(), 'daytlas-account-smoke-'));
 const source = fileURLToPath(new URL('../src/lib/account/', import.meta.url));
 await writeFile(join(dir, 'worker.ts'), `
 import { accountHandlers } from ${JSON.stringify(source + 'handler.ts')};
 import { createAccountProvider } from ${JSON.stringify(source + 'server.ts')};
-const config = {url:'https://example.supabase.co',key:'sb_publishable_synthetic',origin:'https://mebyday.com',preferences:false};
+const config = {url:'https://example.supabase.co',key:'sb_publishable_synthetic',origin:'https://daytlas.com',preferences:false};
 const user = {id:'a0000000-0000-4000-a000-000000000001',aud:'authenticated',role:'authenticated',email:'synthetic@example.test',email_confirmed_at:'2026-09-30T00:00:00Z',created_at:'2026-09-30T00:00:00Z',app_metadata:{},user_metadata:{}};
 const token = btoa(JSON.stringify({alg:'HS256'})) + '.' + btoa(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})) + '.signature';
 const mock = async (url,init) => {
@@ -32,7 +32,7 @@ const mock = async (url,init) => {
 const handlers = accountHandlers(()=>config,(request,config)=>createAccountProvider(request,config,mock));
 export default {fetch(request) {return request.method === 'POST' ? handlers.POST(request) : handlers.GET(request)}};
 `);
-await writeFile(join(dir, 'wrangler.jsonc'), JSON.stringify({name:'mebyday-account-runtime-test',main:'worker.ts',compatibility_date:'2026-09-27',workers_dev:false}));
+await writeFile(join(dir, 'wrangler.jsonc'), JSON.stringify({name:'daytlas-account-runtime-test',main:'worker.ts',compatibility_date:'2026-09-27',workers_dev:false}));
 const child = spawn(binary,['dev','--local','--config',join(dir,'wrangler.jsonc'),'--ip','127.0.0.1','--port',String(port),'--show-interactive-dev-session=false'],{stdio:'inherit',detached:true});
 const base = `http://127.0.0.1:${port}`;
 try {
@@ -42,7 +42,7 @@ try {
  }
  assert.ok(response,'workerd failed to start');
  assert.deepEqual(await response.json(),{enabled:true,account:null,preferences:false});
- const post=(body,cookie,origin='https://mebyday.com')=>fetch(base,{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(body)});
+ const post=(body,cookie,origin='https://daytlas.com')=>fetch(base,{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(body)});
  assert.equal((await post({action:'request_code',email:'synthetic@example.test'},null,'https://evil.test')).status,403);
  assert.equal((await post({action:'request_code',email:'synthetic@example.test'})).status,200);
  const verified=await post({action:'verify_code',email:'synthetic@example.test',code:'123456'});

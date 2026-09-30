@@ -19,7 +19,7 @@ for (const path of ['/', '/index.html', '/app', '/app/profile', '/app/year', '/a
   const scripts = html.match(/<script\b[^>]*>/gi) ?? [];
   assert(scripts.length > 0, path);
   assert(scripts.every(tag => tag.includes(`nonce="${nonce}"`)), path);
-  assert(!html.includes('data-mebyday-script'));
+  assert(!html.includes('data-daytlas-script'));
   assert(response.headers.get('Cache-Control')?.includes('private, no-store'));
   assert.equal(response.headers.get('CDN-Cache-Control'), 'no-store');
   assert(!response.headers.has('set-cookie'));
@@ -49,7 +49,7 @@ for (const path of ['/api/account']) {
 }
 const health = await fetch(new URL('/api/health', base));
 assert.equal((await health.json()).mode, 'synthetic-demo');
-for (const [path, target, status] of [['/setup', '/connect', 308], ['/year', '/app/year', 308], ['/api/auth/login', 'https://mebyday.com/api/auth/login', 303]]) {
+for (const [path, target, status] of [['/setup', '/connect', 308], ['/year', '/app/year', 308], ['/api/auth/login', 'https://daytlas.com/api/auth/login', 303]]) {
   const response = await fetch(new URL(path, base), { redirect: 'manual' });
   assert.equal(response.status, status);
   assert.equal(response.headers.get('Location'), target);

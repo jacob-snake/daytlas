@@ -1,10 +1,10 @@
 /** Public presentation only. Never use branding to namespace stored user data. */
 const identity = {
-  name: "Me by Day",
-  slug: "mebyday",
-  domain: "mebyday.com",
-  // Repository URL is intentionally unchanged until the repository is renamed.
-  sourceUrl: "https://github.com/jacob-snake/woura",
+  name: "Daytlas",
+  slug: "daytlas",
+  domain: "daytlas.com",
+  // Canonical repository, renamed with the Daytlas rollout.
+  sourceUrl: "https://github.com/jacob-snake/daytlas",
 } as const;
 
 export const brand = {

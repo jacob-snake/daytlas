@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@/lib/brand-config";
 import { useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export function FeedbackDialog() {
           onSubmit={(event) => {
             event.preventDefault();
             const params = new URLSearchParams({
-              subject: `Me by Day · ${topic}`,
+              subject: `${brand.name} · ${topic}`,
               body: message.trim(),
             });
             window.location.href = `mailto:hadjkb@gmail.com?${params.toString().replaceAll("+", "%20")}`;

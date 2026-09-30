@@ -6,7 +6,7 @@ for (const width of [320, 390, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.addInitScript(() => localStorage.setItem("woura.mode", "demo"));
+    await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
     await page.route("**/api/oura/**", (route) => route.abort());
     await page.goto("/app/profile");
     await expect(

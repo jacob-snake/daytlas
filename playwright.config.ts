@@ -25,7 +25,7 @@ export default defineConfig({
       OURA_CLIENT_ID: "",
       OURA_CLIENT_SECRET: "",
       OURA_REDIRECT_URI: "http://localhost:3011/api/auth/callback",
-      WOURA_PUBLIC_URL: "http://localhost:3011",
+      PUBLIC_SITE_URL: "http://localhost:3011",
     },
   },
 });

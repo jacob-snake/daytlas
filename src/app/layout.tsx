@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.PUBLIC_SITE_URL ??
-      process.env.WOURA_PUBLIC_URL ??
+      process.env.DAYTLAS_PUBLIC_URL ??
       (process.env.NODE_ENV === "production"
         ? brand.publicUrl
         : "http://localhost:3001"),

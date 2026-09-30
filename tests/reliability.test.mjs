@@ -18,7 +18,7 @@ import { cacheClear, cacheGet, cacheSet } from "../src/lib/idb-cache.ts";
 import { isOAuthConfigured } from "../src/app/api/auth/_shared.ts";
 
 const originalFetch = globalThis.fetch;
-const origin = "https://woura.example";
+const origin = "https://daytlas.example";
 let storage;
 
 function makeStorage() {
@@ -61,7 +61,7 @@ function collectionRequest(
 function connect() {
   setToken("synthetic-access");
   setMode("live");
-  storage.setItem("woura.refresh", "synthetic-refresh");
+  storage.setItem("daytlas.refresh", "synthetic-refresh");
 }
 function json(value, status = 200, headers = {}) {
   return Response.json(value, { status, headers });
@@ -147,7 +147,7 @@ test("callback rejects mismatched state without contacting Oura", async () => {
   };
   const response = await callback(
     request("/api/auth/callback?code=synthetic-code&state=wrong", {
-      headers: { cookie: "woura_oauth_state=correct" },
+      headers: { cookie: "daytlas_oauth_state=correct" },
     }),
   );
   assert.equal(response.status, 400);
@@ -165,7 +165,7 @@ test("callback escapes script-breaking provider tokens and restricts execution",
     });
   const response = await callback(
     request("/api/auth/callback?code=synthetic-code&state=correct", {
-      headers: { cookie: "woura_oauth_state=correct" },
+      headers: { cookie: "daytlas_oauth_state=correct" },
     }),
   );
   const html = await response.text();
@@ -197,7 +197,7 @@ test("OAuth failures never reflect provider debug bodies", async () => {
     new Response("synthetic-private-debug-detail", { status: 400 });
   const response = await callback(
     request("/api/auth/callback?code=synthetic-code&state=correct", {
-      headers: { cookie: "woura_oauth_state=correct" },
+      headers: { cookie: "daytlas_oauth_state=correct" },
     }),
   );
   assert.equal(response.status, 502);
@@ -370,7 +370,7 @@ test("401 refresh is bounded and does not change the cache identity", async () =
   assert.equal(refreshCalls, 1);
   assert.equal(apiCalls, 2);
   assert.equal(getCacheScope(), scope);
-  assert(Number(storage.getItem("woura.expiresAt")) > Date.now());
+  assert(Number(storage.getItem("daytlas.expiresAt")) > Date.now());
 });
 
 test("rate limiting stops after three retries", async () => {
@@ -440,8 +440,8 @@ test("an in-flight refresh cannot restore a disconnected account", async () => {
     json({ access_token: "synthetic-new", refresh_token: "synthetic-rotated" }),
   );
   await assert.rejects(operation, { status: 401 });
-  assert.equal(storage.getItem("woura.token"), null);
-  assert.equal(storage.getItem("woura.refresh"), null);
+  assert.equal(storage.getItem("daytlas.token"), null);
+  assert.equal(storage.getItem("daytlas.refresh"), null);
 });
 
 test("malformed collection responses fail clearly instead of crashing a dashboard", async () => {
@@ -472,9 +472,9 @@ test("an account switch invalidates in-flight responses and isolates new cache k
   await assert.rejects(operation, { status: 401 });
 });
 
-test("disconnect removes all Woura credentials and metadata but not unrelated storage", async () => {
+test("disconnect removes all Daytlas credentials and metadata but not unrelated storage", async () => {
   connect();
-  storage.setItem("woura.firstDay.v3", "2025-01-01");
+  storage.setItem("daytlas.firstDay.v3", "2025-01-01");
   storage.setItem("unrelated-setting", "keep");
   await disconnectAndClear();
   assert.deepEqual(Object.keys(storage), ["unrelated-setting"]);

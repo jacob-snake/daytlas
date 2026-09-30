@@ -1,3 +1,8 @@
+import {
+  migrateBrowserStorage,
+  LEGACY_STORAGE_PREFIX,
+  LEGACY_ANALYTICS_CONSENT,
+} from "../brand-migration";
 import { brand } from "@/lib/brand-config";
 import { cacheClear, cacheGet, cacheSet } from "@/lib/idb-cache";
 import type { OuraListResponse } from "./types";
@@ -11,9 +16,9 @@ export interface OuraRange {
   end_datetime?: string;
 }
 
-const TOKEN_KEY = "woura.token";
-const MODE_KEY = "woura.mode";
-const SCOPE_KEY = "woura.cacheScope";
+const TOKEN_KEY = "daytlas.token";
+const MODE_KEY = "daytlas.mode";
+const SCOPE_KEY = "daytlas.cacheScope";
 const MAX_RATE_RETRIES = 3;
 const MAX_PAGES = 1_000;
 const pending = new Map<string, Promise<unknown[]>>();
@@ -21,6 +26,7 @@ const pending = new Map<string, Promise<unknown[]>>();
 function readStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
   try {
+    migrateBrowserStorage(window.localStorage);
     return window.localStorage.getItem(key);
   } catch {
     return null;
@@ -36,15 +42,15 @@ export function setToken(token: string | null) {
   if (token?.trim()) {
     if (token !== getToken()) {
       storage.setItem(SCOPE_KEY, crypto.randomUUID());
-      storage.removeItem("woura.refresh");
-      storage.removeItem("woura.expiresAt");
+      storage.removeItem("daytlas.refresh");
+      storage.removeItem("daytlas.expiresAt");
     }
     storage.setItem(TOKEN_KEY, token);
   } else {
     for (const key of [
       TOKEN_KEY,
-      "woura.refresh",
-      "woura.expiresAt",
+      "daytlas.refresh",
+      "daytlas.expiresAt",
       SCOPE_KEY,
     ])
       storage.removeItem(key);
@@ -83,7 +89,7 @@ export function reloadSession(path: "/" | "/app" | "/?clear=failed" = "/") {
 export function getCacheScope(): string {
   const mode = getMode();
   if (mode === "import")
-    return `import:${readStorage("woura.importRevision") ?? "history"}`;
+    return `import:${readStorage("daytlas.importRevision") ?? "history"}`;
   if (mode !== "live") return mode;
   let scope = readStorage(SCOPE_KEY);
   if (!scope) {
@@ -97,7 +103,12 @@ export function getCacheScope(): string {
 export async function disconnectAndClear(): Promise<void> {
   const storage = window.localStorage;
   for (const key of Object.keys(storage))
-    if (key.startsWith("woura.")) storage.removeItem(key);
+    if (
+      key.startsWith("daytlas.") ||
+      key.startsWith(LEGACY_STORAGE_PREFIX) ||
+      key === LEGACY_ANALYTICS_CONSENT
+    )
+      storage.removeItem(key);
   pending.clear();
   await cacheClear();
 }
@@ -127,7 +138,7 @@ async function tryRefresh(scope: string): Promise<boolean> {
   if (refreshing?.scope === scope) return refreshing.promise;
   const promise = (async () => {
     try {
-      const refreshToken = readStorage("woura.refresh");
+      const refreshToken = readStorage("daytlas.refresh");
       if (!refreshToken) return false;
       const res = await fetch("/api/auth/refresh", {
         method: "POST",
@@ -144,17 +155,17 @@ async function tryRefresh(scope: string): Promise<boolean> {
       )
         return false;
       assertSession(scope);
-      if (readStorage("woura.refresh") !== refreshToken) return false;
+      if (readStorage("daytlas.refresh") !== refreshToken) return false;
       // Refresh keeps the same connection and its isolated cache scope.
       window.localStorage.setItem(TOKEN_KEY, tokens.access_token);
       if (typeof tokens.refresh_token === "string" && tokens.refresh_token)
-        window.localStorage.setItem("woura.refresh", tokens.refresh_token);
+        window.localStorage.setItem("daytlas.refresh", tokens.refresh_token);
       if (typeof tokens.expires_in === "number" && tokens.expires_in > 0)
         window.localStorage.setItem(
-          "woura.expiresAt",
+          "daytlas.expiresAt",
           String(Date.now() + tokens.expires_in * 1000),
         );
-      else window.localStorage.removeItem("woura.expiresAt");
+      else window.localStorage.removeItem("daytlas.expiresAt");
       return true;
     } catch {
       return false;

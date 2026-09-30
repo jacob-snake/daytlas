@@ -115,8 +115,8 @@ test("returning allowed consent never instruments an Oura-connected session", as
           revision: "synthetic-consent",
         }),
       );
-      localStorage.setItem("woura.mode", "live");
-      localStorage.setItem("woura.token", "synthetic-do-not-send-token");
+      localStorage.setItem("daytlas.mode", "live");
+      localStorage.setItem("daytlas.token", "synthetic-do-not-send-token");
     },
     { key: ANALYTICS_CONSENT_KEY },
   );

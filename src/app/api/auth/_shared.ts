@@ -8,7 +8,7 @@ export const PRIVATE_HEADERS = {
   "X-Robots-Tag": "noindex, nofollow",
 };
 
-export const STATE_COOKIE = "woura_oauth_state";
+export const STATE_COOKIE = "daytlas_oauth_state";
 
 function parseRedirect(value: string): URL | null {
   try {

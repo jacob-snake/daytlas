@@ -1,7 +1,7 @@
-name: personal-days
+name: daytlas
 services:
   app:
-    image: personal-days:${RELEASE_TAG:-local}
+    image: daytlas:${RELEASE_TAG:-local}
     build:
       context: ..
       args:

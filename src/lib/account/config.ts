@@ -8,7 +8,7 @@ export type AccountConfiguration = {
 export function accountConfiguration(
   env: Record<string, string | undefined> = process.env,
 ): AccountConfiguration | null {
-  if (env.MEBYDAY_ACCOUNTS_ENABLED !== "true") return null;
+  if (env.DAYTLAS_ACCOUNTS_ENABLED !== "true") return null;
   try {
     const url = new URL(env.SUPABASE_URL ?? "");
     const site = new URL(env.PUBLIC_SITE_URL ?? "");
@@ -37,7 +37,7 @@ export function accountConfiguration(
       url: url.origin,
       key: env.SUPABASE_PUBLISHABLE_KEY!,
       origin: site.origin,
-      preferences: env.MEBYDAY_ACCOUNT_PREFERENCES_ENABLED === "true",
+      preferences: env.DAYTLAS_ACCOUNT_PREFERENCES_ENABLED === "true",
     };
   } catch {
     return null;

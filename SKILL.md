@@ -1,14 +1,14 @@
-# SKILL.md — Woura
+# SKILL.md — Daytlas
 
 Znalostná báza projektu. Priebežne aktualizovať pri každom zásadnom rozhodnutí alebo zistení.
 
-## Čo je Woura
+## Čo je Daytlas
 Open-source, local-first web dashboard pre dáta z Oura prstena. Náhrada za „Oura on the Web" (cloud.ouraring.com), ktorý Oura ruší v septembri 2026. Fáza 1: osobné použitie pre Jakuba, lokálne. Fáza 2 (možno): verejný open-source release.
 
 ## Kľúčové rozhodnutia
 - **Architektúra: local-first.** Zdravotné dáta idú prehliadač ↔ Oura API, ukladajú sa len lokálne (localStorage/IndexedDB). Žiadna serverová DB, žiadne účty, žiadna telemetria.
 - **CORS:** api.ouraring.com neposiela `Access-Control-Allow-Origin` pre cudzie origins (empiricky overené) → v appke je stateless pass-through proxy `/api/oura/[...path]` (nič neloguje, allowlist len `v2/usercollection/` a `v2/sandbox/usercollection/`).
-- **Auth: iba OAuth2.** Personal Access Tokens Oura zrušila v decembri 2025. Authorization-code flow: authorize `https://cloud.ouraring.com/oauth/authorize`, token `https://api.ouraring.com/oauth/token`. Client ID/Secret v `.env.local` (`OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`). Redirect URI: `http://localhost:3001/api/auth/callback`. Tokeny žijú len v localStorage prehliadača (`woura.token`, `woura.refresh`, `woura.expiresAt`, `woura.mode`).
+- **Auth: iba OAuth2.** Personal Access Tokens Oura zrušila v decembri 2025. Authorization-code flow: authorize `https://cloud.ouraring.com/oauth/authorize`, token `https://api.ouraring.com/oauth/token`. Client ID/Secret v `.env.local` (`OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`). Redirect URI: `http://localhost:3001/api/auth/callback`. Tokeny žijú len v localStorage prehliadača (`daytlas.token`, `daytlas.refresh`, `daytlas.expiresAt`, `daytlas.mode`).
 - **Sandbox:** `/v2/sandbox/usercollection/*` vracia fake dáta — vyžaduje ľubovoľný neprázdny `Authorization` header. Celé UI sa vyvíja na sandboxe (mode `sandbox`).
 - **Monetizácia:** free + donations. §4(a)(xiii) API Agreementu ZAKAZUJE spoplatniť užívateľom funkcionalitu nad API.
 - **AI insights: VYRADENÉ.** API Agreement (§4(d), §6(g)) zakazuje posielať User Data z API akémukoľvek AI modelu — aj so súhlasom užívateľa. LLM prístup Oura povoľuje len cez ich MCP Server. Nikdy nepridávať LLM funkciu nad API dátami.
@@ -17,7 +17,7 @@ Open-source, local-first web dashboard pre dáta z Oura prstena. Náhrada za „
 
 ## API Agreement — právne mantinely (effective 2026-06-08)
 - Zákaz produktu, ktorý „competes with or merely replicates" Oura → pre osobné použitie OK; pri verejnom releasi opatrnosť.
-- §6(e): názov appky nesmie byť „confusingly similar" k Oura → „Woura" je pri verejnom releasi rizikový, zvážiť premenovanie.
+- §6(e): názov appky nesmie byť „confusingly similar" k Oura → „Daytlas" je pri verejnom releasi rizikový, zvážiť premenovanie.
 - §4(f): žiadne press releases/oznámenia odkazujúce na Oura bez súhlasu; žiadne naznačovanie endorsementu; žiadny disparagement.
 - §5(i): ToS appky musí disclaimovať warranties tretích strán → je v `/terms`.
 - Aggregator status (posielanie dát tretím stranám) = tvrdé povinnosti → nikdy sa ním nestať; open-source self-host model to obchádza (každý user = vlastná registrácia).
@@ -68,7 +68,7 @@ Open-source, local-first web dashboard pre dáta z Oura prstena. Náhrada za „
 Konkurencia: Cracked-Oura (346★, desktop-only), vital-view (mŕtvy), Grafana stacky (DevOps bariéra). Nikto nekombinuje web + local-first + údržbu.
 
 ## Stránky & funkcie (stav 2026-07-15)
-- **/** Dashboard: sekcie Today (score karty + Export) / How you compare (InsightCards s percentilovým verdiktom, TrendChart s range tabmi v CardAction, DistributionCard, SlopeCard, WeekReportCard, MilestonesCard) / Your patterns (WeekdayCard, ShiftsCard) + OnboardingCard (localStorage `woura.onboarded`)
+- **/** Dashboard: sekcie Today (score karty + Export) / How you compare (InsightCards s percentilovým verdiktom, TrendChart s range tabmi v CardAction, DistributionCard, SlopeCard, WeekReportCard, MilestonesCard) / Your patterns (WeekdayCard, ShiftsCard) + OnboardingCard (localStorage `daytlas.onboarded`)
 - **/trends**: DateRangePicker (default = prvý záznam usera, preset „All data"), Period taby (daily/weekly/monthly/quarterly), Brush timeline, Add Chart (32 metrík), baseline pásma ±1σ v paneloch, tags chips, korelačná matica
 - **/year**: RingYear (radiálny), YearHeatmap (kalendár), SleepBarcode (rytmus nocí)
 - **/tags** Tag Lab: dopad tagov na druhý deň (min n=5, zobrazuje n)
@@ -77,14 +77,14 @@ Konkurencia: Cracked-Oura (346★, desktop-only), vital-view (mŕtvy), Grafana s
 - `src/lib/analytics.ts` = jediný zdroj štatistík (baseline, slope, weekday, changepoints, streaks, weekly z-scores, tag impact) — všetko lokálne, žiadne AI
 
 ## Ponaučenia z vývoja (neopakovať chyby)
-- macOS FS je case-insensitive: `woura` a `Woura` je ten istý adresár; Finder občas vyrobí duplikáty „file 2.tsx" → build error o duplicitných identifikátoroch; hľadať `find src -name "* 2.*"`
+- macOS FS je case-insensitive: `daytlas` a `Daytlas` je ten istý adresár; Finder občas vyrobí duplikáty „file 2.tsx" → build error o duplicitných identifikátoroch; hľadať `find src -name "* 2.*"`
 - Tailwind v4 resetuje `cursor: pointer` na buttonoch → vrátené globálne v globals.css
 - `shadcn add` sa pýta na overwrite existujúcich súborov → odpovedať N (`printf 'N\n' |`), inak prepíše naše úpravy (button má custom scale-0.96)
 - Recharts Brush: custom `traveller` render prop na pekné úchytky; range Area cez dataKey vracajúci `[low, high]`
 - Server na porte 3001: po builde `lsof -ti :3001 | xargs kill` + `npm run start -- -p 3001`; štart trvá ~5 s (smoke test až po sleep 5)
 - Oura sandbox vyžaduje ľubovoľný neprázdny Authorization header
 - BMC handle: **hadjakub**
-- detectFirstDay: ring_configuration.set_up_at + probe daily_activity 5 rokov pred tým; cache v localStorage `woura.firstDay`
+- detectFirstDay: ring_configuration.set_up_at + probe daily_activity 5 rokov pred tým; cache v localStorage `daytlas.firstDay`
 - Nikdy neťahať Jakubove reálne hodnoty do LLM kontextu (agreement §4(d) + náš sľub) — screenshoty od neho áno, ale nefetchovať dáta
 
 ## Prevádzka

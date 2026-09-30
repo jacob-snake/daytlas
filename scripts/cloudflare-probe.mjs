@@ -13,7 +13,7 @@ if (args.includes("--help")) {
 }
 if (args.length) throw new Error("Unsupported arguments. Use --help.");
 
-const directory = await mkdtemp(join(tmpdir(), "mebyday-cloudflare-"));
+const directory = await mkdtemp(join(tmpdir(), "daytlas-cloudflare-"));
 for (const name of [
   "src", "public", "package.json", "package-lock.json", "next.config.ts",
   "tsconfig.json", "postcss.config.mjs", "next-env.d.ts",
@@ -32,7 +32,7 @@ const environment = Object.fromEntries(
 Object.assign(environment, {
   NEXT_TELEMETRY_DISABLED: "1",
   WRANGLER_SEND_METRICS: "false",
-  PUBLIC_SITE_URL: "https://mebyday.com",
+  PUBLIC_SITE_URL: "https://daytlas.com",
   NEXT_PUBLIC_POSTHOG_ENABLED: "false",
   NEXT_PUBLIC_POSTHOG_KEY: "",
   OURA_CLIENT_ID: "",

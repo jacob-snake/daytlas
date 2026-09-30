@@ -1,7 +1,14 @@
 // Native Fetch/Web Crypto only: no SSR, storage, telemetry or secret logging.
-const ORIGIN = "https://mebyday.com";
-const CALLBACK = `${ORIGIN}/api/auth/callback`;
-const STATE = "woura_oauth_state";
+const ORIGIN = "https://daytlas.com";
+// Temporary compatibility origin: keep existing browser data reachable during DNS/OAuth cutover.
+const PREVIOUS_ORIGIN = "https://mebyday.com";
+function siteOrigin(env) {
+  return env?.PUBLIC_SITE_URL === PREVIOUS_ORIGIN ? PREVIOUS_ORIGIN : ORIGIN;
+}
+function callbackUrl(env) {
+  return `${siteOrigin(env)}/api/auth/callback`;
+}
+const STATE = "daytlas_oauth_state";
 const TOKEN_URL = "https://api.ouraring.com/oauth/token";
 const PRIVATE = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -47,7 +54,8 @@ export function configured(env) {
     !!env.OURA_CLIENT_ID.trim() &&
     typeof env.OURA_CLIENT_SECRET === "string" &&
     !!env.OURA_CLIENT_SECRET.trim() &&
-    env.OURA_REDIRECT_URI === CALLBACK
+    (!env.PUBLIC_SITE_URL || [ORIGIN, PREVIOUS_ORIGIN].includes(env.PUBLIC_SITE_URL)) &&
+    env.OURA_REDIRECT_URI === callbackUrl(env)
   );
 }
 function json(value, status = 200, extra = {}) {
@@ -66,10 +74,10 @@ function redirect(location) {
     headers: { ...PRIVATE, Location: location },
   });
 }
-function sameOrigin(request) {
+function sameOrigin(request, origin) {
   return (
     request.headers.get("sec-fetch-site") !== "cross-site" &&
-    (!request.headers.has("origin") || request.headers.get("origin") === ORIGIN)
+    (!request.headers.has("origin") || request.headers.get("origin") === origin)
   );
 }
 function serialize(value) {
@@ -121,7 +129,7 @@ function page(message, status, script = "") {
     `${STATE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
   );
   return new Response(
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect · Me by Day</title></head><body><main><h1>${status === 200 ? "Connecting your browser" : "We couldn’t connect to Oura"}</h1><p id="status">${message}</p><a href="/connect">Back to Me by Day</a></main>${script ? `<script nonce="${nonce}">${script}</script>` : ""}</body></html>`,
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect · Daytlas</title></head><body><main><h1>${status === 200 ? "Connecting your browser" : "We couldn’t connect to Oura"}</h1><p id="status">${message}</p><a href="/connect">Back to Daytlas</a></main>${script ? `<script nonce="${nonce}">${script}</script>` : ""}</body></html>`,
     { status, headers },
   );
 }
@@ -176,7 +184,7 @@ async function callback(request, env, url) {
     const response = await exchange(env, {
       grant_type: "authorization_code",
       code,
-      redirect_uri: CALLBACK,
+      redirect_uri: callbackUrl(env),
     });
     if (!response.ok)
       return page(
@@ -202,21 +210,21 @@ async function callback(request, env, url) {
         history.replaceState(null, "", "/api/auth/callback");
         try {
           const t = ${payload};
-          for (const key of Object.keys(localStorage)) if (key.startsWith("woura.")) localStorage.removeItem(key);
-          await new Promise((resolve, reject) => {
-            const request = indexedDB.deleteDatabase("woura");
+          for (const key of Object.keys(localStorage)) if (key.startsWith("daytlas.") || key.startsWith("woura.") || key === "mebyday.analytics-consent.v1") localStorage.removeItem(key);
+          for (const name of ["daytlas", "woura"]) await new Promise((resolve, reject) => {
+            const request = indexedDB.deleteDatabase(name);
             request.onsuccess = resolve;
-            request.onerror = request.onblocked = () => reject(new Error("Close other Me by Day tabs and try connecting again."));
+            request.onerror = request.onblocked = () => reject(new Error("Close other Daytlas tabs and try connecting again."));
           });
-          localStorage.setItem("woura.cacheScope", crypto.randomUUID());
-          if (t.refresh) localStorage.setItem("woura.refresh", t.refresh);
-          if (t.expiresAt) localStorage.setItem("woura.expiresAt", String(t.expiresAt));
-          localStorage.setItem("woura.mode", "live");
-          localStorage.setItem("woura.token", t.token);
+          localStorage.setItem("daytlas.cacheScope", crypto.randomUUID());
+          if (t.refresh) localStorage.setItem("daytlas.refresh", t.refresh);
+          if (t.expiresAt) localStorage.setItem("daytlas.expiresAt", String(t.expiresAt));
+          localStorage.setItem("daytlas.mode", "live");
+          localStorage.setItem("daytlas.token", t.token);
           location.replace("/app");
         } catch {
-          try { for (const key of ["woura.token", "woura.refresh", "woura.expiresAt", "woura.cacheScope", "woura.mode"]) localStorage.removeItem(key); } catch {}
-          document.getElementById("status").textContent = "Your browser could not save the connection or clear the previous session. Enable site storage, close other Me by Day tabs, and try again.";
+          try { for (const key of ["daytlas.token", "daytlas.refresh", "daytlas.expiresAt", "daytlas.cacheScope", "daytlas.mode"]) localStorage.removeItem(key); } catch {}
+          document.getElementById("status").textContent = "Your browser could not save the connection or clear the previous session. Enable site storage, close other Daytlas tabs, and try again.";
         }
       })();`,
     );
@@ -327,6 +335,7 @@ async function relay(request, url) {
   }
 }
 export async function handleOura(request, env) {
+  const origin = siteOrigin(env);
   const url = new URL(request.url);
   const login = url.pathname === "/api/auth/login";
   const isCallback = url.pathname === "/api/auth/callback";
@@ -336,17 +345,17 @@ export async function handleOura(request, env) {
   const method = isRefresh ? "POST" : "GET";
   if (request.method !== method)
     return json({ error: "Method not allowed" }, 405, { Allow: method });
-  if (url.origin !== ORIGIN)
+  if (url.origin !== origin)
     return login
-      ? redirect(`${ORIGIN}/api/auth/login`)
+      ? redirect(`${origin}/api/auth/login`)
       : json({ error: "Use the canonical site" }, 403);
   // The callback is a provider navigation, so it uses the state cookie instead.
-  if (!isCallback && !sameOrigin(request))
+  if (!isCallback && !sameOrigin(request, origin))
     return json({ error: "Origin not allowed" }, 403);
   if (isCallback) return callback(request, env, url);
   if (!configured(env))
     return login
-      ? redirect(`${ORIGIN}/connect`)
+      ? redirect(`${origin}/connect`)
       : json({ error: "Oura connection is not configured" }, 503);
   if (login) {
     const state = crypto.randomUUID();
@@ -354,7 +363,7 @@ export async function handleOura(request, env) {
     target.search = new URLSearchParams({
       response_type: "code",
       client_id: env.OURA_CLIENT_ID,
-      redirect_uri: CALLBACK,
+      redirect_uri: callbackUrl(env),
       scope: "daily heartrate workout tag session spo2 heart_health",
       state,
     }).toString();

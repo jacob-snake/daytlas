@@ -7,7 +7,7 @@ import { createAccountProvider } from "../src/lib/account/server.ts";
 const config = {
   url: "https://example.supabase.co",
   key: "sb_publishable_test",
-  origin: "https://mebyday.com",
+  origin: "https://daytlas.com",
   preferences: true,
 };
 const verified = { id: "user-a", email: "person@example.test", verified: true };
@@ -47,7 +47,7 @@ function fixture(overrides = {}, enabled = true) {
   };
 }
 function post(value, headers = {}) {
-  return new Request("https://mebyday.com/api/account", {
+  return new Request("https://daytlas.com/api/account", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -60,27 +60,27 @@ function post(value, headers = {}) {
 
 test("account config fails closed and never accepts a service key or arbitrary provider URL", () => {
   const good = {
-    MEBYDAY_ACCOUNTS_ENABLED: "true",
+    DAYTLAS_ACCOUNTS_ENABLED: "true",
     SUPABASE_URL: config.url,
     SUPABASE_PUBLISHABLE_KEY: config.key,
     PUBLIC_SITE_URL: config.origin,
   };
   assert.equal(accountConfiguration(good)?.preferences, false);
   for (const patch of [
-    { MEBYDAY_ACCOUNTS_ENABLED: "false" },
+    { DAYTLAS_ACCOUNTS_ENABLED: "false" },
     { SUPABASE_PUBLISHABLE_KEY: "sb_secret_private" },
     { SUPABASE_PUBLISHABLE_KEY: "eyJservice-role" },
     { SUPABASE_URL: "https://evil.test" },
     { SUPABASE_URL: "https://example.supabase.co/elsewhere" },
-    { PUBLIC_SITE_URL: "http://mebyday.com" },
-    { PUBLIC_SITE_URL: "https://mebyday.com/?next=evil" },
+    { PUBLIC_SITE_URL: "http://daytlas.com" },
+    { PUBLIC_SITE_URL: "https://daytlas.com/?next=evil" },
   ])
     assert.equal(accountConfiguration({ ...good, ...patch }), null);
 });
 test("disabled account routes do not initialize a provider or collect email", async () => {
   const { calls, handlers } = fixture({}, false);
   assert.equal(
-    (await handlers.GET(new Request("https://mebyday.com/api/account")))
+    (await handlers.GET(new Request("https://daytlas.com/api/account")))
       .status,
     200,
   );
@@ -156,7 +156,7 @@ test("unverified users cannot read or save a profile", async () => {
     user: async () => ({ ...verified, verified: false }),
   });
   const session = await handlers.GET(
-    new Request("https://mebyday.com/api/account"),
+    new Request("https://daytlas.com/api/account"),
   );
   assert.equal((await session.json()).account, null);
   assert.equal(
@@ -174,7 +174,7 @@ test("profile ownership is derived from verified server identity, session respon
   assert.equal(response.status, 200);
   assert.deepEqual(calls.at(-1), ["save", verified.id, "Reader"]);
   const session = await handlers.GET(
-    new Request("https://mebyday.com/api/account"),
+    new Request("https://daytlas.com/api/account"),
   );
   assert.deepEqual(await session.json(), {
     enabled: true,
@@ -239,7 +239,7 @@ test("real Supabase adapter sets secure HTTP-only cookies and validates the user
   };
   try {
     const provider = createAccountProvider(
-      new Request("https://mebyday.com/api/account"),
+      new Request("https://daytlas.com/api/account"),
       config,
     );
     const result = await provider.verifyCode(verified.email, "123456");

@@ -56,8 +56,8 @@ export function TrendSection({
         block: "start",
       });
     };
-    window.addEventListener("woura:add-chart", addChart);
-    return () => window.removeEventListener("woura:add-chart", addChart);
+    window.addEventListener("daytlas:add-chart", addChart);
+    return () => window.removeEventListener("daytlas:add-chart", addChart);
   }, [section.metrics, reducedMotion]);
 
   const summary = useMemo(() => {

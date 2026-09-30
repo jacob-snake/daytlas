@@ -16,7 +16,7 @@ export const emptyPreferences = (): LocalPreferences => ({
 });
 // Retain the existing storage namespace so disconnect-and-clear erases these too.
 export const preferencesKey = (scope: string) =>
-  `woura.preferences.v1.${scope}`;
+  `daytlas.preferences.v1.${scope}`;
 export function validTarget(minutes: unknown): minutes is number {
   return (
     typeof minutes === "number" &&

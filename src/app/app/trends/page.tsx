@@ -246,7 +246,7 @@ export default function TrendsPage() {
       <CommandPalette
         onAddChart={(key) =>
           window.dispatchEvent(
-            new CustomEvent("woura:add-chart", { detail: key }),
+            new CustomEvent("daytlas:add-chart", { detail: key }),
           )
         }
       />
