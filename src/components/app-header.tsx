@@ -108,25 +108,34 @@ export function AppHeader({
                 href={item.href}
                 aria-current={active === item.key ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center border-b-2 px-3 text-sm font-medium transition-colors",
+                  "relative flex min-h-11 items-center px-3 pb-1 text-sm font-medium transition-colors",
                   active === item.key
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {item.label}
+                {active === item.key && (
+                  <span className="brand-nav-orb" aria-hidden="true" />
+                )}
               </Link>
             ))}
           </nav>
-          <div className="hidden items-center gap-2 min-[1100px]:flex">
-            <Button asChild variant="ghost" size="sm" className="min-h-11">
+          <div className="ml-auto flex items-center gap-2 min-[1100px]:ml-0">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="brand-profile-orb"
+            >
               <Link
                 href="/app/profile"
+                aria-label="Your profile"
+                title="Your profile"
                 aria-current={active === "profile" ? "page" : undefined}
                 className="aria-[current=page]:bg-muted"
               >
-                <UserRound className="size-4" aria-hidden="true" />
-                Your profile
+                <UserRound className="size-5" aria-hidden="true" />
               </Link>
             </Button>
           </div>

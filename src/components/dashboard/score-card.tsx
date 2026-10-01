@@ -1,5 +1,5 @@
 "use client";
-import { MetricMarker } from "@/components/ui/metric-marker";
+import { Moon, HeartPulse, Footprints } from "lucide-react";
 import { MetricDelta } from "@/components/ui/metric-delta";
 import { Card } from "@/components/ui/card";
 export function ScoreCard({
@@ -21,6 +21,8 @@ export function ScoreCard({
   comparison?: string;
   neutral?: boolean;
 }) {
+  const CategoryIcon =
+    label === "Sleep" ? Moon : label === "Activity" ? Footprints : HeartPulse;
   const points = values
     .map(
       (v, i) =>
@@ -31,7 +33,11 @@ export function ScoreCard({
     <Card className="relative gap-0 p-6">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <MetricMarker color={color} />
+          <CategoryIcon
+            className="size-4"
+            style={{ color }}
+            aria-hidden="true"
+          />
           {label}
         </h2>
         <span className="text-[11px] text-muted-foreground">

@@ -129,3 +129,27 @@ export function daytimeAverages(rows: HeartRateSample[]) {
     value: [...values.values()].reduce((a, b) => a + b, 0) / values.size,
   }));
 }
+
+/** Nearest recorded instant, never across an explicit gap or >5 minutes away. */
+export function sampleAtTime(points: readonly SamplePoint[], time: number) {
+  if (
+    !points.length ||
+    !Number.isFinite(time) ||
+    time < points[0].time ||
+    time > points[points.length - 1].time
+  )
+    return null;
+  let low = 0,
+    high = points.length - 1;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (points[mid].time < time) low = mid + 1;
+    else high = mid;
+  }
+  const after = points[low],
+    before = points[Math.max(0, low - 1)];
+  if (after.time === time) return after.value === null ? null : after;
+  if (before.value === null || after.value === null) return null;
+  const nearest = time - before.time <= after.time - time ? before : after;
+  return Math.abs(nearest.time - time) <= 300000 ? nearest : null;
+}
