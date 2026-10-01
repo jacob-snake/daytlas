@@ -1,4 +1,5 @@
 "use client";
+import { Brand } from "@/components/brand";
 import { brand } from "@/lib/brand-config";
 import { FeedbackDialog } from "@/components/feedback-dialog";
 
@@ -41,12 +42,7 @@ export function AppFooter() {
   return (
     <>
       <footer className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border/40 py-5 text-[13px] font-medium text-muted-foreground">
-        <Link
-          href="/"
-          className="min-h-11 content-center font-semibold text-foreground"
-        >
-          {brand.name}
-        </Link>
+        <Brand />
         <nav
           aria-label="Footer"
           className="flex flex-wrap items-center gap-x-5"

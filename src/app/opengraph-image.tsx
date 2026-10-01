@@ -1,9 +1,16 @@
+/* eslint-disable @next/next/no-img-element -- ImageResponse requires an embedded image. */
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { brand } from "@/lib/brand-config";
 import { ImageResponse } from "next/og";
 export const alt = `${brand.name} — Your days, in a bigger picture. Independent, open-source insights for your Oura history.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export default function SocialImage() {
+export default async function SocialImage() {
+  const logo = await readFile(
+    join(process.cwd(), "public", brand.assets.socialLogo),
+  );
+  const logoData = `data:image/png;base64,${logo.toString("base64")}`;
   return new ImageResponse(
     <div
       style={{
@@ -18,11 +25,16 @@ export default function SocialImage() {
         fontFamily: "sans-serif",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 46, height: 46, borderRadius: 15, background: "#181917", color: "#f8f8f5", fontSize: 28, fontWeight: 600 }}>
-          {brand.initial}
-        </div>
-        <span style={{ fontSize: 30, fontWeight: 600 }}>{brand.name}</span>
+      <div
+        style={{
+          display: "flex",
+          padding: 10,
+          background: "#fff",
+          width: 260,
+          borderRadius: 16,
+        }}
+      >
+        <img src={logoData} alt={brand.name} width={240} height={96} />
       </div>
       <div
         style={{

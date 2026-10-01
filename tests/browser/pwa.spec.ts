@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { brand } from "../../src/lib/brand-config";
 
@@ -35,6 +36,9 @@ test("installation metadata launches the app with valid home-screen icons", asyn
     const width = png.readUInt32BE(16);
     const height = png.readUInt32BE(20);
     expect(`${width}x${height}`).toBe(icon.sizes);
+    expect(
+      png.equals(await readFile(`public${brand.assets.icon(width)}`)),
+    ).toBe(true);
   }
   await expect(
     page.locator('meta[name="mobile-web-app-capable"]'),
@@ -50,6 +54,9 @@ test("installation metadata launches the app with valid home-screen icons", asyn
   expect(appleResponse.ok()).toBe(true);
   expect(appleIcon.readUInt32BE(16)).toBe(180);
   expect(appleIcon.readUInt32BE(20)).toBe(180);
+  expect(
+    appleIcon.equals(await readFile(`public${brand.assets.icon(180)}`)),
+  ).toBe(true);
 
   // A fresh install can enter the demo without inheriting another browser's storage.
   await page.goto(manifest.start_url);
