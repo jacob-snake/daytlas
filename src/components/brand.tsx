@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- Exact, local approved artwork; no image transformation. */
+import { BrandOrbit } from "@/components/brand-orbit";
 import { brand } from "@/lib/brand-config";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -22,13 +23,7 @@ export function BrandMark({ className }: { className?: string }) {
 export function BrandLogo({ className }: { className?: string }) {
   return (
     <span className={cn("brand-artwork", className)} aria-hidden="true">
-      <img
-        className="brand-artwork-full"
-        src={brand.assets.logo}
-        alt=""
-        width={160}
-        height={64}
-      />
+      <BrandOrbit className="brand-artwork-full" />
       <img
         className="brand-artwork-compact"
         src={brand.assets.wordmark}
