@@ -97,11 +97,16 @@ test("sync is truthful for cache, refresh, partial failure and recovery", async 
   await expect(status).toContainText(/Ring data synced/);
   await page.setViewportSize({ width: 320, height: 900 });
   await expect(status).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth + 1,
-    ),
-  ).toBe(true);
+  // WebKit can acknowledge the viewport before responsive charts finish resizing.
+  // Keep the real overflow check, but wait for the resulting layout to settle.
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        viewport: innerWidth,
+        document: document.documentElement.scrollWidth,
+      })),
+    )
+    .toEqual({ viewport: 320, document: 320 });
 });
 
 test("demo never claims a ring was synced", async ({ page }) => {
