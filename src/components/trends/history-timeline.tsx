@@ -324,7 +324,13 @@ export function HistoryTimeline({
               onKeyDown={(e) => keyboard(e, part)}
             >
               <span aria-hidden="true">
-                <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
+                <svg
+                  width="10"
+                  height="14"
+                  viewBox="0 0 12 20"
+                  style={{ width: 10, height: 14, flexShrink: 0 }}
+                  fill="none"
+                >
                   <path
                     d="M3 2v16M9 2v16"
                     stroke="currentColor"

@@ -1,11 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { MetricDelta } from "@/components/ui/metric-delta";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
 import type { baseline } from "@/lib/day-detail";
 const number = (n: number) =>
   (Number(n.toFixed(1)) || 0).toLocaleString(undefined, {
@@ -35,33 +29,25 @@ export function Reading({
           {unit}
         </span>
       </p>
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
         {valid && comparison.average !== null && (
           <MetricDelta
             value={value - comparison.average}
             unit={unit}
-            polarity="neutral"
+            polarity="direction"
+            className="shrink-0"
           />
         )}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="min-h-8 rounded text-left text-sm text-muted-foreground decoration-dotted underline underline-offset-4"
-              >
-                {comparison.average !== null
-                  ? `${number(comparison.average)} ${unit} avg`
-                  : "Not enough history"}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64">
-              Previous 30 calendar days{partial ? ", full-day readings" : ""}.{" "}
-              {comparison.count}/30 days recorded; selected day excluded.
-              {partial ? " Today is still in progress." : ""}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <span className="font-medium">
+          {comparison.average !== null
+            ? "vs previous 30 days"
+            : "Not enough history"}
+        </span>
+        {partial && (
+          <span className="sr-only">
+            Today so far compared with previous full days.
+          </span>
+        )}
       </div>
     </Card>
   );

@@ -1,39 +1,55 @@
 "use client";
-
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
+import {
+  Sparkles,
+  Mail,
+  CalendarDays,
+  Plug,
+  Lock,
+  ArrowUpRight,
+} from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { ExportDialog } from "@/components/dashboard/export-dialog";
 import { AppFooter } from "@/components/app-footer";
 import { CommandPalette } from "@/components/command-palette";
 import { PageHeading } from "@/components/page-heading";
 import { Welcome } from "@/components/welcome";
-import { DataError, HistoryLoading, NoData } from "@/components/data-state";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DayOrb } from "@/components/ui/day-orb";
-import { useOuraQuery, useOuraSession } from "@/lib/use-oura-query";
-import { detectFirstDay, fetchWide } from "@/lib/oura/metrics";
-import { localDay } from "@/lib/dates";
-import { profileSummary, sleepDuration } from "@/lib/profile-summary";
+import { ExportDialog } from "@/components/dashboard/export-dialog";
 import { PreferencesCard } from "@/components/onboarding/preferences-card";
-import { brand } from "@/lib/brand-config";
-
-const monthLabel = (month: string) =>
-  format(parseISO(`${month}-01`), "MMMM yyyy");
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DataError, HistoryLoading } from "@/components/data-state";
+import { useOuraSession, useOuraQuery } from "@/lib/use-oura-query";
+import { detectFirstDay, fetchWide } from "@/lib/oura/metrics";
+import { profileSummary } from "@/lib/profile-summary";
+import { localDay } from "@/lib/dates";
 const dayLabel = (day: string | null) =>
   day ? format(parseISO(day), "d MMM yyyy") : "No available records";
-
+const features = [
+  {
+    icon: Sparkles,
+    title: "LLM assistants",
+    text: "Optional ways to explore questions about your history.",
+  },
+  {
+    icon: Mail,
+    title: "Personal digests",
+    text: "Choose the topics and updates you want to receive.",
+  },
+  {
+    icon: CalendarDays,
+    title: "A richer year in review",
+    text: "More ways to revisit your year and keep the moments that matter.",
+  },
+  {
+    icon: Plug,
+    title: "MCP connections",
+    text: "Connect compatible tools and choose what you share.",
+  },
+];
 export default function ProfilePage() {
   const session = useOuraSession();
-  const [selected, setSelected] = useState<string | null>(null);
   const load = useCallback(
     async () => fetchWide(await detectFirstDay(), localDay()),
     [],
@@ -44,292 +60,164 @@ export default function ProfilePage() {
   );
   if (!session) return <Welcome />;
   const summary = rows ? profileSummary(rows, localDay()) : null;
-  const current =
-    summary?.months.find((month) => month.month === selected) ??
-    summary?.months.at(-1);
+  const imported = session.startsWith("import:");
   return (
     <main id="main-content" className="app-page">
       <AppHeader active="profile" />
       <CommandPalette />
       <PageHeading
-        title="Your days, in perspective."
-        description="A personal view of the history available in this browser."
+        title="Your space. Your way."
+        description="Manage your connection and shape how Daytlas fits into your days."
       />
-      <p className="text-sm text-muted-foreground">
-        Your Oura connection or file import does not create a {brand.name}{" "}
-        account. Your history and preferences stay in this browser.
-      </p>
-      <Card>
-        <CardHeader>
-          <CardTitle>Your account · Coming soon</CardTitle>
-          <CardDescription>
-            We’re preparing accounts for after the current free access period,
-            before paid access begins. Your existing browser history stays
-            yours.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5 text-sm">
-          <div>
-            <h3 className="font-semibold">More personal setup</h3>
-            <p className="mt-1 text-muted-foreground">
-              Account preferences and more ways to tailor your experience are
-              planned.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold">Weekly email digest · Coming soon</h3>
-            <p className="mt-1 text-muted-foreground">
-              An optional account benefit. You’ll choose whether to receive it
-              here. No subscription is active.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold">
-              AI connections and AI chat · Coming soon
-            </h3>
-            <p className="mt-1 text-muted-foreground">
-              MCP connections and conversations with AI are on the roadmap.
-              Availability will be announced separately.
-            </p>
-          </div>
-          <p className="text-muted-foreground">
-            These features will arrive in stages; creating an account won’t
-            enable them all at once. Cross-device health history is not
-            available yet.
-          </p>
-          <Link
-            href="/account"
-            className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
-          >
-            About your account
-          </Link>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Your data</CardTitle>
-          <CardDescription>
-            Download a copy of your records as CSV or JSON.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-4">
-            <ExportDialog />
-            <Link
-              href="/connect#import"
-              className="text-sm font-semibold underline underline-offset-4"
-            >
-              Import or update an Oura file
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-      <PreferencesCard key={session} scope={session} rows={rows} />
-      {error ? (
-        <DataError error={error} />
-      ) : !summary ? (
-        <HistoryLoading />
-      ) : !summary.records ? (
-        <NoData title="Your story starts with the first available record" />
-      ) : (
-        <>
+      <div className="grid items-start gap-6 lg:grid-cols-[285px_minmax(0,1fr)]">
+        <aside
+          className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1"
+          aria-label="Connection and history"
+        >
           <Card>
             <CardHeader>
-              <CardTitle>Your months, at a glance</CardTitle>
-              <CardDescription>
-                The twelve months ending with your latest available record.
-                Select a month to explore main sleep duration.
-              </CardDescription>
+              <CardTitle>Your connection</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <p className="font-semibold">
+                {session === "demo"
+                  ? "Demo · fictional data"
+                  : imported
+                    ? "Oura file · this browser"
+                    : "Oura · this browser"}
+              </p>
+              <p className="text-muted-foreground">
+                Your history is stored in this browser. Connecting Oura does not
+                create a Daytlas account.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/connect">
+                  Manage connection
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Your months belong together.</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Explore your twelve-month view alongside the rest of your year.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/app/year#your-months">
+                  Explore your year
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Available history</CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                className="grid grid-cols-3 gap-3 sm:grid-cols-6"
-                aria-label="Choose a month"
-              >
-                {summary.months.map((month) => (
-                  <button
-                    key={month.month}
-                    type="button"
-                    aria-pressed={current?.month === month.month}
-                    onClick={() => setSelected(month.month)}
-                    className="group flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-transparent p-3 text-sm transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:border-border aria-pressed:bg-secondary"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="relative block size-14 shrink-0"
-                    >
-                      <DayOrb
-                        className="absolute left-2 top-2"
-                        state={month.average === null ? "missing" : "recorded"}
-                      />
-                      <svg
-                        viewBox="0 0 56 56"
-                        className="absolute inset-0 size-full -rotate-90"
-                        fill="none"
-                      >
-                        <circle
-                          cx="28"
-                          cy="28"
-                          r="26"
-                          stroke="var(--border)"
-                          strokeWidth="2"
-                        />
-                        <circle
-                          cx="28"
-                          cy="28"
-                          r="26"
-                          pathLength="100"
-                          stroke="var(--chart-1)"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeDasharray={`${(100 * month.count) / month.calendarDays} 100`}
-                        />
-                      </svg>
-                    </span>
-                    <span>{format(parseISO(`${month.month}-01`), "MMM")}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {month.month.slice(0, 4)}
-                    </span>
-                    <span className="sr-only">
-                      {month.count} recorded nights,{" "}
-                      {sleepDuration(month.average)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {current && (
-                <div
-                  className="mt-6 rounded-2xl bg-secondary p-5"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  <p className="text-sm text-muted-foreground">
-                    {monthLabel(current.month)} · Average main sleep
-                  </p>
-                  <p className="mt-2 text-3xl font-medium tracking-tight sm:text-4xl">
-                    {sleepDuration(current.average)}
-                  </p>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {current.count} recorded nights · {current.missing} calendar
-                    days without a duration record
-                    {current.month === localDay().slice(0, 7)
-                      ? " through today"
-                      : ""}
-                    .
-                  </p>
-                </div>
+              {error ? (
+                <DataError error={error} />
+              ) : !summary ? (
+                <HistoryLoading />
+              ) : (
+                <dl className="space-y-4 text-sm">
+                  {[
+                    ["Earliest available record", dayLabel(summary.first)],
+                    ["Latest available record", dayLabel(summary.latest)],
+                    [
+                      "Days with a measurement",
+                      summary.records.toLocaleString(),
+                    ],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 font-semibold">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               )}
-              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                Each circle represents a month. The outer ring shows recorded
-                sleep durations as a share of calendar days (through today for
-                the current month). Size and shading are decorative. An empty
-                circle means no available sleep duration. Missing records are
-                never counted as zero.
-              </p>
             </CardContent>
           </Card>
+        </aside>
+        <div className="min-w-0 space-y-6">
           <section
-            className="grid gap-5 md:grid-cols-2"
-            aria-label="Patterns in your available history"
+            aria-labelledby="premium-title"
+            className="overflow-hidden rounded-[var(--ds-radius-card)] border border-border/60 bg-card shadow-[var(--ds-shadow)]"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>A little more time asleep</CardTitle>
-                <CardDescription>
-                  Highest monthly average in this view
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-medium tracking-tight">
-                  {summary.longest
-                    ? monthLabel(summary.longest.month)
-                    : "More nights needed"}
+            <div className="flex flex-wrap items-center justify-between gap-5 bg-[#eaf0fb] p-6 sm:p-8">
+              <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#48689b]">
+                  Your next chapter
                 </p>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {summary.longest
-                    ? `${sleepDuration(summary.longest.average)} across ${summary.longest.count} recorded nights.`
-                    : "We need at least two months with seven duration records each to compare."}
+                <h2
+                  id="premium-title"
+                  className="text-3xl font-bold tracking-tight text-[#18232b]"
+                >
+                  Daytlas Premium
+                </h2>
+                <p className="mt-3 font-semibold text-[#536b91]">
+                  More context. On your terms.
                 </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>A steadier sleep duration</CardTitle>
-                <CardDescription>
-                  Lowest variation in recorded duration
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-medium tracking-tight">
-                  {summary.steadiest
-                    ? monthLabel(summary.steadiest.month)
-                    : "Building the picture"}
-                </p>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {summary.steadiest
-                    ? `${Math.round(summary.steadiest.deviation! * 60)} min standard deviation across ${summary.steadiest.count} recorded nights.`
-                    : "We need at least two months with seven duration records each to compare."}
-                </p>
-              </CardContent>
-            </Card>
-          </section>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Comparisons use available nights in the twelve months shown, with at
-            least seven per eligible month. Coverage can differ. Longer or less
-            variable sleep does not automatically mean better health.
-          </p>
-          <Card>
-            <CardHeader>
-              <CardTitle>Connection and available history</CardTitle>
-              <CardDescription>
-                Record dates describe the data we can access, not when you
-                joined Oura.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm text-muted-foreground">
-                    Earliest available record
-                  </dt>
-                  <dd className="mt-1 text-xl">{dayLabel(summary.first)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">
-                    Latest available record
-                  </dt>
-                  <dd className="mt-1 text-xl">{dayLabel(summary.latest)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">
-                    Days with an available measurement
-                  </dt>
-                  <dd className="mt-1 text-xl">{summary.records}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">
-                    Main sleep duration records
-                  </dt>
-                  <dd className="mt-1 text-xl">{summary.nights}</dd>
-                </div>
-              </dl>
-              <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-                {session.startsWith("import:")
-                  ? "This history is a file snapshot. Upload another complete Oura export to update it. Missing measurements stay empty."
-                  : "The latest record date is not a live sync timestamp. Fresh Oura data depends on your ring syncing with the Oura mobile app. Available history can be limited by permissions or missing records."}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Button asChild variant="secondary">
-                  <Link href="/app/year">Explore your year</Link>
-                </Button>
-                <Button asChild variant="ghost">
-                  <Link href="/privacy">Data and privacy</Link>
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+              <span className="rounded-full bg-white/50 px-4 py-2 text-xs font-bold text-[#48689b]">
+                Planned · late October 2026
+              </span>
+            </div>
+            <div className="px-6 sm:px-8">
+              {features.map(({ icon: FeatureIcon, title, text }) => (
+                <div
+                  key={title}
+                  className="flex items-start gap-4 border-b border-border/50 py-6 last:border-0"
+                >
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#eff3fb] text-[#48689b]">
+                    <FeatureIcon className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold">{title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {text}
+                    </p>
+                  </div>
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Lock className="size-3.5" />
+                    <span className="hidden sm:inline">Coming soon</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="px-6 pb-6 text-xs leading-relaxed text-muted-foreground sm:px-8">
+              Premium features are not available yet. They will arrive in
+              stages; timing and pricing will be confirmed before launch. No
+              subscription is active.
+            </p>
+          </section>
+          <PreferencesCard key={session} scope={session} rows={rows} />
+        </div>
+      </div>
+      <section
+        className="flex flex-wrap items-center justify-between gap-5 border-t border-border/60 pt-6"
+        aria-label="Your data"
+      >
+        <div>
+          <h2 className="font-bold">Your data</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Keep a copy. Update your history.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <ExportDialog />
+          <Button asChild variant="ghost">
+            <Link href="/connect#import">Import or update an Oura file</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/privacy">Data and privacy</Link>
+          </Button>
+        </div>
+      </section>
       <AppFooter />
     </main>
   );

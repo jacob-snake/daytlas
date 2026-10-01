@@ -1,5 +1,10 @@
 "use client";
-import { Moon, HeartPulse, Footprints } from "lucide-react";
+import {
+  Moon02Icon,
+  HeartPulseIcon,
+  WorkoutRunIcon,
+} from "@hugeicons/core-free-icons";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { MetricDelta } from "@/components/ui/metric-delta";
 import { Card } from "@/components/ui/card";
 export function ScoreCard({
@@ -11,6 +16,7 @@ export function ScoreCard({
   day,
   comparison = "vs previous 7 days",
   neutral = false,
+  showDate = true,
 }: {
   label: string;
   value: number | null;
@@ -20,9 +26,14 @@ export function ScoreCard({
   day?: string;
   comparison?: string;
   neutral?: boolean;
+  showDate?: boolean;
 }) {
-  const CategoryIcon =
-    label === "Sleep" ? Moon : label === "Activity" ? Footprints : HeartPulse;
+  const icon =
+    label === "Sleep"
+      ? Moon02Icon
+      : label === "Activity"
+        ? WorkoutRunIcon
+        : HeartPulseIcon;
   const points = values
     .map(
       (v, i) =>
@@ -33,16 +44,14 @@ export function ScoreCard({
     <Card className="relative gap-0 p-6">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <CategoryIcon
-            className="size-4"
-            style={{ color }}
-            aria-hidden="true"
-          />
+          <CategoryIcon icon={icon} color={color} small />
           {label}
         </h2>
-        <span className="text-[11px] text-muted-foreground">
-          {day ?? "No reading"}
-        </span>
+        {showDate && (
+          <span className="text-[11px] text-muted-foreground">
+            {day ?? "No reading"}
+          </span>
+        )}
       </div>
       <div className="mt-5 flex items-center justify-between gap-4">
         <p className="text-[56px] font-bold leading-none tracking-[-0.065em] tabular-nums">
@@ -64,15 +73,16 @@ export function ScoreCard({
           </svg>
         )}
       </div>
-      <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-muted-foreground">
+      <p className="mt-5 flex items-center gap-2 text-xs leading-5 text-muted-foreground">
         {delta !== null ? (
           <>
             <MetricDelta
               value={delta}
               unit="pts"
+              className="shrink-0"
               polarity={neutral ? "neutral" : "higher"}
             />
-            <span className="font-medium">{comparison}</span>
+            <span className="min-w-0 font-medium">{comparison}</span>
           </>
         ) : (
           "Waiting for enough recent readings"

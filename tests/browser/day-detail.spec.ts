@@ -12,12 +12,15 @@ test("daily view preserves Overview and exposes night series, baselines and part
   ).toBeVisible();
   await expect(page.getByText("Sleep stages", { exact: true })).toBeVisible();
   await expect(page.getByText("Overnight HRV", { exact: true })).toBeVisible();
-  const average = page
-    .locator("#day-sleep")
-    .getByRole("button", { name: /avg$/ })
-    .first();
-  await average.hover();
-  await expect(page.getByRole("tooltip")).toContainText("30/30 days recorded");
+  await expect(
+    page
+      .locator("#day-sleep")
+      .getByText("vs previous 30 days", { exact: true })
+      .first(),
+  ).toBeVisible();
+  await expect(
+    page.locator("#day-sleep").getByRole("button", { name: /avg$/ }),
+  ).toHaveCount(0);
   await expect(
     page.getByText("Today so far is compared", { exact: false }),
   ).toBeVisible();
@@ -174,8 +177,10 @@ test("day sections, category colors and shared night cursor work with keyboard a
   await chart.focus();
   await chart.press("ArrowRight");
   const readouts = page.locator('#day-sleep [data-testid="time-readout"]');
+  await expect(readouts.first()).toHaveClass(/sr-only/);
   await expect(readouts.first()).not.toBeEmpty();
   await expect(readouts.last()).not.toBeEmpty();
+  await expect(chart.getByRole("tooltip")).toBeVisible();
   expect((await readouts.first().innerText()).split(" · ")[0]).toBe(
     (await readouts.last().innerText()).split(" · ")[0],
   );

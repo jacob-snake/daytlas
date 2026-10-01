@@ -1,0 +1,76 @@
+import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+for (const width of [390, 1195])
+  test(`day calendar and floating controls keep working at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(() =>
+      localStorage.setItem("daytlas.mode", "demo"),
+    );
+    await page.goto("/app/day");
+    await page.getByRole("button", { name: /Choose a date:/ }).click();
+    const calendar = page.getByRole("dialog");
+    await expect(calendar.getByRole("grid")).toBeVisible();
+    await page.keyboard.press("Escape");
+    const scores = page.getByRole("region", { name: "Selected day scores" });
+    await expect(scores).not.toContainText("/30 recorded");
+    await expect(
+      scores.getByText("vs previous 30 days", { exact: true }),
+    ).toHaveCount(3);
+    await page
+      .getByRole("heading", { name: "Daytime activity", exact: true })
+      .scrollIntoViewIfNeeded();
+    const floating = page.getByRole("group", { name: "Floating day controls" });
+    await expect(floating).toBeVisible();
+    const original = await page.locator("#detail-day").inputValue();
+    await floating
+      .getByRole("button", { name: "Previous day", exact: true })
+      .click();
+    await expect(page.locator("#detail-day")).not.toHaveValue(original);
+    await floating.getByRole("button", { name: /Choose a date:/ }).click();
+    await expect(calendar.getByRole("grid")).toBeVisible();
+    await page.keyboard.press("Escape");
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    ).toBe(true);
+  });
+test("five product views and silent film remain usable with reduced motion", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const tabs = page.getByRole("tablist", { name: "Explore Daytlas views" });
+  await expect(tabs.getByRole("tab")).toHaveCount(5);
+  await tabs.getByRole("tab", { name: "Tag Lab", exact: true }).click();
+  await expect(page.getByRole("tabpanel")).toContainText(
+    "Get curious about your habits.",
+  );
+  const film = page.getByRole("region", { name: "Daytlas product film" });
+  await film.scrollIntoViewIfNeeded();
+  const video = film.locator("video");
+  await expect(video).toHaveAttribute(
+    "src",
+    "/media/product-tour-2026-10-01.mp4",
+  );
+  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  await film.getByRole("button", { name: "Play product film" }).click();
+  await expect
+    .poll(() => video.evaluate((v: HTMLVideoElement) => v.paused))
+    .toBe(false);
+  await film.getByRole("button", { name: "Pause product film" }).click();
+  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth + 1,
+    ),
+  ).toBe(true);
+  const report = await new AxeBuilder({ page }).analyze();
+  expect(
+    report.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    ),
+  ).toEqual([]);
+});

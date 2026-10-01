@@ -24,6 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Welcome } from "@/components/welcome";
+import { MonthOverview } from "@/components/year/month-overview";
 import { YearStory } from "@/components/year/year-story";
 import { YearHeatmap } from "@/components/year/heatmap";
 import { RingYear } from "@/components/year/ring-year";
@@ -171,6 +172,7 @@ export default function YearPage() {
           </div>
         </>
       )}
+      <MonthOverview />
       <AppFooter />
     </main>
   );

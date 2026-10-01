@@ -81,7 +81,16 @@ export function setMode(mode: OuraMode) {
 }
 
 /** A document navigation deliberately drops all React-held health data. */
-export function reloadSession(path: "/" | "/app" | "/?clear=failed" = "/") {
+export function reloadSession(
+  path:
+    | "/"
+    | "/app"
+    | "/app/day"
+    | "/app/trends"
+    | "/app/year"
+    | "/app/tags"
+    | "/?clear=failed" = "/",
+) {
   window.location.assign(path);
 }
 

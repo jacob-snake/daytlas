@@ -1,5 +1,5 @@
 "use client";
-import { Icon } from "@/components/icon";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import {
   Tooltip,
   TooltipContent,
@@ -108,15 +108,7 @@ export function TrendSection({
     >
       <header className="flex flex-wrap items-center justify-between gap-6 border-t border-border/40 pt-6 pb-3">
         <div className="flex items-center gap-4">
-          <span
-            className="flex size-12 items-center justify-center rounded-2xl"
-            style={{
-              color: section.color,
-              background: `color-mix(in oklab, ${section.color} 10%, transparent)`,
-            }}
-          >
-            <Icon icon={section.icon} className="size-6" />
-          </span>
+          <CategoryIcon icon={section.icon} color={section.color} />
           <div>
             <p className="mb-1 text-sm font-medium text-muted-foreground">
               Your patterns

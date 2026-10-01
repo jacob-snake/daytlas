@@ -79,16 +79,38 @@ export default {
     const page = Object.hasOwn(pages, path) ? pages[path] : null;
     const asset = Object.hasOwn(assets, path) ? assets[path] : null;
     const file = page ?? asset ?? '/404.html';
-    // Never forward user headers, cookies, tokens, query strings or bodies to assets.
-    const assetResponse = await env.ASSETS.fetch(new Request(`https://static.invalid${file}`, { method: 'GET' }));
-    if (assetResponse.status !== 200) return json({ error: 'asset_unavailable' }, 503, head);
+    // Only a validated video byte range is forwarded; no cookies, tokens, queries or bodies.
+    const range = request.headers.get('Range');
+    const media = !!asset && path.startsWith('/media/') && path.endsWith('.mp4');
+    const rangeHeaders = media && range && /^bytes=\d*-\d*$/.test(range) ? { Range: range } : {};
+    const assetResponse = await env.ASSETS.fetch(new Request(`https://static.invalid${file}`, { method: 'GET', headers: rangeHeaders }));
+    if (assetResponse.status !== 200 && !(media && [206, 416].includes(assetResponse.status))) return json({ error: 'asset_unavailable' }, 503, head);
     if (!page && asset) {
       const headers = new Headers(assetResponse.headers);
       for (const [name, value] of Object.entries(baseHeaders)) headers.set(name, value);
       headers.delete('Set-Cookie');
       if (Object.hasOwn(contentTypes, path)) headers.set('Content-Type', contentTypes[path]);
       if (path.startsWith('/_next/static/')) headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-      return new Response(head ? null : assetResponse.body, { status: 200, headers });
+      if (media) headers.set('Accept-Ranges', 'bytes');
+      // Some ASSETS implementations ignore Range. Public build assets are size-bounded;
+      // slice the video fallback so Safari's initial bytes=0-1 probe receives a real206.
+      if (media && rangeHeaders.Range && assetResponse.status === 200 && !head) {
+        const bytes = await assetResponse.arrayBuffer();
+        const total = bytes.byteLength;
+        const [from, to] = range.slice(6).split('-');
+        const suffix = from === '' ? Number(to) : null;
+        const start = suffix !== null ? Math.max(0, total - suffix) : Number(from);
+        const end = suffix !== null || to === '' ? total - 1 : Math.min(Number(to), total - 1);
+        if ((!from && !to) || (suffix !== null && (!Number.isSafeInteger(suffix) || suffix === 0)) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end || start >= total) {
+          headers.set('Content-Range', `bytes */${total}`);
+          headers.set('Content-Length', '0');
+          return new Response(null, { status: 416, headers });
+        }
+        headers.set('Content-Range', `bytes ${start}-${end}/${total}`);
+        headers.set('Content-Length', String(end - start + 1));
+        return new Response(bytes.slice(start, end + 1), { status: 206, headers });
+      }
+      return new Response(head ? null : assetResponse.body, { status: assetResponse.status, headers });
     }
 
     const nonce = freshNonce();
