@@ -91,6 +91,7 @@
   background: radial-gradient(circle at 30% 22%, #cfe9ff, #2687ee 55%, #164999);
 }
 .brand-profile-orb {
+  width:44px; height:44px; min-width:44px; flex:none; padding:0; display:grid; place-items:center; overflow:visible;
   border-radius: 50%;
   color: #173957;
   background: radial-gradient(
@@ -106,3 +107,5 @@
 .brand-profile-orb:hover {
   background: radial-gradient(circle at 32% 22%, #fff, #d2e6ff 50%, #a3c8f2);
 }
+
+.brand-profile-orb > svg { width:20px; height:20px; flex:none; overflow:visible; }

@@ -59,4 +59,22 @@ const head = await fetch(new URL('/app', base), { method: 'HEAD' });
 assert.equal(head.status, 200);
 assert(head.headers.has('Content-Security-Policy'));
 assert.equal(await head.text(), '');
+const mediaUrl = new URL('/media/product-tour-2026-10-01.mp4', base);
+const media = await fetch(mediaUrl);
+assert.equal(media.status, 200);
+assert.equal(media.headers.get('content-type'), 'video/mp4');
+const mediaBytes = Buffer.from(await media.arrayBuffer());
+for (const [range, status, expected] of [
+  ['bytes=0-1', 206, mediaBytes.subarray(0, 2)],
+  ['bytes=10-19', 206, mediaBytes.subarray(10, 20)],
+  ['bytes=-8', 206, mediaBytes.subarray(-8)],
+  ['bytes=999999999-', 416, Buffer.alloc(0)],
+  ['bytes=-0', 416, Buffer.alloc(0)],
+]) {
+  const response = await fetch(mediaUrl, { headers: { Range: range } });
+  assert.equal(response.status, status, range);
+  assert.equal(response.headers.get('accept-ranges'), 'bytes');
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected, range);
+  results.push({ range, status });
+}
 console.log(JSON.stringify({ result: 'passed', browserHydration: 'not-covered', liveCpu: 'not-covered', checks: results }, null, 2));

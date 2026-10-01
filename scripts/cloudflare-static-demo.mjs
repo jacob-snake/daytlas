@@ -45,7 +45,7 @@ for (const name of ['src', 'public']) {
     assert(!relative(root, file).split(sep).some(part => part.startsWith('.')), `Hidden source file excluded: ${file}`);
     const allowed = name === 'src'
       ? ['.ts', '.tsx', '.css', '.json', '.svg', '.png', '.jpg', '.webp', '.ico', '.woff', '.woff2']
-      : ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.woff', '.woff2', '.txt'];
+      : ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.woff', '.woff2', '.txt', '.mp4'];
     assert(allowed.includes(extname(file).toLowerCase()), `Unreviewed public/source file: ${file}`);
   }
   await cp(join(root, name), join(directory, name), { recursive: true });

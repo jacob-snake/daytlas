@@ -16,6 +16,7 @@ import {
   Moon02Icon,
   WorkoutRunIcon,
 } from "@hugeicons/core-free-icons";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { ScoreCard } from "@/components/dashboard/score-card";
 import { SampleChart, SleepStages } from "@/components/day-detail/day-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,7 +73,7 @@ function Contributors({
       <CardContent className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
         {Object.entries(values).map(([key, value]) => (
           <div key={key}>
-            <div className="mb-2 flex justify-between gap-3 text-sm">
+            <div className="mb-2 flex justify-between gap-3 text-sm font-semibold">
               <span className="capitalize">{key.replaceAll("_", " ")}</span>
               <span className="tabular-nums">
                 {value ?? "—"}
@@ -184,7 +185,7 @@ export default function DayDetail() {
         <HistoryLoading />
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
             <h2 className="text-2xl font-bold">
               {format(parseDay(day), "EEEE, d MMMM yyyy")}
             </h2>
@@ -247,10 +248,10 @@ export default function DayDetail() {
                       ? s.row.score - b.average
                       : null
                   }
-                  neutral={partial && s.label === "Activity"}
+                  showDate={false}
                   color={s.color}
                   day={format(parseDay(day), "d MMM")}
-                  comparison={`vs previous 30 days · ${b.count}/30 recorded${partial && s.label === "Activity" ? " · today incomplete" : ""}`}
+                  comparison="vs previous 30 days"
                 />
               );
             })}
@@ -268,8 +269,9 @@ export default function DayDetail() {
             >
               <h2
                 id="readiness-title"
-                className="border-t border-border/40 pt-6 text-2xl font-bold"
+                className="flex items-center gap-4 border-t border-border/40 pt-6 text-2xl font-bold"
               >
+                <CategoryIcon icon={HeartPulseIcon} color="var(--chart-2)" />
                 Readiness &amp; Heart
               </h2>
               <Contributors
@@ -277,16 +279,25 @@ export default function DayDetail() {
                 color="var(--chart-2)"
                 values={readiness?.contributors}
               />
-              <Reading
-                label="Temperature deviation"
-                value={readiness?.temperature_deviation}
-                unit="°C"
-                comparison={baseline(
-                  data.readiness,
-                  day,
-                  (r) => r.temperature_deviation,
-                )}
-              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Reading
+                  label="Temperature deviation"
+                  value={readiness?.temperature_deviation}
+                  unit="°C"
+                  comparison={baseline(
+                    data.readiness,
+                    day,
+                    (r) => r.temperature_deviation,
+                  )}
+                />
+                <Reading
+                  label="Daytime resting heart rate"
+                  value={dayMeans.find((r) => r.day === day)?.value}
+                  unit="bpm"
+                  comparison={baseline(dayMeans, day, (r) => r.value)}
+                  partial={partial}
+                />
+              </div>
               {imported ? (
                 <p className="text-sm text-muted-foreground">
                   Intraday heart-rate samples are not included in this file
@@ -314,18 +325,6 @@ export default function DayDetail() {
                     color="var(--chart-2)"
                     domain={[bounds.start, bounds.end]}
                   />
-                  <Reading
-                    label="Daytime resting heart rate"
-                    value={dayMeans.find((r) => r.day === day)?.value}
-                    unit="bpm"
-                    comparison={baseline(dayMeans, day, (r) => r.value)}
-                    partial={partial}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Daytime resting average uses awake/rest samples only; sleep
-                    and workouts are excluded. Gaps longer than 15 minutes stay
-                    visible. Sampling coverage can vary between days.
-                  </p>
                 </>
               )}
             </section>
@@ -336,7 +335,11 @@ export default function DayDetail() {
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 id="night-title" className="text-2xl font-bold">
+                  <h2
+                    id="night-title"
+                    className="flex items-center gap-4 text-2xl font-bold"
+                  >
+                    <CategoryIcon icon={Moon02Icon} color="var(--chart-1)" />
                     Sleep
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -496,7 +499,11 @@ export default function DayDetail() {
               className="space-y-5 pt-6"
             >
               <div>
-                <h2 id="activity-title" className="text-2xl font-bold">
+                <h2
+                  id="activity-title"
+                  className="flex items-center gap-4 text-2xl font-bold"
+                >
+                  <CategoryIcon icon={WorkoutRunIcon} color="var(--chart-3)" />
                   Daytime activity
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">

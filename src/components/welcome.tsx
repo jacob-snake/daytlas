@@ -1,5 +1,7 @@
 "use client";
 import { trackProductEvent } from "@/lib/product-analytics";
+import { ProductShowcase } from "@/components/marketing/product-showcase";
+import { ProductFilm } from "@/components/marketing/product-film";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import Image from "next/image";
 import { FaqItem } from "@/components/ui/faq-item";
@@ -360,6 +362,8 @@ export function Welcome() {
           </p>
         </section>
         <ProductPreview />
+        <ProductShowcase />
+        <ProductFilm />
         <section id="how-it-works" className="scroll-mt-8 py-20 sm:py-28">
           <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <h2 className="max-w-lg text-3xl font-medium leading-tight tracking-[-0.045em] sm:text-4xl">

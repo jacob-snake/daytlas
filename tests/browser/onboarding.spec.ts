@@ -6,7 +6,9 @@ for (const width of [320, 390, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
+    await page.addInitScript(() =>
+      localStorage.setItem("daytlas.mode", "demo"),
+    );
     await page.route("**/api/oura/**", (route) => route.abort());
     await page.goto("/app/onboarding");
     await expect(
@@ -39,7 +41,7 @@ for (const width of [320, 390, 1440]) {
       page.getByText("Your goal and preferences", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Weekly email digest · Coming soon" }),
+      page.getByRole("heading", { name: "Personal digests" }),
     ).toBeVisible();
     await page.reload();
     await expect(page.getByText("7h 30m", { exact: true })).toBeVisible();

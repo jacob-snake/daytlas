@@ -9,11 +9,7 @@ import {
   BarChart,
   CartesianGrid,
 } from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartGrid } from "@/components/ui/chart-grid";
 import { averageLineLabel } from "@/components/ui/average-line-label";
@@ -58,19 +54,11 @@ export function SampleChart({
         <p className="text-sm text-muted-foreground">{unit} · local time</p>
       </CardHeader>
       <CardContent>
-        <div
-          className="mb-2 min-h-7 text-sm tabular-nums"
-          data-testid="time-readout"
-        >
-          {within && (
-            <span className="rounded-full bg-foreground px-3 py-1 text-background">
-              {clockLabel(time!)} ·{" "}
-              {reading
-                ? `${reading.value?.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}${reading.time !== time ? ` at ${clockLabel(reading.time)}` : ""}`
-                : "No sample"}
-            </span>
-          )}
-        </div>
+        <p className="sr-only" data-testid="time-readout" aria-live="polite">
+          {within
+            ? `${clockLabel(time!)} · ${reading ? `${reading.value} ${unit}` : "No sample"}`
+            : ""}
+        </p>
         {points.some((p) => p.value !== null) ? (
           <ChartContainer
             config={{ value: { label: title, color } }}
@@ -140,6 +128,7 @@ export function SampleChart({
               />
               {average != null && (
                 <ReferenceLine
+                  zIndex={600}
                   y={average}
                   ifOverflow="extendDomain"
                   stroke={color}
@@ -163,24 +152,28 @@ export function SampleChart({
                 />
               )}
               <ChartTooltip
+                active={within}
+                defaultIndex={reading ? points.indexOf(reading) : undefined}
                 isAnimationActive={false}
-                content={
-                  <ChartTooltipContent
-                    className="chart-tooltip-dark"
-                    formatter={(value) => (
-                      <span className="font-bold tabular-nums">
-                        {Number(value).toLocaleString(undefined, {
-                          maximumFractionDigits: 1,
-                        })}{" "}
-                        {unit}
-                      </span>
-                    )}
-                    labelFormatter={(_, payload) =>
-                      payload?.[0]?.payload?.time
-                        ? clockLabel(payload[0].payload.time)
-                        : ""
-                    }
-                  />
+                content={() =>
+                  within ? (
+                    <div
+                      className="chart-tooltip-dark rounded-xl px-3 py-2 text-xs shadow-lg"
+                      role="tooltip"
+                    >
+                      <p className="font-semibold">{clockLabel(time!)}</p>
+                      <p className="mt-1 font-bold">
+                        {reading
+                          ? `${reading.value?.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`
+                          : "No sample"}
+                      </p>
+                      {reading && reading.time !== time && (
+                        <p className="mt-1">
+                          Recorded at {clockLabel(reading.time)}
+                        </p>
+                      )}
+                    </div>
+                  ) : null
                 }
               />
               {bars ? (
@@ -378,7 +371,10 @@ export function SleepStages({ period }: { period: SleepPeriod }) {
                   {segment && (
                     <p className="mt-1 whitespace-nowrap">
                       {clockLabel(segment.start)}–{clockLabel(segment.end)} ·{" "}
-                      {Math.round((segment.end - segment.start) / 60000)} min
+                      {Number(
+                        ((segment.end - segment.start) / 60000).toFixed(1),
+                      )}{" "}
+                      min
                     </p>
                   )}
                 </div>
