@@ -10,12 +10,12 @@ const identity = {
 export const brand = {
   ...identity,
   assets: {
-    favicon: "/favicon.ico",
-    logo: "/brand/v1.1/logo.svg",
-    symbol: "/brand/v1.1/symbol.svg",
-    socialLogo: "/brand/v1/logo.png",
-    wordmark: "/brand/v1/wordmark.svg",
-    icon: (size: number) => `/brand/v1/icon-${size}.png`,
+    favicon: "/brand/v1.2/favicon.ico",
+    logo: "/brand/v1.2/logo.svg",
+    symbol: "/brand/v1.2/symbol.svg",
+    socialLogo: "/brand/v1.2/logo.png",
+    wordmark: "/brand/v1.2/wordmark.svg",
+    icon: (size: number) => `/brand/v1.2/icon-${size}.png`,
   },
   publicUrl: `https://${identity.domain}`,
   title: `${identity.name} — your days, in a bigger picture`,
