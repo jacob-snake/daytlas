@@ -51,6 +51,8 @@ for (const width of [320, 390, 1440]) {
         () => document.documentElement.scrollWidth <= innerWidth + 1,
       ),
     ).toBe(true);
+    // App Router streams metadata after navigation; audit the settled document.
+    await expect(page).toHaveTitle("Your overview — Daytlas");
     const report = await new AxeBuilder({ page }).analyze();
     expect(
       report.violations.filter((v) =>
