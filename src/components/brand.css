@@ -1,3 +1,33 @@
+.brand-artwork {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6.4px;
+  background: #fff;
+  border-radius: 12px;
+}
+.brand-artwork-full {
+  display: block;
+  width: 160px;
+  height: 64px;
+}
+.brand-artwork-compact {
+  display: none;
+}
+@media (max-width: 639px) {
+  .brand-artwork {
+    min-height: 44px;
+    padding: 7px;
+  }
+  .brand-artwork-full {
+    display: none;
+  }
+  .brand-artwork-compact {
+    display: block;
+    width: 104px;
+    height: auto;
+  }
+}
 .brand-home-roll {
   min-height: 44px;
 }

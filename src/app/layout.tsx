@@ -25,6 +25,10 @@ export const metadata: Metadata = {
         : "http://localhost:3001"),
   ),
   applicationName: brand.name,
+  icons: {
+    apple: { url: brand.assets.icon(180), type: "image/png", sizes: "180x180" },
+    icon: { url: brand.assets.favicon, type: "image/x-icon", sizes: "any" },
+  },
   appleWebApp: {
     capable: true,
     title: brand.name,

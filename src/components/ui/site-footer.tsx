@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { Brand } from "@/components/brand";
 import { brand } from "@/lib/brand-config";
 
 /** Shared dark footer for public pages and product surfaces. */
@@ -8,12 +9,7 @@ export function SiteFooter({ actions }: { actions?: ReactNode }) {
     <footer className="site-footer mt-14 mb-5 rounded-[28px] px-7 py-9 sm:px-10 sm:py-11">
       <div className="flex flex-col justify-between gap-8 sm:flex-row sm:items-start">
         <div>
-          <Link
-            href="/"
-            className="text-2xl font-semibold tracking-[-0.045em] focus-visible:outline-2 focus-visible:outline-offset-4"
-          >
-            {brand.name}
-          </Link>
+          <Brand />
           <p className="mt-3 text-sm text-white/65">
             Your days, in a bigger picture.
           </p>

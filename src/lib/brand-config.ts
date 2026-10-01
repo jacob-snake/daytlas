@@ -9,7 +9,13 @@ const identity = {
 
 export const brand = {
   ...identity,
-  initial: identity.name.charAt(0),
+  assets: {
+    favicon: "/favicon.ico",
+    logo: "/brand/v1/logo.svg",
+    socialLogo: "/brand/v1/logo.png",
+    wordmark: "/brand/v1/wordmark.svg",
+    icon: (size: number) => `/brand/v1/icon-${size}.png`,
+  },
   publicUrl: `https://${identity.domain}`,
   title: `${identity.name} — your days, in a bigger picture`,
 };
