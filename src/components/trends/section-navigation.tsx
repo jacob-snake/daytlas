@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import type { SectionDef } from "./trend-section";
 
-export function SectionNavigation({ sections }: { sections: SectionDef[] }) {
+type NavigationSection = Pick<SectionDef, "id" | "title" | "icon" | "color">;
+export function SectionNavigation({
+  sections,
+  label = "Trend sections",
+  prefix = "trend",
+}: {
+  sections: NavigationSection[];
+  label?: string;
+  prefix?: string;
+}) {
   const rail = useRef<HTMLElement>(null);
   const [position, setPosition] = useState({
     active: sections[0].id,
@@ -41,7 +50,7 @@ export function SectionNavigation({ sections }: { sections: SectionDef[] }) {
       const nodes = sections
         .map((s) => ({
           id: s.id,
-          node: document.getElementById(`trend-${s.id}`),
+          node: document.getElementById(`${prefix}-${s.id}`),
         }))
         .filter((s) => s.node);
       const current =
@@ -89,7 +98,7 @@ export function SectionNavigation({ sections }: { sections: SectionDef[] }) {
       window.removeEventListener("resize", schedule);
       headerNode?.style.removeProperty("--trend-navigation-height");
     };
-  }, [sections]);
+  }, [sections, prefix]);
   return (
     <aside
       ref={rail}
@@ -99,15 +108,15 @@ export function SectionNavigation({ sections }: { sections: SectionDef[] }) {
         transform: "translateY(var(--app-header-offset, 0px))",
       }}
     >
-      <nav aria-label="Trend sections" className="trend-rail-nav">
+      <nav aria-label={label} className="trend-rail-nav">
         {sections.map((s) => (
           <a
             key={s.id}
-            href={`#trend-${s.id}`}
+            href={`#${prefix}-${s.id}`}
             aria-current={position.active === s.id ? "location" : undefined}
             onClick={(e) => {
               e.preventDefault();
-              const node = document.getElementById(`trend-${s.id}`);
+              const node = document.getElementById(`${prefix}-${s.id}`);
               if (node) {
                 const offset = position.top;
                 window.scrollTo({

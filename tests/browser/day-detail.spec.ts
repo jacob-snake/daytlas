@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
 import { getDemoCollection } from "../../src/lib/demo-data";
 
@@ -11,13 +12,12 @@ test("daily view preserves Overview and exposes night series, baselines and part
   ).toBeVisible();
   await expect(page.getByText("Sleep stages", { exact: true })).toBeVisible();
   await expect(page.getByText("Overnight HRV", { exact: true })).toBeVisible();
-  await expect(
-    page
-      .getByText("30/30 days recorded · selected day excluded", {
-        exact: false,
-      })
-      .first(),
-  ).toBeVisible();
+  const average = page
+    .locator("#day-sleep")
+    .getByRole("button", { name: /avg$/ })
+    .first();
+  await average.hover();
+  await expect(page.getByRole("tooltip")).toContainText("30/30 days recorded");
   await expect(
     page.getByText("Today so far is compared", { exact: false }),
   ).toBeVisible();
@@ -151,9 +151,108 @@ test("inclusive activity range retrieves today's totals and explicit refresh byp
   const activity = page.getByRole("region", { name: "Daytime activity" });
   await expect(activity.getByText(/4.?321/).first()).toBeVisible();
   steps = 5678;
-  await page
-    .getByRole("button", { name: "Latest available", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
   await expect(activity.getByText(/5.?678/).first()).toBeVisible();
   expect(requests).toBe(2);
+});
+
+test("day sections, category colors and shared night cursor work with keyboard and pointer", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
+  await page.goto("/app/day");
+  await expect(
+    page.getByRole("navigation", { name: "Day sections" }),
+  ).toBeVisible();
+  await expect(
+    page.locator("#day-readiness").getByText("Readiness contributors"),
+  ).toBeVisible();
+  await expect(
+    page.locator("#day-sleep").getByText("Readiness contributors"),
+  ).toHaveCount(0);
+  const chart = page.locator('[tabindex="0"][aria-label^="Overnight HRV,"]');
+  await chart.focus();
+  await chart.press("ArrowRight");
+  const readouts = page.locator('#day-sleep [data-testid="time-readout"]');
+  await expect(readouts.first()).not.toBeEmpty();
+  await expect(readouts.last()).not.toBeEmpty();
+  expect((await readouts.first().innerText()).split(" · ")[0]).toBe(
+    (await readouts.last().innerText()).split(" · ")[0],
+  );
+  await expect(page.locator("#day-sleep .chart-average-label")).toHaveCount(2);
+  await expect(
+    page.locator("#day-sleep .chart-grid-major").first(),
+  ).toHaveAttribute("stroke-opacity", "0.13");
+  const stage = page.getByRole("slider", { name: "Deep timeline" });
+  await stage.press("Home");
+  await stage.press("ArrowRight");
+  await expect(page.getByTestId("stage-readout")).toContainText(
+    /Deep|Light|REM|Awake|No sample/,
+  );
+  const plot = chart.locator(".recharts-surface");
+  const box = await plot.boundingBox();
+  await page.mouse.move(box!.x + box!.width * 0.45, box!.y + box!.height * 0.5);
+  await expect(readouts.first()).not.toBeEmpty();
+  expect((await readouts.first().innerText()).split(" · ")[0]).toBe(
+    (await readouts.last().innerText()).split(" · ")[0],
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("link", { name: "Your profile", exact: true }),
+  ).toHaveCount(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("Today selects the actual current day when newest available records are older", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("daytlas.mode", "live");
+    localStorage.setItem("daytlas.token", "synthetic-missing-today");
+  });
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  await page.route("**/api/oura/**", (route) => {
+    const url = new URL(route.request().url());
+    const endpoint = url.pathname.split("/").at(-1)!;
+    const rows =
+      endpoint === "heartrate"
+        ? []
+        : getDemoCollection<{ day: string }>(endpoint, {
+            start_date: url.searchParams.get("start_date") ?? undefined,
+            end_date: url.searchParams.get("end_date") ?? undefined,
+          }).filter((row) => row.day < today);
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ data: rows, next_token: null }),
+    });
+  });
+  await page.goto("/app/day");
+  await expect(
+    page.getByText("Recorded day · missing data stays blank"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
+  await expect(page.locator("#detail-day")).toHaveValue(today);
+  await expect(
+    page.getByText("No sleep period is available for this date."),
+  ).toBeVisible();
+});
+
+test("day detail maintains accessible controls at mobile and desktop widths", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
+  await page.goto("/app/day");
+  await expect(page.getByText("Sleep stages", { exact: true })).toBeVisible();
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const result = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(result.violations).toEqual([]);
+  }
 });

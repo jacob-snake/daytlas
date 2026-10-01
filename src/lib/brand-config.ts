@@ -11,7 +11,8 @@ export const brand = {
   ...identity,
   assets: {
     favicon: "/favicon.ico",
-    logo: "/brand/v1/logo.svg",
+    logo: "/brand/v1.1/logo.svg",
+    symbol: "/brand/v1.1/symbol.svg",
     socialLogo: "/brand/v1/logo.png",
     wordmark: "/brand/v1/wordmark.svg",
     icon: (size: number) => `/brand/v1/icon-${size}.png`,

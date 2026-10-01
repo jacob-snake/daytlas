@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import "./brand.css";
 
-/** Approved exports are kept intact: no re-typesetting or reconstructed symbol. */
+/** Shared artwork: original sphere pixels, transparent SVG silhouette, outlined wordmark. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <img
-      src={brand.assets.icon(192)}
+      src={brand.assets.symbol}
       alt=""
       aria-hidden="true"
       width={48}

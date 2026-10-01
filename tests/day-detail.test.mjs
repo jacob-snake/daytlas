@@ -90,3 +90,29 @@ test("heart-rate deduplication, day bounds and missing intervals", () => {
     80,
   );
 });
+
+test("shared time cursor uses timestamps, preserves null gaps and rejects distant samples", async () => {
+  const { sampleAtTime } = await import("../src/lib/day-detail.ts");
+  const points = [
+    { time: 0, value: 60 },
+    { time: 300000, value: 70 },
+    { time: 600000, value: null },
+    { time: 900000, value: 80 },
+  ];
+  assert.equal(sampleAtTime(points, 290000)?.value, 70);
+  assert.equal(sampleAtTime(points, 450000), null);
+  assert.equal(sampleAtTime(points, 700000), null);
+  assert.equal(sampleAtTime(points, 900000)?.value, 80);
+  assert.equal(sampleAtTime(points, -1), null);
+  assert.equal(sampleAtTime(points, 1000000), null);
+  assert.equal(
+    sampleAtTime(
+      [
+        { time: 0, value: 1 },
+        { time: 1200000, value: 2 },
+      ],
+      600000,
+    ),
+    null,
+  );
+});

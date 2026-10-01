@@ -8,6 +8,14 @@ import { CommandPalette } from "@/components/command-palette";
 import { Welcome } from "@/components/welcome";
 import { PageHeading } from "@/components/page-heading";
 import { DataError, HistoryLoading } from "@/components/data-state";
+import { Reading } from "@/components/day-detail/reading";
+import { TimeCursorGroup } from "@/components/day-detail/time-cursor";
+import { SectionNavigation } from "@/components/trends/section-navigation";
+import {
+  HeartPulseIcon,
+  Moon02Icon,
+  WorkoutRunIcon,
+} from "@hugeicons/core-free-icons";
 import { ScoreCard } from "@/components/dashboard/score-card";
 import { SampleChart, SleepStages } from "@/components/day-detail/day-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,60 +40,28 @@ import {
 import { mainSleepByDay } from "@/lib/oura/metrics";
 import { isDay, localDay, parseDay, shiftDay } from "@/lib/dates";
 
-const number = (n: number) =>
-  (Number(n.toFixed(1)) || 0).toLocaleString(undefined, {
-    maximumFractionDigits: 1,
-  });
-function Reading({
-  label,
-  value,
-  unit,
-  comparison,
-  partial = false,
-}: {
-  label: string;
-  value: number | null | undefined;
-  unit: string;
-  comparison: ReturnType<typeof baseline>;
-  partial?: boolean;
-}) {
-  const valid = typeof value === "number" && Number.isFinite(value);
-  return (
-    <div className="min-w-0 rounded-2xl bg-secondary/50 p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-bold tabular-nums">
-        {valid ? number(value) : "—"}
-        <span className="ml-1 text-sm font-medium text-muted-foreground">
-          {unit}
-        </span>
-      </p>
-      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        {comparison.average !== null ? (
-          <>
-            {number(comparison.average)} {unit} · previous 30-day{" "}
-            {partial ? "full-day " : ""}average
-            {valid && (
-              <>
-                {" "}
-                · {value - comparison.average > 0 ? "+" : ""}
-                {number(value - comparison.average)} {unit}
-              </>
-            )}
-          </>
-        ) : (
-          "Not enough history for a 30-day average"
-        )}
-        <br />
-        {comparison.count}/30 days recorded · selected day excluded
-      </p>
-    </div>
-  );
-}
+const sections = [
+  {
+    id: "readiness",
+    title: "Readiness & Heart",
+    icon: HeartPulseIcon,
+    color: "var(--chart-2)",
+  },
+  { id: "sleep", title: "Sleep", icon: Moon02Icon, color: "var(--chart-1)" },
+  {
+    id: "activity",
+    title: "Activity",
+    icon: WorkoutRunIcon,
+    color: "var(--chart-3)",
+  },
+];
 function Contributors({
   title,
   values,
+  color,
 }: {
   title: string;
+  color: string;
   values?: Record<string, number | null>;
 }) {
   if (!values || !Object.values(values).some((v) => v !== null)) return null;
@@ -106,8 +82,11 @@ function Contributors({
             </div>
             <div className="h-1.5 rounded-full bg-secondary">
               <div
-                className="h-full rounded-full bg-primary/60"
-                style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }}
+                className="h-full rounded-full"
+                style={{
+                  backgroundColor: color,
+                  width: `${Math.max(0, Math.min(100, value ?? 0))}%`,
+                }}
               />
             </div>
           </div>
@@ -217,12 +196,12 @@ export default function DayDetail() {
           <Button
             variant="outline"
             onClick={() => {
-              setSelected(null);
+              setSelected(today);
               setEpisode("");
               setAttempt((v) => v + 1);
             }}
           >
-            Latest available
+            Today
           </Button>
         </CardContent>
       </Card>
@@ -303,321 +282,367 @@ export default function DayDetail() {
               );
             })}
           </section>
-          <section aria-labelledby="night-title" className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionNavigation
+            sections={sections}
+            label="Day sections"
+            prefix="day"
+          />
+          <TimeCursorGroup key={day}>
+            <section
+              id="day-readiness"
+              aria-labelledby="readiness-title"
+              className="space-y-5 pt-6"
+            >
+              <h2
+                id="readiness-title"
+                className="border-t border-border/40 pt-6 text-2xl font-bold"
+              >
+                Readiness &amp; Heart
+              </h2>
+              <Contributors
+                title="Readiness contributors"
+                color="var(--chart-2)"
+                values={readiness?.contributors}
+              />
+              <Reading
+                label="Temperature deviation"
+                value={readiness?.temperature_deviation}
+                unit="°C"
+                comparison={baseline(
+                  data.readiness,
+                  day,
+                  (r) => r.temperature_deviation,
+                )}
+              />
+              {imported ? (
+                <p className="text-sm text-muted-foreground">
+                  Intraday heart-rate samples are not included in this file
+                  import.
+                </p>
+              ) : heart.error ? (
+                <DataError
+                  error={heart.error}
+                  retry={() => setAttempt((v) => v + 1)}
+                />
+              ) : heart.loading ? (
+                <HistoryLoading />
+              ) : (
+                <>
+                  {heart.data?.partial && (
+                    <p role="status" className="text-sm text-muted-foreground">
+                      Some heart-rate history could not be loaded. Comparisons
+                      use the available days.
+                    </p>
+                  )}
+                  <SampleChart
+                    title="Heart rate throughout the day"
+                    points={dayHeart}
+                    unit="bpm"
+                    color="var(--chart-2)"
+                    domain={[bounds.start, bounds.end]}
+                  />
+                  <Reading
+                    label="Daytime resting heart rate"
+                    value={dayMeans.find((r) => r.day === day)?.value}
+                    unit="bpm"
+                    comparison={baseline(dayMeans, day, (r) => r.value)}
+                    partial={partial}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Daytime resting average uses awake/rest samples only; sleep
+                    and workouts are excluded. Gaps longer than 15 minutes stay
+                    visible. Sampling coverage can vary between days.
+                  </p>
+                </>
+              )}
+            </section>
+            <section
+              id="day-sleep"
+              aria-labelledby="night-title"
+              className="space-y-5 pt-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 id="night-title" className="text-2xl font-bold">
+                    Sleep
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Sleep episodes assigned to this day by Oura. Times use this
+                    device’s timezone.
+                  </p>
+                </div>
+                {periods.length > 1 && (
+                  <Select value={night?.id} onValueChange={setEpisode}>
+                    <SelectTrigger aria-label="Sleep episode">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {periods.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.id === main?.id
+                            ? "Main sleep"
+                            : "Additional sleep"}{" "}
+                          ·{" "}
+                          {new Date(p.bedtime_start).toLocaleTimeString(
+                            undefined,
+                            { hour: "2-digit", minute: "2-digit" },
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              {night ? (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <Reading
+                      label="Total sleep"
+                      value={
+                        night.total_sleep_duration == null
+                          ? null
+                          : night.total_sleep_duration / 3600
+                      }
+                      unit="h"
+                      comparison={baseline(mainPeriods, day, (p) =>
+                        p.total_sleep_duration == null
+                          ? null
+                          : p.total_sleep_duration / 3600,
+                      )}
+                    />
+                    <Reading
+                      label="Average HRV"
+                      value={night.average_hrv}
+                      unit="ms"
+                      comparison={hrvBaseline}
+                    />
+                    <Reading
+                      label="Average resting heart rate"
+                      value={night.average_heart_rate}
+                      unit="bpm"
+                      comparison={hrBaseline}
+                    />
+                    <Reading
+                      label="Lowest resting heart rate"
+                      value={night.lowest_heart_rate}
+                      unit="bpm"
+                      comparison={baseline(
+                        mainPeriods,
+                        day,
+                        (p) => p.lowest_heart_rate,
+                      )}
+                    />
+                  </div>
+                  {night.id !== main?.id && (
+                    <p className="text-sm text-muted-foreground">
+                      Additional sleep selected. Baselines describe previous
+                      main nights, which can differ from naps.
+                    </p>
+                  )}
+                  <TimeCursorGroup key={night.id}>
+                    <SleepStages period={night} />
+                    <div className="grid gap-5 lg:grid-cols-2">
+                      <SampleChart
+                        title="Overnight HRV"
+                        domain={[
+                          Date.parse(night.bedtime_start),
+                          Date.parse(night.bedtime_end),
+                        ]}
+                        points={samplePoints(
+                          night.hrv,
+                          Date.parse(night.bedtime_start),
+                          Date.parse(night.bedtime_end),
+                        )}
+                        unit="ms"
+                        color="var(--chart-4)"
+                        average={hrvBaseline.average}
+                      />
+                      <SampleChart
+                        title="Overnight heart rate"
+                        domain={[
+                          Date.parse(night.bedtime_start),
+                          Date.parse(night.bedtime_end),
+                        ]}
+                        points={samplePoints(
+                          night.heart_rate,
+                          Date.parse(night.bedtime_start),
+                          Date.parse(night.bedtime_end),
+                        )}
+                        unit="bpm"
+                        average={hrBaseline.average}
+                      />
+                    </div>
+                  </TimeCursorGroup>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Reading
+                      label="Sleep efficiency"
+                      value={night.efficiency}
+                      unit="%"
+                      comparison={baseline(
+                        mainPeriods,
+                        day,
+                        (p) => p.efficiency,
+                      )}
+                    />
+                    <Reading
+                      label="Time to fall asleep"
+                      value={night.latency == null ? null : night.latency / 60}
+                      unit="min"
+                      comparison={baseline(mainPeriods, day, (p) =>
+                        p.latency == null ? null : p.latency / 60,
+                      )}
+                    />
+                    <Reading
+                      label="Breathing rate"
+                      value={night.average_breath}
+                      unit="/min"
+                      comparison={baseline(
+                        mainPeriods,
+                        day,
+                        (p) => p.average_breath,
+                      )}
+                    />
+                  </div>
+                </>
+              ) : (
+                <Card>
+                  <CardContent>
+                    No sleep period is available for this date.
+                  </CardContent>
+                </Card>
+              )}
+              <Contributors
+                title="Sleep contributors"
+                color="var(--chart-1)"
+                values={sleep?.contributors}
+              />
+            </section>
+            <section
+              id="day-activity"
+              aria-labelledby="activity-title"
+              className="space-y-5 pt-6"
+            >
               <div>
-                <h2 id="night-title" className="text-2xl font-bold">
-                  Last night
+                <h2 id="activity-title" className="text-2xl font-bold">
+                  Daytime activity
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Sleep episodes assigned to this day by Oura. Times use this
-                  device’s timezone.
+                  {partial
+                    ? "Today so far is compared with previous full days. This is progress, not a final daily result."
+                    : "Daily totals compared with the previous 30 calendar days."}
                 </p>
               </div>
-              {periods.length > 1 && (
-                <Select value={night?.id} onValueChange={setEpisode}>
-                  <SelectTrigger aria-label="Sleep episode">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periods.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.id === main?.id ? "Main sleep" : "Additional sleep"}{" "}
-                        ·{" "}
-                        {new Date(p.bedtime_start).toLocaleTimeString(
-                          undefined,
-                          { hour: "2-digit", minute: "2-digit" },
-                        )}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            {night ? (
-              <>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Reading
-                    label="Total sleep"
-                    value={
-                      night.total_sleep_duration == null
-                        ? null
-                        : night.total_sleep_duration / 3600
-                    }
-                    unit="h"
-                    comparison={baseline(mainPeriods, day, (p) =>
-                      p.total_sleep_duration == null
-                        ? null
-                        : p.total_sleep_duration / 3600,
-                    )}
-                  />
-                  <Reading
-                    label="Average HRV"
-                    value={night.average_hrv}
-                    unit="ms"
-                    comparison={hrvBaseline}
-                  />
-                  <Reading
-                    label="Average resting heart rate"
-                    value={night.average_heart_rate}
-                    unit="bpm"
-                    comparison={hrBaseline}
-                  />
-                  <Reading
-                    label="Lowest resting heart rate"
-                    value={night.lowest_heart_rate}
-                    unit="bpm"
-                    comparison={baseline(
-                      mainPeriods,
-                      day,
-                      (p) => p.lowest_heart_rate,
-                    )}
-                  />
-                </div>
-                {night.id !== main?.id && (
-                  <p className="text-sm text-muted-foreground">
-                    Additional sleep selected. Baselines describe previous main
-                    nights, which can differ from naps.
+              {!activity && (
+                <div
+                  role="status"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 px-4 py-3 text-sm"
+                >
+                  <p className="max-w-2xl text-muted-foreground">
+                    {imported
+                      ? "This import has no activity record for the selected day."
+                      : "Oura has not returned activity for this date. Sync your ring in the Oura app, then refresh here."}{" "}
+                    The averages below describe earlier days; missing readings
+                    are not zero.
                   </p>
-                )}
-                <SleepStages period={night} />
-                <div className="grid gap-5 lg:grid-cols-2">
-                  <SampleChart
-                    title="Overnight HRV"
-                    points={samplePoints(
-                      night.hrv,
-                      Date.parse(night.bedtime_start),
-                      Date.parse(night.bedtime_end),
-                    )}
-                    unit="ms"
-                    color="var(--chart-4)"
-                    average={hrvBaseline.average}
-                  />
-                  <SampleChart
-                    title="Overnight heart rate"
-                    points={samplePoints(
-                      night.heart_rate,
-                      Date.parse(night.bedtime_start),
-                      Date.parse(night.bedtime_end),
-                    )}
-                    unit="bpm"
-                    average={hrBaseline.average}
-                  />
+                  {!imported && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAttempt((v) => v + 1)}
+                    >
+                      Refresh activity
+                    </Button>
+                  )}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Reading
-                    label="Sleep efficiency"
-                    value={night.efficiency}
-                    unit="%"
-                    comparison={baseline(mainPeriods, day, (p) => p.efficiency)}
-                  />
-                  <Reading
-                    label="Time to fall asleep"
-                    value={night.latency == null ? null : night.latency / 60}
-                    unit="min"
-                    comparison={baseline(mainPeriods, day, (p) =>
-                      p.latency == null ? null : p.latency / 60,
-                    )}
-                  />
-                  <Reading
-                    label="Breathing rate"
-                    value={night.average_breath}
-                    unit="/min"
-                    comparison={baseline(
-                      mainPeriods,
-                      day,
-                      (p) => p.average_breath,
-                    )}
-                  />
-                </div>
-              </>
-            ) : (
-              <Card>
-                <CardContent>
-                  No sleep period is available for this date.
-                </CardContent>
-              </Card>
-            )}
-            <Contributors
-              title="Sleep contributors"
-              values={sleep?.contributors}
-            />
-            <Contributors
-              title="Readiness contributors"
-              values={readiness?.contributors}
-            />
-            <Reading
-              label="Temperature deviation"
-              value={readiness?.temperature_deviation}
-              unit="°C"
-              comparison={baseline(
-                data.readiness,
-                day,
-                (r) => r.temperature_deviation,
               )}
-            />
-          </section>
-          <section aria-labelledby="activity-title" className="space-y-5">
-            <div>
-              <h2 id="activity-title" className="text-2xl font-bold">
-                Daytime activity
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {partial
-                  ? "Today so far is compared with previous full days. This is progress, not a final daily result."
-                  : "Daily totals compared with the previous 30 calendar days."}
-              </p>
-            </div>
-            {!activity && (
-              <div
-                role="status"
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 px-4 py-3 text-sm"
-              >
-                <p className="max-w-2xl text-muted-foreground">
-                  {imported
-                    ? "This import has no activity record for the selected day."
-                    : "Oura has not returned activity for this date. Sync your ring in the Oura app, then refresh here."}{" "}
-                  The averages below describe earlier days; missing readings are
-                  not zero.
-                </p>
-                {!imported && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAttempt((v) => v + 1)}
-                  >
-                    Refresh activity
-                  </Button>
-                )}
-              </div>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Reading
-                label="Steps"
-                value={activity?.steps}
-                unit="steps"
-                comparison={baseline(data.activity, day, (r) => r.steps)}
-                partial={partial}
-              />
-              <Reading
-                label="Active energy"
-                value={activity?.active_calories}
-                unit="kcal"
-                comparison={baseline(
-                  data.activity,
-                  day,
-                  (r) => r.active_calories,
-                )}
-                partial={partial}
-              />
-              <Reading
-                label="Total energy"
-                value={activity?.total_calories}
-                unit="kcal"
-                comparison={baseline(
-                  data.activity,
-                  day,
-                  (r) => r.total_calories,
-                )}
-                partial={partial}
-              />
-              <Reading
-                label="Walking equivalency"
-                value={
-                  activity?.equivalent_walking_distance == null
-                    ? null
-                    : activity.equivalent_walking_distance / 1000
-                }
-                unit="km"
-                comparison={baseline(data.activity, day, (r) =>
-                  r.equivalent_walking_distance == null
-                    ? null
-                    : r.equivalent_walking_distance / 1000,
-                )}
-                partial={partial}
-              />
-            </div>
-            {imported ? (
-              <p className="text-sm text-muted-foreground">
-                Intraday heart-rate samples are not included in this file
-                import.
-              </p>
-            ) : heart.error ? (
-              <DataError
-                error={heart.error}
-                retry={() => setAttempt((v) => v + 1)}
-              />
-            ) : heart.loading ? (
-              <HistoryLoading />
-            ) : (
-              <>
-                {heart.data?.partial && (
-                  <p role="status" className="text-sm text-muted-foreground">
-                    Some heart-rate history could not be loaded. Comparisons use
-                    the available days.
-                  </p>
-                )}
-                <SampleChart
-                  title="Heart rate throughout the day"
-                  points={dayHeart}
-                  unit="bpm"
-                  color="var(--chart-2)"
-                  domain={[bounds.start, bounds.end]}
-                />
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Reading
-                  label="Daytime resting heart rate"
-                  value={dayMeans.find((r) => r.day === day)?.value}
-                  unit="bpm"
-                  comparison={baseline(dayMeans, day, (r) => r.value)}
+                  label="Steps"
+                  value={activity?.steps}
+                  unit="steps"
+                  comparison={baseline(data.activity, day, (r) => r.steps)}
                   partial={partial}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Daytime resting average uses awake/rest samples only; sleep
-                  and workouts are excluded. Gaps longer than 15 minutes stay
-                  visible. Sampling coverage can vary between days.
-                </p>
-              </>
-            )}
-            <SampleChart
-              title="Activity intensity"
-              points={samplePoints(
-                activity?.met,
-                bounds.start,
-                Math.min(bounds.end, data.fetchedAt),
-              )}
-              unit="MET"
-              color="var(--chart-3)"
-              bars
-              domain={[bounds.start, bounds.end]}
-            />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {(
-                [
-                  { label: "Inactive", key: "sedentary_time" },
-                  { label: "Low activity", key: "low_activity_time" },
-                  { label: "Medium activity", key: "medium_activity_time" },
-                  { label: "High activity", key: "high_activity_time" },
-                ] as const
-              ).map((r) => (
                 <Reading
-                  key={r.key}
-                  label={r.label}
-                  value={
-                    activity?.[r.key] == null ? null : activity[r.key] / 60
-                  }
-                  unit="min"
-                  comparison={baseline(data.activity, day, (a) =>
-                    a[r.key] == null ? null : a[r.key] / 60,
+                  label="Active energy"
+                  value={activity?.active_calories}
+                  unit="kcal"
+                  comparison={baseline(
+                    data.activity,
+                    day,
+                    (r) => r.active_calories,
                   )}
                   partial={partial}
                 />
-              ))}
-            </div>
-            <Contributors
-              title="Activity contributors"
-              values={activity?.contributors}
-            />
-          </section>
+                <Reading
+                  label="Total energy"
+                  value={activity?.total_calories}
+                  unit="kcal"
+                  comparison={baseline(
+                    data.activity,
+                    day,
+                    (r) => r.total_calories,
+                  )}
+                  partial={partial}
+                />
+                <Reading
+                  label="Walking equivalency"
+                  value={
+                    activity?.equivalent_walking_distance == null
+                      ? null
+                      : activity.equivalent_walking_distance / 1000
+                  }
+                  unit="km"
+                  comparison={baseline(data.activity, day, (r) =>
+                    r.equivalent_walking_distance == null
+                      ? null
+                      : r.equivalent_walking_distance / 1000,
+                  )}
+                  partial={partial}
+                />
+              </div>
+              <SampleChart
+                title="Activity intensity"
+                points={samplePoints(
+                  activity?.met,
+                  bounds.start,
+                  Math.min(bounds.end, data.fetchedAt),
+                )}
+                unit="MET"
+                color="var(--chart-3)"
+                bars
+                domain={[bounds.start, bounds.end]}
+              />
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {(
+                  [
+                    { label: "Inactive", key: "sedentary_time" },
+                    { label: "Low activity", key: "low_activity_time" },
+                    { label: "Medium activity", key: "medium_activity_time" },
+                    { label: "High activity", key: "high_activity_time" },
+                  ] as const
+                ).map((r) => (
+                  <Reading
+                    key={r.key}
+                    label={r.label}
+                    value={
+                      activity?.[r.key] == null ? null : activity[r.key] / 60
+                    }
+                    unit="min"
+                    comparison={baseline(data.activity, day, (a) =>
+                      a[r.key] == null ? null : a[r.key] / 60,
+                    )}
+                    partial={partial}
+                  />
+                ))}
+              </div>
+              <Contributors
+                title="Activity contributors"
+                color="var(--chart-3)"
+                values={activity?.contributors}
+              />
+            </section>
+          </TimeCursorGroup>
         </>
       )}
       <AppFooter />
