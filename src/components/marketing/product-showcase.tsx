@@ -248,7 +248,7 @@ export function ProductShowcase() {
             <TabsTrigger
               key={v.id}
               value={v.id}
-              className="min-h-11 whitespace-nowrap"
+              className="min-h-11 !flex-none whitespace-nowrap !px-3 sm:!px-4"
             >
               <v.icon className="size-4" />
               {v.label}
