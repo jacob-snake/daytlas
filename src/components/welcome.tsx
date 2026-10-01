@@ -1,6 +1,8 @@
 "use client";
 import { trackProductEvent } from "@/lib/product-analytics";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
+import { ProductPurpose } from "@/components/marketing/product-purpose";
+import { WearableSources } from "@/components/marketing/wearable-sources";
 import { ProductFilm } from "@/components/marketing/product-film";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import Image from "next/image";
@@ -229,56 +231,6 @@ function ProductActions() {
     </div>
   );
 }
-function WearableSources() {
-  return (
-    <section
-      aria-labelledby="wearable-title"
-      className="border-t border-border pt-16 text-center"
-    >
-      <p className="text-sm font-semibold text-muted-foreground">
-        Your ring. A wider view.
-      </p>
-      <h2
-        id="wearable-title"
-        className="mt-3 text-3xl font-medium tracking-tight sm:text-4xl"
-      >
-        Starting with Oura.
-      </h2>
-      <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground">
-        Bring your sleep, readiness and activity into one view. More wearable
-        connections are on our roadmap.
-      </p>
-      <div className="mx-auto mt-9 grid max-w-2xl gap-4 sm:grid-cols-2">
-        <div className="rounded-[28px] border border-border bg-card px-7 py-10">
-          <div
-            aria-hidden="true"
-            className="mx-auto flex h-36 items-center justify-center"
-          >
-            <div className="size-24 rotate-[-25deg] rounded-full border-[14px] border-[#a1a6ab] bg-transparent shadow-[inset_3px_3px_7px_#4e5359,inset_-3px_-3px_5px_#fff,4px_10px_18px_#18202b20]" />
-          </div>
-          <h3 className="mt-3 text-xl font-semibold">Oura</h3>
-          <p className="mt-2 text-sm text-chart-2">Available in early access</p>
-        </div>
-        <div className="rounded-[28px] border border-dashed border-border bg-secondary/30 px-7 py-10 text-muted-foreground">
-          <div
-            aria-hidden="true"
-            className="mx-auto flex h-36 items-center justify-center opacity-40"
-          >
-            <div className="flex h-32 w-12 items-center justify-center rounded-2xl border-2 border-current">
-              <div className="h-16 w-16 shrink-0 rounded-2xl border-4 border-current bg-background" />
-            </div>
-          </div>
-          <h3 className="mt-3 text-xl font-semibold">More wearables</h3>
-          <p className="mt-2 text-sm">Coming soon</p>
-        </div>
-      </div>
-      <p className="mt-5 text-xs text-muted-foreground">
-        Independent app. Not affiliated with or endorsed by Oura. Device
-        illustrations.
-      </p>
-    </section>
-  );
-}
 export function Welcome() {
   const session = useOuraSession();
   return (
@@ -362,6 +314,7 @@ export function Welcome() {
           </p>
         </section>
         <ProductPreview />
+        <ProductPurpose />
         <ProductShowcase />
         <ProductFilm />
         <section id="how-it-works" className="scroll-mt-8 py-20 sm:py-28">

@@ -1,4 +1,10 @@
 import {
+  beginSync,
+  finishSync,
+  getFreshAfter,
+  getRefreshRevision,
+} from "./sync-state";
+import {
   migrateBrowserStorage,
   LEGACY_STORAGE_PREFIX,
   LEGACY_ANALYTICS_CONSENT,
@@ -316,38 +322,52 @@ export async function fetchAll<T>(
       .sort(([a], [b]) => a.localeCompare(b)),
   ) as Record<string, string>;
   const cacheKey = `${scope}|inclusive-v2|${endpoint}|${JSON.stringify(params)}`;
-  const pendingKey = `${cacheKey}|${options.fresh ? "fresh" : "cached"}`;
+  const pendingKey = `${cacheKey}|${options.fresh ? "fresh" : "cached"}|${getRefreshRevision()}`;
   const existing = pending.get(pendingKey);
   if (existing) return existing as Promise<T[]>;
   const operation = (async () => {
-    const cached = options.fresh ? null : await cacheGet<T[]>(cacheKey);
+    const cached = options.fresh
+      ? null
+      : await cacheGet<T[]>(cacheKey, getFreshAfter());
     assertSession(scope);
     if (cached) return cached;
-    const out: T[] = [];
-    const seen = new Set<string>();
-    let next: string | null = null;
-    let count = 0;
-    do {
-      if (++count > MAX_PAGES)
-        throw new OuraApiError(
-          502,
-          "This date range is too large. Try a shorter range.",
+    const tracked = scope.startsWith("live:");
+    if (tracked) beginSync(scope);
+    let success = false;
+    try {
+      const out: T[] = [];
+      const seen = new Set<string>();
+      let next: string | null = null;
+      let count = 0;
+      do {
+        if (++count > MAX_PAGES)
+          throw new OuraApiError(
+            502,
+            "This date range is too large. Try a shorter range.",
+          );
+        const page: OuraListResponse<T> = await fetchPage<T>(
+          endpoint,
+          { ...params, ...(next ? { next_token: next } : {}) },
+          scope,
         );
-      const page: OuraListResponse<T> = await fetchPage<T>(
-        endpoint,
-        { ...params, ...(next ? { next_token: next } : {}) },
-        scope,
-      );
-      out.push(...page.data.filter((row) => inCalendarRange(row, range)));
-      next = page.next_token || null;
-      if (next && seen.has(next))
-        throw new OuraApiError(502, "Oura repeated a page. Please try again.");
-      if (next) seen.add(next);
-    } while (next);
-    assertSession(scope);
-    await cacheSet(cacheKey, out);
-    assertSession(scope);
-    return out;
+        out.push(...page.data.filter((row) => inCalendarRange(row, range)));
+        next = page.next_token || null;
+        if (next && seen.has(next))
+          throw new OuraApiError(
+            502,
+            "Oura repeated a page. Please try again.",
+          );
+        if (next) seen.add(next);
+      } while (next);
+      assertSession(scope);
+      await cacheSet(cacheKey, out);
+      assertSession(scope);
+      success = true;
+      return out;
+    } finally {
+      // A replaced connection must not publish status for the new one.
+      if (tracked && getCacheScope() === scope) finishSync(scope, success);
+    }
   })();
   pending.set(pendingKey, operation);
   try {

@@ -108,7 +108,10 @@ async function openDb(): Promise<IDBDatabase> {
   }
 }
 
-export async function cacheGet<T>(key: string): Promise<T | null> {
+export async function cacheGet<T>(
+  key: string,
+  minStoredAt = 0,
+): Promise<T | null> {
   let db: IDBDatabase | undefined;
   const started = generation;
   try {
@@ -120,7 +123,8 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
       req.onsuccess = () => {
         const entry = req.result as Entry | undefined;
         const age = entry ? Date.now() - entry.storedAt : -1;
-        if (entry && age >= 0 && age < TTL_MS) value = entry.data as T;
+        if (entry && entry.storedAt >= minStoredAt && age >= 0 && age < TTL_MS)
+          value = entry.data as T;
       };
       transaction.oncomplete = () =>
         resolve(started === generation ? value : null);

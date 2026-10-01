@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { getRefreshRevision, subscribeRefresh } from "./oura/sync-state";
 import { getCacheScope, getMode, hasSession } from "./oura/client";
 
 function subscribeSession(changed: () => void) {
@@ -38,7 +39,16 @@ interface QueryResult<T> {
 }
 
 /** Results belong to their request key; changing it never displays old data. */
-export function useOuraQuery<T>(key: string | null, load: () => Promise<T>) {
+export function useOuraQuery<T>(
+  requestKey: string | null,
+  load: () => Promise<T>,
+) {
+  const revision = useSyncExternalStore(
+    subscribeRefresh,
+    getRefreshRevision,
+    () => 0,
+  );
+  const key = requestKey === null ? null : `${requestKey}:refresh:${revision}`;
   const [result, setResult] = useState<QueryResult<T> | null>(null);
   useEffect(() => {
     if (key === null) return;
