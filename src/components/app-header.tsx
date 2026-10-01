@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { UserRound, Menu, ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { OuraSyncStatus } from "@/components/oura-sync-status";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { getMode, hasToken, setMode, reloadSession } from "@/lib/oura/client";
@@ -192,6 +193,9 @@ export function AppHeader({
               </nav>
             </DialogContent>
           </Dialog>
+        </div>
+        <div className="flex justify-end">
+          <OuraSyncStatus />
         </div>
       </header>
       {imported && (
