@@ -347,3 +347,40 @@ test("staged domain cutover keeps the previous origin working without allowing c
   assert.equal((await handleOura(new Request(`${previous}/api/oura/v2/usercollection/sleep`, { headers: auth }), env)).status, 403);
   assert.equal(configured({ ...env, PUBLIC_SITE_URL: "https://evil.example" }), false);
 });
+
+test("opt-in recovery keeps each origin's login and relay isolated after cutover", async (t) => {
+  const current = "https://daytlas.com";
+  const previous = "https://mebyday.com";
+  const recoveryEnv = { ...env, PUBLIC_SITE_URL: current, DAYTLAS_PREVIOUS_ORIGIN_ENABLED: "true" };
+  const upstream = t.mock.method(globalThis, "fetch", async () => new Response('{"data":[]}'));
+  for (const origin of [current, previous]) {
+    const login = await handleOura(new Request(`${origin}/api/auth/login`), recoveryEnv);
+    assert.equal(new URL(login.headers.get("Location")).searchParams.get("redirect_uri"), `${origin}/api/auth/callback`);
+    assert(!login.headers.get("Set-Cookie").includes("Domain="));
+    const path = `${origin}/api/oura/v2/usercollection/sleep`;
+    assert.equal((await handleOura(new Request(path, { headers: { ...auth, Origin: origin } }), recoveryEnv)).status, 200);
+    for (const other of [origin === current ? previous : current, "https://evil.example"]) {
+      assert.equal((await handleOura(new Request(path, { headers: { ...auth, Origin: other } }), recoveryEnv)).status, 403);
+    }
+    assert.equal((await handleOura(new Request(path, { headers: { ...auth, "Sec-Fetch-Site": "cross-site" } }), recoveryEnv)).status, 403);
+  }
+  assert.equal(upstream.mock.callCount(), 2);
+  assert.equal(recoveryEnv.PUBLIC_SITE_URL, current);
+  for (const change of [{ DAYTLAS_PREVIOUS_ORIGIN_ENABLED: "false" }, { PUBLIC_SITE_URL: "https://evil.example" }, { OURA_REDIRECT_URI: "https://evil.example/callback" }]) {
+    assert.equal((await handleOura(new Request(`${previous}/api/oura/v2/usercollection/sleep`, { headers: auth }), { ...recoveryEnv, ...change })).status, 403);
+  }
+});
+
+test("previous-origin callback exchanges its own redirect URI and retains state protection", async (t) => {
+  const previous = "https://mebyday.com";
+  const recoveryEnv = { ...env, PUBLIC_SITE_URL: "https://daytlas.com", DAYTLAS_PREVIOUS_ORIGIN_ENABLED: "true" };
+  const upstream = t.mock.method(globalThis, "fetch", async (_url, init) => {
+    assert.equal(new URLSearchParams(init.body).get("redirect_uri"), `${previous}/api/auth/callback`);
+    return new Response('{"error":"invalid_grant"}', { status: 400 });
+  });
+  const invalid = await handleOura(new Request(`${previous}/api/auth/callback?state=wrong&code=synthetic`, { headers: { Cookie: "daytlas_oauth_state=expected" } }), recoveryEnv);
+  assert.equal(invalid.status, 400);
+  assert.equal(upstream.mock.callCount(), 0);
+  await handleOura(new Request(`${previous}/api/auth/callback?state=expected&code=synthetic`, { headers: { Cookie: "daytlas_oauth_state=expected" } }), recoveryEnv);
+  assert.equal(upstream.mock.callCount(), 1);
+});

@@ -335,8 +335,22 @@ async function relay(request, url) {
   }
 }
 export async function handleOura(request, env) {
-  const origin = siteOrigin(env);
   const url = new URL(request.url);
+  // Temporary recovery access on the previous address. Each origin keeps its own
+  // callback, state cookie and same-origin checks; tokens never cross domains.
+  if (
+    configured(env) &&
+    env.DAYTLAS_PREVIOUS_ORIGIN_ENABLED === "true" &&
+    siteOrigin(env) === ORIGIN &&
+    url.origin === PREVIOUS_ORIGIN
+  ) {
+    env = {
+      ...env,
+      PUBLIC_SITE_URL: PREVIOUS_ORIGIN,
+      OURA_REDIRECT_URI: `${PREVIOUS_ORIGIN}/api/auth/callback`,
+    };
+  }
+  const origin = siteOrigin(env);
   const login = url.pathname === "/api/auth/login";
   const isCallback = url.pathname === "/api/auth/callback";
   const isRefresh = url.pathname === "/api/auth/refresh";
