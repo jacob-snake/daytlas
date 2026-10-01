@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
+import { DomainMoveNotice } from "@/components/domain-move-notice";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -66,7 +67,10 @@ export default async function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <Providers>{children}</Providers>
+        <Providers>
+          <DomainMoveNotice />
+          {children}
+        </Providers>
         <Toaster position="bottom-right" />
       </body>
     </html>
