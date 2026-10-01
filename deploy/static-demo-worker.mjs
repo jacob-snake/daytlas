@@ -1,3 +1,4 @@
+import { previousDomainRedirect } from "./domain-redirect.ts";
 import { accountConfiguration } from "./account/config.ts";
 import { accountHandlers } from "./account/handler.ts";
 import { createAccountProvider } from "./account/server.ts";
@@ -46,6 +47,8 @@ function csp(nonce) {
 }
 export default {
   async fetch(request, env) {
+    const redirect = previousDomainRedirect(request);
+    if (redirect) return redirect;
     const url = new URL(request.url);
     const path = url.pathname;
     const head = request.method === 'HEAD';

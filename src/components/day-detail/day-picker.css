@@ -1,0 +1,76 @@
+.day-orb-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 22px;
+}
+.day-orb-button {
+  display: flex;
+  flex: 1;
+  min-width: 44px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 4px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+.day-picker-orb {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 23%,
+    #f7fcff 0%,
+    #baddff 20%,
+    #60a8fa 48%,
+    #1678ec 75%,
+    #0756b9 100%
+  );
+  box-shadow:
+    inset 0 0 0 0.5px #277bc331,
+    0 3px 6px #1b6bd020;
+  opacity: 0.65;
+  transition:
+    transform 160ms ease-out,
+    opacity 160ms ease-out;
+}
+.day-orb-button[data-current="true"] {
+  background: color-mix(in oklab, var(--chart-1) 9%, var(--card));
+}
+.day-orb-button[data-current="true"] .day-picker-orb {
+  transform: scale(1.23);
+  opacity: 1;
+}
+.day-orb-button[data-loaded="true"][data-recorded="false"] .day-picker-orb {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.day-orb-button:hover .day-picker-orb {
+  opacity: 1;
+}
+.day-orb-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (max-width: 639px) {
+  .day-orb-strip {
+    gap: 0;
+  }
+  .day-orb-button {
+    min-width: 0;
+  }
+  .day-orb-button[data-near="false"] {
+    display: none;
+  }
+  .day-picker-orb {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .day-picker-orb {
+    transition: none;
+  }
+}

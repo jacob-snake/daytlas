@@ -183,7 +183,7 @@ test("day sections, category colors and shared night cursor work with keyboard a
   await expect(
     page.locator("#day-sleep .chart-grid-major").first(),
   ).toHaveAttribute("stroke-opacity", "0.13");
-  const stage = page.getByRole("slider", { name: "Deep timeline" });
+  const stage = page.getByRole("slider", { name: "Sleep stage timeline" });
   await stage.press("Home");
   await stage.press("ArrowRight");
   await expect(page.getByTestId("stage-readout")).toContainText(
@@ -255,4 +255,31 @@ test("day detail maintains accessible controls at mobile and desktop widths", as
       .analyze();
     expect(result.violations).toEqual([]);
   }
+});
+
+test("selected orb strip chooses real dates and Night Contour exposes thick phases and clock tooltip", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("daytlas.mode", "demo"));
+  await page.goto("/app/day");
+  const strip = page.getByRole("group", { name: "Choose a day" });
+  await expect(strip.getByRole("button")).toHaveCount(11);
+  const original = await page.locator("#detail-day").inputValue();
+  await strip.getByRole("button").nth(8).click();
+  await expect(page.locator("#detail-day")).not.toHaveValue(original);
+  await page.getByRole("button", { name: "Today", exact: true }).click();
+  await expect(page.locator("#detail-day")).toHaveValue(original);
+  const phases = page.locator(".sleep-phase-segment");
+  await expect(phases.first()).toHaveAttribute("height", "28");
+  await expect(page.locator(".stage-clock-grid")).toHaveCount(7);
+  const timeline = page.getByRole("slider", { name: "Sleep stage timeline" });
+  await timeline.press("Home");
+  await expect(page.getByTestId("stage-readout")).toContainText("min");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(strip.locator("button:visible")).toHaveCount(7);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

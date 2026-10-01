@@ -94,7 +94,7 @@ export function AppHeader({
         ref={header}
         onFocusCapture={() => setHidden(false)}
         data-hidden={hidden}
-        className="motion-safe:transition-transform motion-safe:duration-[220ms] motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] data-[hidden=true]:-translate-y-[calc(100%+2rem)] app-header sticky top-3 z-40 rounded-2xl bg-background/90 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-xl sm:top-5 sm:px-5"
+        className="motion-safe:transition-transform motion-safe:duration-[220ms] motion-safe:ease-[cubic-bezier(0.23,1,0.32,1)] data-[hidden=true]:-translate-y-[calc(100%+2rem)] app-header sticky top-3 z-40 rounded-2xl bg-white px-4 py-3 shadow-[var(--shadow-border)] sm:top-5 sm:px-5"
       >
         <div className="flex items-center justify-between gap-3">
           <Brand revealWebsite />
