@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-for (const width of [390, 1195])
+for (const width of [320, 390, 1195])
   test(`day calendar and floating controls keep working at ${width}px`, async ({
     page,
   }) => {
@@ -40,10 +40,25 @@ for (const width of [390, 1195])
 test("five product views and silent film remain usable with reduced motion", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
   await page.goto("/");
   const tabs = page.getByRole("tablist", { name: "Explore Daytlas views" });
   await expect(tabs.getByRole("tab")).toHaveCount(5);
-  await tabs.getByRole("tab", { name: "Tag Lab", exact: true }).click();
+  for (const name of [
+    "Day detail",
+    "Overview",
+    "Trends",
+    "Your year",
+    "Tag Lab",
+  ]) {
+    await tabs.getByRole("tab", { name, exact: true }).click();
+    await expect(page.getByRole("tabpanel")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+    ).toBe(true);
+  }
   await expect(page.getByRole("tabpanel")).toContainText(
     "Get curious about your habits.",
   );
@@ -61,7 +76,6 @@ test("five product views and silent film remain usable with reduced motion", asy
     .toBe(false);
   await film.getByRole("button", { name: "Pause product film" }).click();
   expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
-  await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth + 1,

@@ -75,14 +75,14 @@ function MiniView({ view }: { view: string }) {
       </div>
       {view === "day" ? (
         <>
-          <div className="mb-7 flex justify-between">
+          <div className="mb-7 grid grid-cols-7 gap-1">
             {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
               <div
                 key={i}
-                className={`flex flex-col items-center gap-3 rounded-2xl p-2 ${i === 4 ? "bg-blue-50" : ""}`}
+                className={`flex min-w-0 flex-col items-center gap-3 rounded-2xl px-1 py-2 ${i === 4 ? "bg-blue-50" : ""}`}
               >
                 <span className="text-xs text-muted-foreground">{d}</span>
-                <span className="day-picker-orb !opacity-100" />
+                <span className="day-picker-orb !size-5 !opacity-100 sm:!size-[26px]" />
                 <span className="text-xs font-semibold">{21 + i}</span>
               </div>
             ))}
