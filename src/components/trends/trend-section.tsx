@@ -1,5 +1,13 @@
 "use client";
 import { Icon } from "@/components/icon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { format } from "date-fns";
+import { parseDay } from "@/lib/dates";
 import { MetricDelta } from "@/components/ui/metric-delta";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -61,15 +69,30 @@ export function TrendSection({
   }, [section.metrics, reducedMotion]);
 
   const summary = useMemo(() => {
-    const vals = data
-      .map((d) => d[section.headline])
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    const records = data
+      .filter(
+        (d) =>
+          typeof d[section.headline] === "number" &&
+          Number.isFinite(d[section.headline]),
+      )
+      .toSorted((a, b) => a.day.localeCompare(b.day));
+    const vals = records.map((d) => d[section.headline] as number);
     const avg = mean(vals);
     const half = Math.floor(vals.length / 2);
     const first = mean(vals.slice(0, half));
     const second = mean(vals.slice(half));
     return {
       avg,
+      first,
+      second,
+      firstDates: half
+        ? `${format(parseDay(records[0].day), "d MMM yyyy")}–${format(parseDay(records[half - 1].day), "d MMM yyyy")}`
+        : "",
+      secondDates: half
+        ? `${format(parseDay(records[half].day), "d MMM yyyy")}–${format(parseDay(records[records.length - 1].day), "d MMM yyyy")}`
+        : "",
+      firstCount: half,
+      secondCount: vals.length - half,
       delta: first !== null && second !== null ? second - first : null,
     };
   }, [data, section.headline]);
@@ -124,9 +147,39 @@ export function TrendSection({
               )}
             </div>
             {summary.delta !== null && (
-              <p className="text-xs font-medium text-muted-foreground">
-                Change · later vs earlier half
-              </p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="min-h-8 text-left text-xs font-medium text-muted-foreground underline decoration-dotted underline-offset-4"
+                    >
+                      Newer readings vs older readings
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-80 space-y-2">
+                    <p>
+                      Available readings in this selection are split into two
+                      chronological groups. The change is the newer average
+                      minus the older average.
+                    </p>
+                    <p>
+                      Older: {summary.firstDates} · {summary.firstCount}{" "}
+                      readings · {summary.first?.toFixed(1)}{" "}
+                      {headlineDef.unit || "pts"} avg
+                    </p>
+                    <p>
+                      Newer: {summary.secondDates} · {summary.secondCount}{" "}
+                      readings · {summary.second?.toFixed(1)}{" "}
+                      {headlineDef.unit || "pts"} avg
+                    </p>
+                    <p>
+                      Missing days are excluded. This does not compare with a
+                      previous period.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         )}

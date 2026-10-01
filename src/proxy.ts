@@ -1,8 +1,11 @@
+import { previousDomainRedirect } from "@/lib/domain-redirect";
 import { productAnalyticsConfiguration } from "@/lib/product-analytics";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Per-request nonces require dynamic rendering in the root layout. */
 export function proxy(request: NextRequest) {
+  const redirect = previousDomainRedirect(request);
+  if (redirect) return redirect;
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const development = process.env.NODE_ENV === "development";
   const analytics = productAnalyticsConfiguration();

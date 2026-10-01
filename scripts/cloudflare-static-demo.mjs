@@ -126,6 +126,7 @@ for (const page of ['/', '/app', '/app/onboarding', '/app/profile', '/connect', 
 for (const asset of ['/manifest.webmanifest', '/app-icons/192', '/app-icons/512']) assert(assets[asset], `Required PWA asset absent: ${asset}`);
 await mkdir(join(directory, 'worker'));
 await cp(join(root, 'deploy/static-demo-worker.mjs'), join(directory, 'worker/index.mjs'));
+await cp(join(root, 'src/lib/domain-redirect.ts'), join(directory, 'worker/domain-redirect.ts'));
 await cp(join(root, 'deploy/oura-worker.mjs'), join(directory, 'worker/oura-worker.mjs'));
 await cp(join(root, 'src/lib/account'), join(directory, 'worker/account'), { recursive: true });
 await writeFile(join(directory, 'worker/static-demo-manifest.mjs'), `export const assets = ${JSON.stringify(assets)};\nexport const pages = ${JSON.stringify(pages)};\nexport const marker = ${JSON.stringify(marker)};\nexport const contentTypes = ${JSON.stringify(contentTypes)};\n`);

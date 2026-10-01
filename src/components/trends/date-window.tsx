@@ -147,7 +147,10 @@ export function DateWindow({
           Choose a valid date range within your available history.
         </p>
       ) : (
-        <p className="text-sm font-medium text-muted-foreground" role="status">
+        <p
+          className="text-center text-sm font-medium text-muted-foreground"
+          role="status"
+        >
           <span className="font-semibold tabular-nums text-foreground">
             {inclusiveDays(start, end).toLocaleString()} days
           </span>{" "}

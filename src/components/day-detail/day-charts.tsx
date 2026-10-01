@@ -219,6 +219,19 @@ export function SleepStages({ period }: { period: SleepPeriod }) {
     "var(--chart-4)",
     "var(--muted-foreground)",
   ];
+  const x = (t: number) => (1000 * (t - start)) / (end - start);
+  const y = (stage: number) => 28 + (4 - stage) * 52;
+  const active = time !== null && time >= start && time < end;
+  const segment = active
+    ? stages.find((s) => s.start <= time && s.end > time)
+    : undefined;
+  const description = active
+    ? `${clockLabel(time!)} · ${segment ? names[segment.stage - 1] : "No sample"}`
+    : "Browse the night";
+  const ticks = Array.from(
+    { length: 7 },
+    (_, i) => start + (i * (end - start)) / 6,
+  );
   return (
     <Card>
       <CardHeader>
@@ -230,114 +243,158 @@ export function SleepStages({ period }: { period: SleepPeriod }) {
       </CardHeader>
       <CardContent>
         {stages.length ? (
-          <div>
-            <div
-              className="mb-3 min-h-6 text-sm tabular-nums"
-              data-testid="stage-readout"
-            >
-              {time !== null && time >= start && time <= end
-                ? `${clockLabel(time)} · ${names[(stages.find((s) => s.start <= time && s.end > time)?.stage ?? 0) - 1] ?? "No sample"}`
-                : " "}
-            </div>
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3">
+            <div className="relative h-[212px]" aria-hidden="true">
               {[4, 3, 2, 1].map((stage) => (
-                <div
+                <span
                   key={stage}
-                  className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3"
+                  className="absolute left-0 -translate-y-1/2 text-xs text-muted-foreground"
+                  style={{ top: y(stage) }}
                 >
-                  <span className="text-xs text-muted-foreground">
-                    {names[stage - 1]}
-                  </span>
-                  <div
-                    className="relative h-6 bg-secondary/30"
-                    role="slider"
-                    tabIndex={0}
-                    aria-label={`${names[stage - 1]} timeline`}
-                    aria-valuemin={0}
-                    aria-valuemax={Math.round((end - start) / 60000)}
-                    aria-valuenow={Math.max(
-                      0,
-                      Math.round(((time ?? start) - start) / 60000),
-                    )}
-                    aria-valuetext={
-                      time === null ? "Browse the night" : clockLabel(time)
-                    }
-                    onPointerMove={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setTime(
-                        start +
-                          Math.max(
-                            0,
-                            Math.min(1, (e.clientX - rect.left) / rect.width),
-                          ) *
-                            (end - start),
-                      );
-                    }}
-                    onPointerLeave={() => setTime(null)}
-                    onBlur={() => setTime(null)}
-                    onKeyDown={(e) => {
-                      if (
-                        !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
-                          e.key,
-                        )
-                      )
-                        return;
-                      e.preventDefault();
-                      setTime(
-                        e.key === "Home"
-                          ? start
-                          : e.key === "End"
-                            ? end - 1
-                            : Math.max(
-                                start,
-                                Math.min(
-                                  end - 1,
-                                  (time ?? start) +
-                                    (e.key === "ArrowRight" ? 300000 : -300000),
-                                ),
-                              ),
-                      );
-                    }}
-                  >
-                    {time !== null && time >= start && time <= end && (
-                      <span
-                        className="pointer-events-none absolute z-10 inset-y-0 border-l border-foreground"
-                        style={{
-                          left: `${(100 * (time - start)) / (end - start)}%`,
-                        }}
-                      />
-                    )}
-                    {stages
-                      .filter((s) => s.stage === stage)
-                      .map((s) => (
-                        <span
-                          key={s.start}
-                          aria-hidden="true"
-                          className="absolute inset-y-0"
-                          style={{
-                            left: `${(100 * (s.start - start)) / (end - start)}%`,
-                            width: `${(100 * (s.end - s.start)) / (end - start)}%`,
-                            background: colors[stage - 1],
-                          }}
-                        />
-                      ))}
-                    <span className="sr-only">
-                      {Math.round(
-                        stages
-                          .filter((s) => s.stage === stage)
-                          .reduce((sum, s) => sum + s.end - s.start, 0) / 60000,
-                      )}{" "}
-                      minutes recorded
-                    </span>
-                  </div>
-                </div>
+                  {names[stage - 1]}
+                </span>
               ))}
             </div>
-            <div className="mt-3 ml-[4.25rem] flex justify-between text-xs text-muted-foreground">
-              <span>{clockLabel(start)}</span>
-              <span>{clockLabel((start + end) / 2)}</span>
-              <span>{clockLabel(end)}</span>
+            <div
+              className="relative h-[212px]"
+              role="slider"
+              tabIndex={0}
+              aria-label="Sleep stage timeline"
+              aria-valuemin={0}
+              aria-valuemax={Math.ceil((end - start) / 60000)}
+              aria-valuenow={active ? Math.floor((time! - start) / 60000) : 0}
+              aria-valuetext={description}
+              onPointerMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setTime(
+                  Math.min(
+                    end - 1,
+                    start +
+                      Math.max(
+                        0,
+                        Math.min(1, (e.clientX - rect.left) / rect.width),
+                      ) *
+                        (end - start),
+                  ),
+                );
+              }}
+              onPointerLeave={() => setTime(null)}
+              onBlur={() => setTime(null)}
+              onKeyDown={(e) => {
+                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key))
+                  return;
+                e.preventDefault();
+                setTime(
+                  e.key === "Home"
+                    ? start
+                    : e.key === "End"
+                      ? end - 1
+                      : Math.max(
+                          start,
+                          Math.min(
+                            end - 1,
+                            (time ?? start) +
+                              (e.key === "ArrowRight" ? 300000 : -300000),
+                          ),
+                        ),
+                );
+              }}
+            >
+              <svg
+                viewBox="0 0 1000 212"
+                preserveAspectRatio="none"
+                className="h-full w-full overflow-visible"
+                aria-hidden="true"
+              >
+                <g stroke="var(--muted-foreground)" pointerEvents="none">
+                  {[4, 3, 2, 1].map((stage) => (
+                    <line
+                      key={stage}
+                      x1="0"
+                      x2="1000"
+                      y1={y(stage)}
+                      y2={y(stage)}
+                      strokeOpacity=".13"
+                    />
+                  ))}
+                  {ticks.map((t) => (
+                    <line
+                      key={t}
+                      className="stage-clock-grid"
+                      x1={x(t)}
+                      x2={x(t)}
+                      y1="8"
+                      y2="204"
+                      strokeOpacity=".1"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                </g>
+                {stages.map((s, i) => (
+                  <g key={s.start}>
+                    {i > 0 && stages[i - 1].end === s.start && (
+                      <path
+                        d={`M${x(s.start)} ${y(stages[i - 1].stage)} V${y(s.stage)}`}
+                        stroke="var(--chart-1)"
+                        strokeOpacity=".4"
+                        fill="none"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    <rect
+                      className="sleep-phase-segment"
+                      x={x(s.start)}
+                      y={y(s.stage) - 14}
+                      width={Math.max(0.25, x(s.end) - x(s.start))}
+                      height="28"
+                      rx="4"
+                      fill={colors[s.stage - 1]}
+                    />
+                  </g>
+                ))}
+                {active && (
+                  <line
+                    x1={x(time!)}
+                    x2={x(time!)}
+                    y1="8"
+                    y2="204"
+                    stroke="var(--foreground)"
+                    strokeDasharray="3 3"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                )}
+              </svg>
+              {active && (
+                <div
+                  role="tooltip"
+                  data-testid="stage-readout"
+                  className="pointer-events-none absolute -top-2 z-10 max-w-[calc(100%-8px)] rounded-lg bg-foreground px-3 py-2 text-xs text-background shadow-lg"
+                  style={{
+                    left: `${Math.min(100, Math.max(0, x(time!) / 10))}%`,
+                    transform: `translateX(${x(time!) > 700 ? "-100%" : x(time!) < 300 ? "0" : "-50%"}) translateY(-100%)`,
+                  }}
+                >
+                  <p className="font-bold whitespace-nowrap">{description}</p>
+                  {segment && (
+                    <p className="mt-1 whitespace-nowrap">
+                      {clockLabel(segment.start)}–{clockLabel(segment.end)} ·{" "}
+                      {Math.round((segment.end - segment.start) / 60000)} min
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
+            <div />
+            <div className="mt-3 flex justify-between text-xs text-muted-foreground">
+              {ticks.map((t, i) => (
+                <span key={t} className={i % 2 ? "hidden sm:inline" : ""}>
+                  {clockLabel(t)}
+                </span>
+              ))}
+            </div>
+            <p className="sr-only" aria-live="polite">
+              {description}
+            </p>
           </div>
         ) : (
           <p className="text-muted-foreground">

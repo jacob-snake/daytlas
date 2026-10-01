@@ -323,7 +323,15 @@ export function HistoryTimeline({
               onPointerCancel={finish}
               onKeyDown={(e) => keyboard(e, part)}
             >
-              <span aria-hidden="true">Ⅱ</span>
+              <span aria-hidden="true">
+                <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
+                  <path
+                    d="M3 2v16M9 2v16"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </span>
             </button>
           ))}
         </div>
@@ -332,13 +340,8 @@ export function HistoryTimeline({
           <span>{fmt(dayString(model.max))}</span>
         </div>
       </div>
-      <p
-        className="mt-2 min-h-5 text-xs font-medium text-muted-foreground"
-        aria-live="polite"
-      >
-        {snapped
-          ? `Quarter boundary · ${fmt(snapped)}`
-          : "Drag an edge or move the whole selection. Changes apply immediately."}
+      <p className="sr-only" aria-live="polite">
+        {snapped ? `Quarter boundary · ${fmt(snapped)}` : ""}
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPicker } from "@/components/day-detail/day-picker";
 import { AppHeader } from "@/components/app-header";
 import { AppFooter } from "@/components/app-footer";
 import { CommandPalette } from "@/components/command-palette";
@@ -20,7 +20,6 @@ import { ScoreCard } from "@/components/dashboard/score-card";
 import { SampleChart, SleepStages } from "@/components/day-detail/day-charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -101,7 +100,8 @@ export default function DayDetail() {
   const [selected, setSelected] = useState<string | null>(null),
     [attempt, setAttempt] = useState(0),
     [episode, setEpisode] = useState("");
-  const end = selected ?? today;
+  const end =
+    selected && shiftDay(selected, 5) < today ? shiftDay(selected, 5) : today;
   const load = useCallback(
     () => fetchDayDetail(end, attempt > 0),
     [end, attempt],
@@ -156,55 +156,28 @@ export default function DayDetail() {
         title="A closer look at your day."
         description="Your night, recovery and activity — with context from the 30 days before."
       />
-      <Card>
-        <CardContent className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <label
-              htmlFor="detail-day"
-              className="mb-2 block text-xs font-medium text-muted-foreground"
-            >
-              Day detail
-            </label>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Previous day"
-                onClick={() => choose(shiftDay(day, -1))}
-              >
-                <ChevronLeft />
-              </Button>
-              <Input
-                id="detail-day"
-                type="date"
-                value={day}
-                max={today}
-                onChange={(e) => choose(e.target.value)}
-                className="w-auto min-w-0"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Next day"
-                disabled={day >= today}
-                onClick={() => choose(shiftDay(day, 1))}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSelected(today);
-              setEpisode("");
-              setAttempt((v) => v + 1);
-            }}
-          >
-            Today
-          </Button>
-        </CardContent>
-      </Card>
+      <DayPicker
+        day={day}
+        today={today}
+        recorded={
+          new Set(
+            data
+              ? [
+                  ...data.sleep,
+                  ...data.readiness,
+                  ...data.activity,
+                  ...data.periods,
+                ].map((r) => r.day)
+              : [],
+          )
+        }
+        loaded={!!data && data.failures === 0}
+        onChoose={choose}
+        onToday={() => {
+          choose(today);
+          setAttempt((v) => v + 1);
+        }}
+      />
       {query.error ? (
         <DataError error={query.error} retry={() => setAttempt((v) => v + 1)} />
       ) : !data ? (
