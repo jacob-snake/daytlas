@@ -91,7 +91,14 @@
   background: radial-gradient(circle at 30% 22%, #cfe9ff, #2687ee 55%, #164999);
 }
 .brand-profile-orb {
-  width:44px; height:44px; min-width:44px; flex:none; padding:0; display:grid; place-items:center; overflow:visible;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  overflow: visible;
   border-radius: 50%;
   color: #173957;
   background: radial-gradient(
@@ -108,4 +115,49 @@
   background: radial-gradient(circle at 32% 22%, #fff, #d2e6ff 50%, #a3c8f2);
 }
 
-.brand-profile-orb > svg { width:20px; height:20px; flex:none; overflow:visible; }
+.brand-profile-orb > svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  overflow: visible;
+}
+
+.brand-orbit {
+  position: relative;
+}
+.brand-orbit-static,
+.brand-orbit-motion {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.brand-orbit-motion {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.brand-orbit[data-orbit-state="playing"] .brand-orbit-static {
+  visibility: hidden;
+}
+.brand-orbit[data-orbit-state="playing"] .brand-orbit-motion {
+  visibility: visible;
+}
+@media (max-width: 639px) {
+  .brand-artwork-full {
+    display: block;
+    width: 120px;
+    height: 48px;
+  }
+  .brand-artwork-compact {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-orbit[data-orbit-state] .brand-orbit-static {
+    visibility: visible;
+  }
+  .brand-orbit[data-orbit-state] .brand-orbit-motion {
+    visibility: hidden;
+  }
+}
