@@ -10,6 +10,13 @@
     --ds-line: var(--border, oklch(0.9 0.01 95));
     --ds-primary: var(--primary, oklch(0.2 0.01 90));
     --ds-on-primary: var(--primary-foreground, oklch(0.985 0.005 95));
+    /* Charcoal: product demonstrations. Navy: brand story and future vision. */
+    --ds-surface-charcoal: oklch(0.24 0.012 265);
+    --ds-surface-navy: #152c45;
+    --ds-on-dark: #ffffff;
+    --ds-on-dark-muted: #c3cbd5;
+    --ds-on-dark-accent: #a8caff;
+    --ds-brand-blue: #246bd1;
     --ds-blue: var(--chart-1, #2e6be6);
     --ds-green: var(--chart-2, #456f10);
     --ds-danger: var(--destructive, #b83227);

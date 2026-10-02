@@ -14,7 +14,7 @@ export function ProductPurpose() {
         >
           A different view.
           <br />
-          <span className="text-[#246bd1]">A shared purpose.</span>
+          <span className="text-[var(--ds-brand-blue)]">A shared purpose.</span>
         </h2>
         <p className="max-w-sm text-base leading-relaxed text-muted-foreground">
           Keep your daily check-in with Oura. Open Daytlas when you want more
@@ -39,8 +39,8 @@ export function ProductPurpose() {
             A moment to check in.
           </p>
         </article>
-        <article className="flex flex-col rounded-3xl bg-[#152c45] p-7 text-white sm:p-10">
-          <p className="flex items-center gap-3 text-sm font-semibold text-[#a8caff]">
+        <article className="flex flex-col rounded-3xl bg-[var(--ds-surface-navy)] p-7 text-white sm:p-10">
+          <p className="flex items-center gap-3 text-sm font-semibold text-[var(--ds-on-dark-accent)]">
             <Monitor className="size-5" aria-hidden="true" /> Daytlas, in your
             browser
           </p>

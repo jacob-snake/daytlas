@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { UserRound, Menu, ArrowLeft } from "lucide-react";
+import { Menu, ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OuraSyncStatus } from "@/components/oura-sync-status";
 import { Brand } from "@/components/brand";
@@ -136,7 +136,19 @@ export function AppHeader({
                 aria-current={active === "profile" ? "page" : undefined}
                 className="aria-[current=page]:bg-muted"
               >
-                <UserRound className="size-5" aria-hidden="true" />
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5.5 19a6.5 6.5 0 0 1 13 0v1h-13z" />
+                </svg>
               </Link>
             </Button>
           </div>
@@ -151,7 +163,7 @@ export function AppHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="min-[1100px]:hidden"
+                className="!rounded-full border border-border min-[1100px]:hidden"
                 aria-label="Open navigation"
               >
                 <Menu aria-hidden="true" />
@@ -194,10 +206,10 @@ export function AppHeader({
             </DialogContent>
           </Dialog>
         </div>
-        <div className="flex justify-end">
-          <OuraSyncStatus />
-        </div>
       </header>
+      <div className="!mt-3 flex justify-end px-1">
+        <OuraSyncStatus />
+      </div>
       {imported && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3 text-sm">
           <p>

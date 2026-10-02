@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { DemoButton } from "@/components/demo-button";
 import { AppFooter } from "@/components/app-footer";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { disconnectAndClear, reloadSession } from "@/lib/oura/client";
 import { useOuraSession } from "@/lib/use-oura-query";
@@ -233,9 +233,19 @@ function ProductActions() {
 }
 export function Welcome() {
   const session = useOuraSession();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 24);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
   return (
     <div className="landing mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-12">
-      <header className="flex h-24 items-center justify-between gap-4">
+      <header
+        data-scrolled={scrolled}
+        className="landing-header flex h-20 items-center justify-between gap-3 sm:h-24"
+      >
         <Brand />
         <nav
           aria-label="Main navigation"
@@ -307,7 +317,7 @@ export function Welcome() {
           <div className="mt-8">
             <ProductActions />
           </div>
-          <p className="mx-auto mt-5 w-fit rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-foreground">
+          <p className="mx-auto mt-5 text-sm text-muted-foreground">
             {session && session !== "demo"
               ? "Your Oura connection is ready when you are."
               : "Try every view with sample data. No account needed."}
@@ -317,7 +327,7 @@ export function Welcome() {
         <ProductPurpose />
         <ProductShowcase />
         <ProductFilm />
-        <section id="how-it-works" className="scroll-mt-8 py-20 sm:py-28">
+        <section id="how-it-works" className="scroll-mt-28 py-20 sm:py-28">
           <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <h2 className="max-w-lg text-3xl font-medium leading-tight tracking-[-0.045em] sm:text-4xl">
               Built for the curious
@@ -392,6 +402,22 @@ export function Welcome() {
                 a: "An Oura account with API access. Select Connect with Oura, sign in on Oura’s website and choose what to share. You’ll return here automatically. Oura membership requirements apply; early-access places are limited.",
               },
               {
+                q: "Does this replace the Oura app?",
+                a: "Keep the Oura app for syncing your ring and your daily check-in. Daytlas gives you more room to explore that history: compare weeks, put metrics side by side and investigate your habits.",
+              },
+              {
+                q: "Where is my health data stored?",
+                a: "Your readings pass through this app’s server to connect to Oura, then are cached in your browser. Daytlas has no server-side health database. You can disconnect and clear local data in your profile.",
+              },
+              {
+                q: "Can I take my data with me?",
+                a: "Yes. Export your available readings as CSV or JSON from your profile. You can also explore a supported Oura export without connecting a ring.",
+              },
+              {
+                q: "Which features are coming next?",
+                a: "WHOOP, Polar, AI chat and connections to compatible AI tools are planned. Oura is available today. No health data is sent to an AI service by Daytlas today.",
+              },
+              {
                 q: "Is this an official Oura product?",
                 a: `No. ${brand.name} is an independent, open-source project by Jakub Had. It is not affiliated with or endorsed by Oura, and it does not provide medical advice.`,
               },
@@ -406,41 +432,59 @@ export function Welcome() {
           <WearableSources />
           <section
             aria-labelledby="ai-roadmap-title"
-            className="border-t border-border/35 pt-12"
+            className="mt-16 rounded-[28px] bg-[var(--ds-surface-navy)] p-7 text-[var(--ds-on-dark)] sm:p-12"
           >
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--ds-on-dark-accent)]">
+              The next chapter · Coming soon
+            </p>
             <h2
               id="ai-roadmap-title"
-              className="text-center text-2xl font-semibold"
+              className="mt-4 max-w-2xl text-3xl font-medium leading-tight tracking-tight sm:text-4xl"
             >
-              More ways to explore, on the way.
+              Your history has more to tell.
+              <br />
+              Start with a question.
             </h2>
-            <div className="mx-auto mt-6 grid max-w-2xl gap-6 sm:grid-cols-2">
-              <div>
-                <h3 className="font-semibold">
-                  AI connections{" "}
-                  <span className="ml-2 text-sm font-medium text-muted-foreground">
-                    Coming soon
-                  </span>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-[var(--ds-on-dark-muted)]">
+              We’re building new ways to explore the patterns behind your days,
+              in a conversation that starts with what you’re curious about.
+            </p>
+            <div className="mt-9 grid gap-8 sm:grid-cols-2">
+              <div className="border-t border-white/20 pt-6">
+                <p className="text-xs font-semibold text-[var(--ds-on-dark-accent)]">
+                  AI chat · Coming soon
+                </p>
+                <h3 className="mt-3 text-xl font-medium">
+                  Ask about your own patterns.
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Connect with compatible AI tools through MCP.
+                <p className="mt-4 text-sm leading-relaxed text-[var(--ds-on-dark-muted)]">
+                  A planned chat inside Daytlas, for exploring your history in
+                  your own words.
+                </p>
+                <p className="mt-5 text-base leading-relaxed">
+                  “How has my sleep changed over the last three months?”
                 </p>
               </div>
-              <div>
-                <h3 className="font-semibold">
-                  AI chat{" "}
-                  <span className="ml-2 text-sm font-medium text-muted-foreground">
-                    Coming soon
-                  </span>
+              <div className="border-t border-white/20 pt-6">
+                <p className="text-xs font-semibold text-[var(--ds-on-dark-accent)]">
+                  AI connections · Coming soon
+                </p>
+                <h3 className="mt-3 text-xl font-medium">
+                  Bring context to your AI tools.
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  A conversational way to explore your questions.
+                <p className="mt-4 text-sm leading-relaxed text-[var(--ds-on-dark-muted)]">
+                  Planned connections through MCP, so compatible AI tools can
+                  help you explore supported Daytlas data.
+                </p>
+                <p className="mt-5 text-base leading-relaxed">
+                  More of your history behind the questions you already ask.
                 </p>
               </div>
             </div>
-            <p className="mx-auto mt-5 max-w-2xl text-sm text-muted-foreground">
-              Planned features. Nothing is sent to an AI service today.
-              Supported data and availability will be announced before launch.
+            <p className="mt-9 border-t border-white/20 pt-5 text-xs leading-relaxed text-[var(--ds-on-dark-muted)]">
+              In development. Nothing is sent to an AI service today. Supported
+              data, sharing controls and availability will be explained before
+              launch.
             </p>
           </section>
         </div>

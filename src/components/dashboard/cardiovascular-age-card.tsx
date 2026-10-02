@@ -2,6 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
+import { Info } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,10 +89,6 @@ export function CardiovascularAgeCard({ session }: { session: string }) {
         ) : (
           <div className="grid min-w-0 items-center gap-6 sm:grid-cols-[minmax(180px,0.7fr)_minmax(0,1.7fr)]">
             <div>
-              <p className="text-sm text-muted-foreground">
-                Latest available ·{" "}
-                {format(parseDay(summary.latest.day), "d MMM yyyy")}
-              </p>
               <p className="mt-2 text-5xl font-bold tracking-tight tabular-nums">
                 {summary.latest.value}{" "}
                 <span className="ml-2 text-base font-medium text-muted-foreground">
@@ -107,9 +109,6 @@ export function CardiovascularAgeCard({ session }: { session: string }) {
                       <span className="font-normal text-muted-foreground">
                         · previous 30-day average
                       </span>
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {summary.count} of 30 days recorded · latest day excluded
                     </p>
                   </>
                 ) : (
@@ -169,10 +168,10 @@ export function CardiovascularAgeCard({ session }: { session: string }) {
                   />
                   <Line
                     dataKey="value"
-                    type="stepAfter"
+                    type="monotone"
                     stroke="var(--chart-2)"
                     strokeWidth={2}
-                    dot={{ r: 2, strokeWidth: 0, fill: "var(--chart-2)" }}
+                    dot={false}
                     activeDot={{ r: 4 }}
                     connectNulls={false}
                     isAnimationActive={false}
@@ -186,14 +185,29 @@ export function CardiovascularAgeCard({ session }: { session: string }) {
             </div>
           </div>
         )}
-        <a
-          className="mt-5 inline-block text-sm font-medium underline underline-offset-4"
-          href="https://support.ouraring.com/hc/en-us/articles/28451491040019-Cardiovascular-Age"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          About cardiovascular age ↗
-        </a>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="mt-5 -ml-3">
+              <Info className="size-4" aria-hidden="true" />
+              About cardiovascular age
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-80 max-w-[calc(100vw-2rem)] p-4 leading-relaxed"
+          >
+            <p className="font-semibold">What does this estimate mean?</p>
+            <p>
+              Oura estimates the age of your cardiovascular system from the
+              shape of your pulse signal and estimated pulse wave velocity. It
+              can be compared with your actual age.
+            </p>
+            <p className="text-muted-foreground">
+              Look at the trend over time: changes can take weeks to appear.
+              This is an estimate, not a medical diagnosis.
+            </p>
+          </PopoverContent>
+        </Popover>
       </CardContent>
     </Card>
   );

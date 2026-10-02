@@ -37,7 +37,7 @@ for (const width of [320, 390, 1195])
       ),
     ).toBe(true);
   });
-test("five product views and silent film remain usable with reduced motion", async ({
+test("five product views and film preview remain usable with reduced motion", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 844 });
@@ -64,12 +64,7 @@ test("five product views and silent film remain usable with reduced motion", asy
   );
   const film = page.getByRole("region", { name: "Daytlas product film" });
   await film.scrollIntoViewIfNeeded();
-  const video = film.locator("video");
-  await expect(video).toHaveAttribute(
-    "src",
-    "/media/product-tour-2026-10-01.mp4",
-  );
-  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  await expect(film.locator("video")).toHaveCount(0);
   await expect(
     film.getByRole("button", { name: "Play product film" }),
   ).toBeEnabled();
@@ -89,7 +84,7 @@ test("five product views and silent film remain usable with reduced motion", asy
 // Native media codecs differ by OS; Playwright recommends macOS WebKit for Safari video.
 // https://playwright.dev/docs/browsers#webkit
 // The real H.264 film is verified in Chromium CI and in both engines on macOS.
-test("native product film can play and pause", async ({
+test("native product film opens with sound and closes with Escape", async ({
   page,
   browserName,
 }) => {
@@ -98,17 +93,25 @@ test("native product film can play and pause", async ({
     "Linux WebKit media decoder stalls; native Safari playback is covered on macOS.",
   );
   await page.goto("/");
-  const film = page.getByRole("region", { name: "Daytlas product film" });
-  await film.scrollIntoViewIfNeeded();
-  const video = film.locator("video");
-  await expect(video).toHaveAttribute(
-    "src",
-    "/media/product-tour-2026-10-01.mp4",
-  );
-  await film.getByRole("button", { name: "Play product film" }).click();
+  const trigger = page.getByRole("button", { name: "Play product film" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Daytlas · A little tour" });
+  const video = dialog.locator("video");
+  await expect(video).toHaveAttribute("controls", "");
   await expect
-    .poll(() => video.evaluate((v: HTMLVideoElement) => v.paused))
-    .toBe(false);
-  await film.getByRole("button", { name: "Pause product film" }).click();
-  expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+    .poll(() =>
+      video.evaluate(
+        (v: HTMLVideoElement) => !v.paused && !v.muted && v.currentTime > 0,
+      ),
+    )
+    .toBe(true);
+  const media = await video.elementHandle();
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  expect(await media!.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
 });
