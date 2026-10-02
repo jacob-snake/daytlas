@@ -70,6 +70,11 @@ test("sync is truthful for cache, refresh, partial failure and recovery", async 
   });
   await page.goto("/app/day");
   await page.waitForLoadState("networkidle");
+  // Heart-rate history starts after the day query; wait for both cache writes
+  // before taking the timestamp that a cached reload must preserve.
+  await expect(
+    page.getByText("Heart rate throughout the day", { exact: true }),
+  ).toBeVisible();
   const status = page.getByTestId("oura-sync-status");
   await expect(status).toContainText(/Ring data synced/);
   const stamp = await page.evaluate(() =>
@@ -78,6 +83,9 @@ test("sync is truthful for cache, refresh, partial failure and recovery", async 
   const initialRequests = requests;
   await page.reload();
   await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByText("Heart rate throughout the day", { exact: true }),
+  ).toBeVisible();
   await expect(status).toContainText(/Ring data synced/);
   await expect(
     page.getByRole("heading", { name: "Readiness & Heart" }),
