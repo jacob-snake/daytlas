@@ -143,7 +143,7 @@
 
 [data-slot="card"] { border-color: transparent; box-shadow: var(--shadow-border); }
 .preview-shell { border-radius: 28px; background: var(--secondary); box-shadow: 0 0 0 1px rgb(0 0 0 / .045), 0 8px 16px -10px rgb(0 0 0 / .12), 0 36px 80px -34px rgb(0 0 0 / .16); }
-.preview-note { background: oklch(0.24 0.012 265); color: white; }
+.preview-note { background: var(--ds-surface-charcoal); color: var(--ds-on-dark); }
 .app-page { margin-inline: auto; width: 100%; max-width: 1240px; padding: 20px 24px 24px; }
 .app-page > * + * { margin-top: 24px; }
 .eyebrow { font-size: 11px; font-weight: 500; color: var(--muted-foreground); }
@@ -269,3 +269,10 @@
 .range-calendar .rdp-day:first-child [data-range-middle=true] { border-radius:999px 0 0 999px; }
 .range-calendar .rdp-day:last-child [data-range-middle=true] { border-radius:0 999px 999px 0; }
 @media(min-width:640px) { .range-calendar { padding:8px; } .range-calendar .rdp-months { flex-direction:row; } }
+
+/* The homepage navigation stays available; elevation appears after scrolling. */
+.landing-header { position: sticky; top: 12px; z-index: 40; border-radius: 24px; }
+.landing-header[data-scrolled="true"] { background: var(--background); box-shadow: var(--shadow-border); padding-inline: 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  .landing-header { transition: background-color 180ms ease, box-shadow 180ms ease, padding 180ms ease; }
+}

@@ -131,7 +131,7 @@ export const orbit = {
   name: "Orbit",
   number: "02",
   duration: 3.6,
-  coreScale: 1.1,
+  coreScale: 1.18,
   inStart: 0.035,
   inLength: 1.02,
   outStart: 1.32,

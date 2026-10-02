@@ -12,3 +12,7 @@
 Source: `src/components/brand-orbit.tsx`, `src/lib/brand-orbit.ts`, and `public/brand/v1.2/motion/orbit-source.png`. Original exploration is preserved in the canonical checkout under `docs/brand/daytlas-breathing-motion-v4-2026-10-01/`.
 
 Browser coverage: real 12-second pause, recurrence, reduced-motion switching, offscreen cancellation and 320px homepage/app headers in Chromium and WebKit. Release/deployment evidence is maintained in the local continuity handoff and retained release directory.
+
+## 2 October — stronger central pulse
+
+User asked for a slightly larger central sphere while the surrounding spheres are hidden. Peak scale increases from 1.10 to 1.18 (+18% versus resting size, about 7.3% larger diameter than the previous peak). Orbit path, 3.6-second duration, 4-second initial delay and 12-second pause are unchanged. Static approved logo is unchanged.
