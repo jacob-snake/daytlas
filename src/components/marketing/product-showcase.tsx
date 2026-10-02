@@ -67,7 +67,7 @@ function MiniView({ view }: { view: string }) {
   return (
     <div
       aria-label="Illustrative sample data"
-      className="relative min-w-0 rounded-[24px] border border-border/60 bg-white p-5 shadow-sm sm:p-8"
+      className="relative min-w-0 rounded-[24px] border border-border/60 bg-white text-foreground p-5 shadow-sm sm:p-8"
     >
       <div className="mb-8 flex items-center justify-between text-xs font-semibold text-muted-foreground">
         <span>Daytlas · {views.find((v) => v.id === view)?.label}</span>
@@ -223,11 +223,11 @@ export function ProductShowcase() {
   return (
     <section
       id="product-views"
-      className="py-10 sm:py-16"
+      className="scroll-mt-28 rounded-[28px] bg-[var(--ds-surface-charcoal)] px-5 py-10 text-[var(--ds-on-dark)] sm:p-10 lg:p-14"
       aria-labelledby="views-title"
     >
       <div className="mb-8 max-w-2xl">
-        <p className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--ds-on-dark-muted)]">
           Five ways to see your days
         </p>
         <h2
@@ -242,7 +242,7 @@ export function ProductShowcase() {
       <Tabs value={selected} onValueChange={setSelected}>
         <TabsList
           aria-label="Explore Daytlas views"
-          className="!flex !w-full !flex-wrap gap-1 !rounded-2xl !p-2 sm:!w-fit"
+          className="!flex !w-full !flex-wrap gap-1 !rounded-2xl !p-2 sm:!w-fit text-foreground"
         >
           {views.map((v) => (
             <TabsTrigger
@@ -259,19 +259,19 @@ export function ProductShowcase() {
           <TabsContent key={v.id} value={v.id} className="mt-8">
             <div className="grid items-center gap-8 lg:grid-cols-[.75fr_1.25fr] lg:gap-14">
               <div>
-                <p className="mb-4 text-xs font-semibold text-[var(--chart-1)]">
+                <p className="mb-4 text-xs font-semibold text-[var(--ds-on-dark-accent)]">
                   {String(views.indexOf(v) + 1).padStart(2, "0")} / 05
                 </p>
                 <h3 className="max-w-sm text-3xl font-bold leading-tight tracking-tight">
                   {v.title}
                 </h3>
-                <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground sm:text-base">
+                <p className="mt-5 max-w-sm text-sm leading-relaxed text-[var(--ds-on-dark-muted)] sm:text-base">
                   {v.text}
                 </p>
                 <p className="mt-6 text-sm font-semibold">{v.detail}</p>
                 <Button
                   variant="outline"
-                  className="mt-8"
+                  className="mt-8 !bg-white !text-foreground"
                   asChild={!!session}
                   onClick={
                     !session
